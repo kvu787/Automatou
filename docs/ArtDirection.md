@@ -25,7 +25,19 @@ The two sides must read before the individual unit does:
 
 ![Bastion and soldier concept art](art/bastion-soldier-concept.png)
 
-This comparison sheet is the current shape-language reference for human forces. The Bastion is a walking fortress whose recessed operator, immense shoulder mass, powered joints, and heavy weapon make it immediately distinct from the conventionally proportioned, mobile Soldier. Future low-resolution sprites should preserve those silhouettes before attempting surface detail.
+This detailed comparison sheet established the shape language for human forces. The Bastion is a walking fortress whose recessed operator, immense shoulder mass, powered joints, and heavy weapon make it immediately distinct from the conventionally proportioned, mobile Soldier.
+
+### Simplified sprite-translation concept
+
+![Simplified Bastion and Soldier concept art](art/bastion-soldier-concept-simplified.png)
+
+This deliberately low-detail sheet is the authoritative concept reference for future low-resolution sprite work. It preserves the approved proportions and identity while collapsing armor, weapons, and color accents into large continuous masses. Low-resolution translations should begin with these silhouettes and value groups instead of trying to interpret the detailed surface construction of the original concept.
+
+The essential landmarks are:
+
+- Bastion: enormous shoulder domes, recessed helmet and cyan visor, broad chest block with one cyan core, huge gauntlets, a rectangular heavy weapon, and block-like legs and boots;
+- Soldier: conventional human proportions, one cyan visor, compact shoulder pads, a simple chest plate, restrained limb armor, and a recognizable service rifle;
+- both: dark gunmetal bodies, a few large gold accent groups, and no dependency on tiny panels, cables, lights, pouches, scratches, or other surface texture.
 
 ### Resolution studies
 
