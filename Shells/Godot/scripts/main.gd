@@ -5,26 +5,26 @@ const MUTED := Color("#777f9e")
 const VOID := Color("#090b1d")
 const PANEL := Color("#11142b")
 const PANEL_RAISED := Color("#181c39")
-const VIOLET := Color("#7e6bff")
-const MINT := Color("#4fe4c1")
-const GOLD := Color("#f4d47c")
-const ROSE := Color("#ef6da8")
+const VIOLET := Color("#8b7cff")
+const MINT := Color("#55d6c2")
+const GOLD := Color("#f2c66d")
+const ROSE := Color("#ef5b66")
 
 const TERRAIN_SPRITE_IDS := {
-	"starGlass": "star_glass",
-	"ashDunes": "ash_dunes",
-	"aetherSea": "aether_sea",
-	"crystalForest": "crystal_forest",
-	"ironSteppe": "iron_steppe",
-	"dreamMarsh": "dream_marsh",
+	"shatteredPlain": "shattered_plain",
+	"ashWaste": "ash_waste",
+	"leyChannel": "ley_channel",
+	"xenoforest": "xenoforest",
+	"fortifiedReach": "fortified_reach",
+	"broodMire": "brood_mire",
 }
 
-const BEING_SPRITE_IDS := {
-	"wanderer": "wanderer",
-	"synthBeast": "synth_beast",
-	"oracle": "oracle",
-	"settlement": "settlement",
-	"rift": "rift",
+const FORCE_SPRITE_IDS := {
+	"bastion": "bastion",
+	"legionary": "legionary",
+	"ravener": "ravener",
+	"broodNode": "brood_node",
+	"enclave": "enclave",
 }
 
 var _pipe: FileAccess
@@ -44,7 +44,7 @@ var _inspector: RichTextLabel
 var _chronicle: RichTextLabel
 var _status: Label
 var _advance_button: Button
-var _creator_panel: VBoxContainer
+var _command_panel: VBoxContainer
 
 
 func _ready() -> void:
@@ -112,7 +112,7 @@ func _build_header() -> Control:
 	margin.add_child(row)
 
 	_title_label = Label.new()
-	_title_label.text = "AUTOMAPOLIS"
+	_title_label.text = "AUTOMAPOLIS // THE BASTION FRONT"
 	_title_label.add_theme_font_size_override("font_size", 24)
 	_title_label.add_theme_color_override("font_color", INK)
 	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -125,10 +125,10 @@ func _build_header() -> Control:
 	row.add_child(_turn_label)
 
 	_mode_picker = OptionButton.new()
-	_mode_picker.add_item("OBSERVER · 0 PLAYER")
-	_mode_picker.add_item("CREATOR · 1 PLAYER")
+	_mode_picker.add_item("WITNESS · 0 PLAYER")
+	_mode_picker.add_item("COMMAND · 1 PLAYER")
 	_mode_picker.selected = 1
-	_mode_picker.tooltip_text = "Mode takes effect when a new world is forged."
+	_mode_picker.tooltip_text = "Mode takes effect when a new front is opened."
 	_style_button(_mode_picker, VIOLET)
 	row.add_child(_mode_picker)
 
@@ -141,8 +141,8 @@ func _build_header() -> Control:
 	row.add_child(_seed_edit)
 
 	var forge := Button.new()
-	forge.text = "REFORGE"
-	forge.tooltip_text = "Create a fresh deterministic world from this mode and seed."
+	forge.text = "OPEN FRONT"
+	forge.tooltip_text = "Create a fresh deterministic war front from this mode and seed."
 	_style_button(forge, MINT)
 	forge.pressed.connect(_new_world)
 	row.add_child(forge)
@@ -199,22 +199,22 @@ func _build_side_panel() -> Control:
 	_inspector.add_theme_stylebox_override("normal", _panel_style(PANEL, Color("#282e55"), 1, 8))
 	side.add_child(_inspector)
 
-	_creator_panel = VBoxContainer.new()
-	_creator_panel.add_theme_constant_override("separation", 6)
-	var creator_heading := Label.new()
-	creator_heading.text = "CREATOR INSTRUMENTS"
-	creator_heading.add_theme_color_override("font_color", ROSE)
-	_creator_panel.add_child(creator_heading)
-	_add_creator_button("INFUSE +25 AETHER", "infuse", VIOLET)
-	_add_creator_button("GROW CRYSTAL FOREST", "transmute", MINT, {"terrain": "crystalForest"}, "crystal_forest")
-	_add_creator_button("SHAPE A WANDERER", "create_life", GOLD, {"kind": "wanderer"}, "wanderer")
-	_add_creator_button("SHAPE AN ORACLE", "create_life", GOLD, {"kind": "oracle"}, "oracle")
-	_add_creator_button("FOUND A LANTERN-CITY", "found", MINT, {"name": "Lantern Annex"}, "settlement")
-	_add_creator_button("INVOKE LOCAL CATACLYSM", "cataclysm", ROSE, {"radius": 1}, "rift")
-	side.add_child(_creator_panel)
+	_command_panel = VBoxContainer.new()
+	_command_panel.add_theme_constant_override("separation", 6)
+	var command_heading := Label.new()
+	command_heading.text = "FIELD COMMAND AUTHORITY"
+	command_heading.add_theme_color_override("font_color", ROSE)
+	_command_panel.add_child(command_heading)
+	_add_command_button("CHANNEL +25 RESONANCE", "channel", VIOLET)
+	_add_command_button("FORTIFY THE REACH", "fortify", MINT, {"terrain": "fortifiedReach"}, "fortified_reach")
+	_add_command_button("DEPLOY AEGIS COHORT", "deploy", GOLD, {"kind": "legionary"}, "legionary")
+	_add_command_button("COMMIT BASTION · IF LOST", "deploy", GOLD, {"kind": "bastion"}, "bastion")
+	_add_command_button("ESTABLISH VIGIL ANNEX", "establish", MINT, {"name": "Vigil Annex"}, "enclave")
+	_add_command_button("AUTHORIZE MAGITECH PURGE", "purge", ROSE, {"radius": 1}, "ash_waste")
+	side.add_child(_command_panel)
 
 	var chronicle_heading := Label.new()
-	chronicle_heading.text = "WORLD CHRONICLE"
+	chronicle_heading.text = "FRONT DISPATCHES"
 	chronicle_heading.add_theme_color_override("font_color", VIOLET)
 	side.add_child(chronicle_heading)
 	_chronicle = RichTextLabel.new()
@@ -242,7 +242,7 @@ func _build_footer() -> Control:
 	hint.add_theme_color_override("font_color", MUTED)
 	row.add_child(hint)
 	_advance_button = Button.new()
-	_advance_button.text = "RESOLVE NEXT TURN  →"
+	_advance_button.text = "ADVANCE THE FRONT  →"
 	_advance_button.custom_minimum_size = Vector2(230, 44)
 	_advance_button.add_theme_font_size_override("font_size", 16)
 	_style_button(_advance_button, GOLD)
@@ -255,12 +255,12 @@ func _build_sprite_legend() -> Control:
 	var legend := HBoxContainer.new()
 	legend.add_theme_constant_override("separation", 11)
 	var entries := [
-		["starGlass", "STAR-GLASS"],
-		["ashDunes", "ASH"],
-		["aetherSea", "AETHER"],
-		["crystalForest", "CRYSTAL"],
-		["ironSteppe", "IRON"],
-		["dreamMarsh", "DREAM"],
+		["shatteredPlain", "SHATTERED"],
+		["ashWaste", "ASH"],
+		["leyChannel", "LEY"],
+		["xenoforest", "XENO"],
+		["fortifiedReach", "FORTIFIED"],
+		["broodMire", "BROOD"],
 	]
 	for entry in entries:
 		var item := HBoxContainer.new()
@@ -281,7 +281,7 @@ func _build_sprite_legend() -> Control:
 	return legend
 
 
-func _add_creator_button(label_text: String, command: String, accent: Color, extras := {}, sprite_id := "") -> void:
+func _add_command_button(label_text: String, command: String, accent: Color, extras := {}, sprite_id := "") -> void:
 	var button := Button.new()
 	button.text = label_text
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -296,7 +296,7 @@ func _add_creator_button(label_text: String, command: String, accent: Color, ext
 		payload.merge(extras)
 		_send(payload)
 	)
-	_creator_panel.add_child(button)
+	_command_panel.add_child(button)
 
 
 func _start_kernel() -> void:
@@ -321,7 +321,7 @@ func _start_kernel() -> void:
 	_pipe = process["stdio"]
 	_stderr = process["stderr"]
 	_kernel_pid = process["pid"]
-	_status.text = "KERNEL ONLINE · awaiting world state"
+	_status.text = "WAR KERNEL ONLINE · awaiting front state"
 
 
 func _drain_kernel_output() -> void:
@@ -367,8 +367,8 @@ func _new_world() -> void:
 		"width": 16,
 		"height": 12,
 		"seed": seed_value,
-		"mode": "observer" if _mode_picker.selected == 0 else "creator",
-		"name": "Automapolis",
+		"mode": "witness" if _mode_picker.selected == 0 else "command",
+		"name": "The Bastion Front",
 	})
 
 
@@ -387,11 +387,11 @@ func _render_snapshot() -> void:
 		child.queue_free()
 	_cell_buttons.clear()
 
-	var beings_by_cell := {}
-	for being in _snapshot.get("beings", []):
-		var key := "%d,%d" % [int(being.position.x), int(being.position.y)]
-		if not beings_by_cell.has(key) or _being_priority(being) > _being_priority(beings_by_cell[key]):
-			beings_by_cell[key] = being
+	var forces_by_cell := {}
+	for force in _snapshot.get("forces", []):
+		var key := "%d,%d" % [int(force.position.x), int(force.position.y)]
+		if not forces_by_cell.has(key) or _force_priority(force) > _force_priority(forces_by_cell[key]):
+			forces_by_cell[key] = force
 
 	var tiles: Array = _snapshot.get("tiles", [])
 	for index in range(mini(tiles.size(), width * height)):
@@ -400,23 +400,23 @@ func _render_snapshot() -> void:
 		var y := index / width
 		var key := "%d,%d" % [x, y]
 		var button := Button.new()
-		var being = beings_by_cell.get(key)
+		var force = forces_by_cell.get(key)
 		button.text = ""
-		button.tooltip_text = _cell_tooltip(tile, being)
+		button.tooltip_text = _cell_tooltip(tile, force)
 		button.custom_minimum_size = Vector2(36, 36)
 		button.clip_contents = true
 		button.add_theme_stylebox_override("normal", _cell_style(PANEL_RAISED, x == _selected.x and y == _selected.y))
 		button.add_theme_stylebox_override("hover", _cell_style(PANEL_RAISED.lightened(0.12), true))
 		button.add_theme_stylebox_override("pressed", _cell_style(PANEL_RAISED.darkened(0.12), true))
 		_add_sprite_layer(button, _terrain_sprite_path(str(tile.terrain)))
-		if being != null:
-			_add_sprite_layer(button, _being_sprite_path(str(being.kind)))
+		if force != null:
+			_add_sprite_layer(button, _force_sprite_path(str(force.kind)))
 		button.pressed.connect(_select_cell.bind(Vector2i(x, y)))
 		_grid.add_child(button)
 		_cell_buttons.append(button)
 
-	var mode := str(_snapshot.get("mode", "creator"))
-	_creator_panel.visible = mode == "creator"
+	var mode := str(_snapshot.get("mode", "command"))
+	_command_panel.visible = mode == "command"
 	_render_inspector()
 	_render_chronicle()
 
@@ -433,20 +433,20 @@ func _render_inspector() -> void:
 	var text := "[color=#7e6bff][font_size=12]SELECTED // %02d,%02d[/font_size][/color]\n" % [_selected.x, _selected.y]
 	text += "[img=48x48]%s[/img]  [font_size=22]%s[/font_size]\n" % [_terrain_sprite_path(str(tile.terrain)), _words(str(tile.terrain)).to_upper()]
 	text += "[color=#777f9e]%s[/color]\n" % str(tile.description)
-	var occupants := _beings_at(_selected)
+	var occupants := _forces_at(_selected)
 	if occupants.is_empty():
-		text += "\n[color=#777f9e]No named beings occupy this cell.[/color]"
+		text += "\n[color=#777f9e]No detected forces occupy this sector.[/color]"
 	else:
-		text += "\n[color=#4fe4c1]OCCUPANTS[/color]"
-		for being in occupants:
-			text += "\n[img=24x24]%s[/img]  [b]%s[/b] · %s" % [_being_sprite_path(str(being.kind)), being.name, being.intent]
+		text += "\n[color=#4fe4c1]FORCES[/color]"
+		for force in occupants:
+			text += "\n[img=24x24]%s[/img]  [b]%s[/b] · %s · STR %d" % [_force_sprite_path(str(force.kind)), force.name, force.intent, int(force.strength)]
 	_inspector.text = text
 
 
 func _render_chronicle() -> void:
 	var lines: Array = _snapshot.get("chronicle", [])
 	if lines.is_empty():
-		_chronicle.text = "[color=#777f9e]The world has not spoken yet.[/color]"
+		_chronicle.text = "[color=#777f9e]No dispatches have reached command.[/color]"
 		return
 	var text := ""
 	for index in range(lines.size()):
@@ -462,18 +462,18 @@ func _tile_at(point: Vector2i):
 	return tiles[index] if index >= 0 and index < tiles.size() else null
 
 
-func _beings_at(point: Vector2i) -> Array:
+func _forces_at(point: Vector2i) -> Array:
 	var result: Array = []
-	for being in _snapshot.get("beings", []):
-		if int(being.position.x) == point.x and int(being.position.y) == point.y:
-			result.append(being)
+	for force in _snapshot.get("forces", []):
+		if int(force.position.x) == point.x and int(force.position.y) == point.y:
+			result.append(force)
 	return result
 
 
-func _cell_tooltip(tile, being) -> String:
+func _cell_tooltip(tile, force) -> String:
 	var result := str(tile.description)
-	if being != null:
-		result += "\n%s · %s" % [being.name, being.intent]
+	if force != null:
+		result += "\n%s · %s · strength %d" % [force.name, force.intent, int(force.strength)]
 	return result
 
 
@@ -497,15 +497,15 @@ func _sprite_path(sprite_id: String) -> String:
 
 
 func _terrain_sprite_path(terrain: String) -> String:
-	return _sprite_path(TERRAIN_SPRITE_IDS.get(terrain, "star_glass"))
+	return _sprite_path(TERRAIN_SPRITE_IDS.get(terrain, "shattered_plain"))
 
 
-func _being_sprite_path(kind: String) -> String:
-	return _sprite_path(BEING_SPRITE_IDS.get(kind, "wanderer"))
+func _force_sprite_path(kind: String) -> String:
+	return _sprite_path(FORCE_SPRITE_IDS.get(kind, "legionary"))
 
 
-func _being_priority(being) -> int:
-	return {"rift": 5, "settlement": 4, "oracle": 3, "synthBeast": 2, "wanderer": 1}.get(str(being.kind), 0)
+func _force_priority(force) -> int:
+	return {"bastion": 5, "broodNode": 4, "enclave": 3, "ravener": 2, "legionary": 1}.get(str(force.kind), 0)
 
 
 func _words(camel: String) -> String:

@@ -1,15 +1,16 @@
 # Godot Shell
 
-This optional presentation layer targets Godot 4.7.2. It renders a responsive, colored glyph grid with inspection panels and Creator controls, but contains no simulation rule. There are no raster assets or binary scenes: layout, theme, and the SVG sigil are all source-reviewable.
+This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical sprite grid with sector inspection, front dispatches, and Command controls, but contains no simulation rules.
 
 The Shell starts the adjacent `KernelHost` process and exchanges one JSON object per line. It can therefore be replaced without changing the game.
 
 ## Controls
 
-- Click a cell to inspect it and target Creator instruments.
-- Press Space, Enter, or **Resolve Next Turn** to advance exactly one autonomous turn.
-- Select Observer or Creator, enter an integer seed, and click **Reforge** to start a new deterministic world.
-- Observer mode hides Creator instruments and the Kernel rejects any attempted intervention.
+- Click a sector to inspect its terrain and all forces occupying it.
+- Press Space, Enter, or **Advance the Front** to resolve exactly one autonomous turn.
+- Select Witness or Command, enter an integer seed, and click **Open Front** to start a new deterministic theater.
+- Witness mode hides field authority controls and the Kernel rejects attempted intervention.
+- Command mode can channel resonance, fortify sectors, deploy cohorts, replace a lost Bastion, establish enclaves, and authorize magitech purges.
 
 ## Platform exports
 
