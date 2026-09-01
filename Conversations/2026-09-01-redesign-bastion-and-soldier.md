@@ -71,3 +71,13 @@ Exported true-alpha square PNGs at 1024x1024, then derived exact 512x512, 256x25
 Generated a deliberately simplified Bastion and Soldier comparison sheet for use as the semantic source of future low-resolution sprites. Preserved the approved silhouettes and proportions while collapsing each design into a small set of large armor, weapon, color, and value masses. Removed most paneling, cables, pouches, surface wear, miniature lights, and other details that would not survive reduction.
 
 Saved the new reference as `docs/art/bastion-soldier-concept-simplified.png` and made it the authoritative concept reference for low-resolution sprite translation in `docs/ArtDirection.md`. The original detailed concept remains available as the high-resolution design reference.
+
+## User
+
+> okay, that looks good. now, generate pixel sprites ranging from 8x8 to 1024x1024
+
+## Assistant
+
+Generated new isolated Bastion and Soldier pixel-art masters using only the simplified concept as their design reference. Removed the generator's false checkerboard background, constrained the result to a shared twelve-color gunmetal, gold, and cyan palette, and exported true-alpha square PNGs at 8x8, 16x16, 32x32, 64x64, 128x128, 256x256, 512x512, and 1024x1024.
+
+The 8x8 assets received deliberate icon-scale reductions so their silhouettes and landmarks remain meaningful rather than becoming failed automatic downscales. Added a comparison preview, a browser-viewable catalog under `docs/art/pixel-sprites`, and a reusable sprite-ladder processing tool.
