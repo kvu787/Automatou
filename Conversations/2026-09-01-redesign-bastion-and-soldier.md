@@ -59,3 +59,15 @@ The generated 8x8 reductions were not readable enough, so those two smallest sil
 Pivoted from palette-quantized pixel art to faithful full-color concept-derived sprites. Used the approved concept as an edit target to isolate one clean Bastion master and one clean Soldier master, removed the generated checker backgrounds and edge fringe, and preserved the painted armor, fabric, weapons, lighting, cyan energy, and gold accents.
 
 Exported true-alpha square PNGs at 1024x1024, then derived exact 512x512, 256x256, and 128x128 versions from each master with high-quality full-color downscaling. Added a comparison sheet and browser catalog under `docs/art/sprite-renders`, and marked the previous pixel-art studies as superseded process history without replacing production game assets.
+
+## User
+
+> okay, i suspect the issue here is that the generation of the lower resolution pixel sprites is failing to properly "translate" the level of detail of the original concept art into low res pixel art. the higher resolution sprites handle it fine because they can use more basic downscaling approaches and get decent results, instead of attempting "semantic translation" of details and features.
+>
+> we still need lower res pixel art, so here's what we'll do. create concept art, but significantly reduce the "detail".
+
+## Assistant
+
+Generated a deliberately simplified Bastion and Soldier comparison sheet for use as the semantic source of future low-resolution sprites. Preserved the approved silhouettes and proportions while collapsing each design into a small set of large armor, weapon, color, and value masses. Removed most paneling, cables, pouches, surface wear, miniature lights, and other details that would not survive reduction.
+
+Saved the new reference as `docs/art/bastion-soldier-concept-simplified.png` and made it the authoritative concept reference for low-resolution sprite translation in `docs/ArtDirection.md`. The original detailed concept remains available as the high-resolution design reference.
