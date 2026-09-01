@@ -226,3 +226,24 @@ combined candidate passes, and then refreshes each clean workstream from the
 new stable baseline. Recommended keeping visual work out of Kernel contracts
 and gameplay work out of presentation files where practical, with cross-layer
 changes handled explicitly during integration.
+
+## User
+
+> Walk me through how I create and interact with my first Git worktree.
+
+## Assistant
+
+Provided a concrete Windows/PowerShell walkthrough for creating an
+`Automapolis-gameplay` sibling worktree on a
+`codex/gameplay-cycle-001` branch based on committed `main`. Covered preflight
+inspection, `git worktree add`, verifying the linked checkout, opening the
+directory in a separate editor or Codex task, editing and committing with its
+independent index, and comparing the branch against `main` from either
+worktree.
+
+Extended the walkthrough through the proposed synchronization-fence model:
+create a temporary integration worktree, merge the accepted gameplay branch,
+run the full verification and playtest there, then fast-forward stable `main`
+only after acceptance. Covered safe worktree removal and branch cleanup, and
+emphasized that current uncommitted changes in the primary worktree do not
+appear in a new worktree.
