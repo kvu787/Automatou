@@ -2,27 +2,27 @@ namespace Automapolis.Kernel;
 
 public enum PlayerMode
 {
-    Observer,
-    Creator
+    Witness,
+    Command
 }
 
 public enum TerrainKind
 {
-    StarGlass,
-    AshDunes,
-    AetherSea,
-    CrystalForest,
-    IronSteppe,
-    DreamMarsh
+    ShatteredPlain,
+    AshWaste,
+    LeyChannel,
+    Xenoforest,
+    FortifiedReach,
+    BroodMire
 }
 
-public enum BeingKind
+public enum ForceKind
 {
-    Wanderer,
-    SynthBeast,
-    Oracle,
-    Settlement,
-    Rift
+    Bastion,
+    Legionary,
+    Ravener,
+    BroodNode,
+    Enclave
 }
 
 public readonly record struct GridPoint(int X, int Y)
@@ -34,8 +34,8 @@ public sealed record WorldConfig(
     int Width = 16,
     int Height = 12,
     long Seed = 475_023,
-    PlayerMode Mode = PlayerMode.Creator,
-    string Name = "Automapolis")
+    PlayerMode Mode = PlayerMode.Command,
+    string Name = "The Bastion Front")
 {
     public WorldConfig Validate()
     {
@@ -61,30 +61,32 @@ public sealed record WorldConfig(
 public sealed record TileSnapshot(
     GridPoint Position,
     TerrainKind Terrain,
-    int Aether,
-    int Vitality,
-    int Stability,
+    int Resonance,
+    int Biomass,
+    int Integrity,
     string Glyph,
     string Description);
 
-public sealed record BeingSnapshot(
+public sealed record ForceSnapshot(
     int Id,
     GridPoint Position,
-    BeingKind Kind,
+    ForceKind Kind,
     string Name,
     string Glyph,
-    int Energy,
+    int Strength,
     int Population,
-    int Age,
+    int ServiceTurns,
     string Intent);
 
 public sealed record WorldMetrics(
-    int TotalAether,
-    int TotalVitality,
-    int Population,
-    int Beings,
-    int Settlements,
-    int WorldStability);
+    int TotalResonance,
+    int TotalBiomass,
+    int HumanPopulation,
+    int HumanForces,
+    int AlienForces,
+    int Bastions,
+    int Enclaves,
+    int TheaterIntegrity);
 
 public sealed record WorldSnapshot(
     string Name,
@@ -94,7 +96,7 @@ public sealed record WorldSnapshot(
     int Height,
     int Turn,
     IReadOnlyList<TileSnapshot> Tiles,
-    IReadOnlyList<BeingSnapshot> Beings,
+    IReadOnlyList<ForceSnapshot> Forces,
     WorldMetrics Metrics,
     IReadOnlyList<string> Chronicle);
 

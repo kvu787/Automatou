@@ -9,7 +9,7 @@ var jsonOptions = new JsonSerializerOptions
 };
 
 var kernel = new WorldKernel(new WorldConfig());
-WriteResponse(true, "ready", "Kernel ready.", kernel.Snapshot());
+WriteResponse(true, "ready", "Bastion Front Kernel ready.", kernel.Snapshot());
 
 string? line;
 while ((line = Console.ReadLine()) is not null)
@@ -22,18 +22,18 @@ while ((line = Console.ReadLine()) is not null)
 
         if (commandName is "new")
         {
-            var modeText = OptionalString(root, "mode", "creator");
-            var mode = modeText.Equals("observer", StringComparison.OrdinalIgnoreCase)
-                ? PlayerMode.Observer
-                : PlayerMode.Creator;
+            var modeText = OptionalString(root, "mode", "command");
+            var mode = modeText.Equals("witness", StringComparison.OrdinalIgnoreCase)
+                ? PlayerMode.Witness
+                : PlayerMode.Command;
             var config = new WorldConfig(
                 OptionalInt(root, "width", 16),
                 OptionalInt(root, "height", 12),
                 OptionalLong(root, "seed", 475_023),
                 mode,
-                OptionalString(root, "name", "Automapolis"));
+                OptionalString(root, "name", "The Bastion Front"));
             kernel = new WorldKernel(config);
-            WriteResponse(true, "new", $"Created {config.Name}.", kernel.Snapshot());
+            WriteResponse(true, "new", $"Opened {config.Name}.", kernel.Snapshot());
             continue;
         }
 
@@ -52,11 +52,11 @@ return;
 WorldCommand ParseCommand(string commandName, JsonElement root) => commandName switch
 {
     "advance" => new AdvanceTurn(),
-    "infuse" => new InfuseAether(Point(root), OptionalInt(root, "amount", 25)),
-    "transmute" => new TransmuteTerrain(Point(root), RequiredEnum<TerrainKind>(root, "terrain")),
-    "create_life" => new CreateLife(Point(root), OptionalEnum(root, "kind", BeingKind.Wanderer)),
-    "found" => new FoundSettlement(Point(root), RequiredString(root, "name")),
-    "cataclysm" => new InvokeCataclysm(Point(root), OptionalInt(root, "radius", 1)),
+    "channel" => new ChannelResonance(Point(root), OptionalInt(root, "amount", 25)),
+    "fortify" => new FortifyTerrain(Point(root), RequiredEnum<TerrainKind>(root, "terrain")),
+    "deploy" => new DeployForce(Point(root), OptionalEnum(root, "kind", ForceKind.Legionary)),
+    "establish" => new EstablishEnclave(Point(root), RequiredString(root, "name")),
+    "purge" => new InvokePurge(Point(root), OptionalInt(root, "radius", 1)),
     _ => throw new ArgumentException($"Unknown command '{commandName}'.")
 };
 

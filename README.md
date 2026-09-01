@@ -1,10 +1,12 @@
 # Automapolis
 
-A deterministic, turn-based sci-fi fantasy world simulation. Watch a text-authored world evolve one deliberate turn at a time, or enter Creator mode and reshape its terrain, life, cities, and reality itself.
+Automapolis is a deterministic, turn-based science-fantasy war simulation about humanity's fight against an alien bioswarm. Humanity answers overwhelming biological adaptation with advanced magitech, fortified enclaves, ordinary legionaries, and the rare **Bastion**: a single super-soldier capable of changing an entire front.
 
-The game is split strictly into a mandatory [.NET Kernel](src/Automapolis.Kernel) and optional [Shells](Shells). The included Shell is built with Godot 4.7.2. See [the architecture](docs/Architecture.md) for the boundary and protocol.
+Each generated theater begins in crisis with one Bastion, one human enclave, supporting cohorts, and a spreading alien ecology. In Witness mode the war resolves autonomously one deliberate turn at a time. In Command mode the player can channel resonance, fortify terrain, deploy human forces, establish enclaves, and authorize destructive purges.
 
-The Godot Shell represents every terrain, being, building, and effect with a deterministic 16×16 tactical pixel-art sprite. The palette-indexed source, compiler, generated PNGs, and browser-viewable catalog live in [`Shells/Godot/assets/sprites`](Shells/Godot/assets/sprites). See the [art direction](docs/ArtDirection.md) for the palette and visual grammar.
+The game is split strictly into a mandatory [.NET Kernel](src/Automapolis.Kernel) and optional [Shells](Shells). The included Shell is built with Godot 4.7.2. See [the architecture](docs/Architecture.md), [world foundation](docs/World.md), and [art direction](docs/ArtDirection.md).
+
+Every terrain and force has a deterministic 16x16 tactical pixel-art sprite. The palette-indexed source, compiler, generated PNGs, and browser-viewable catalog live in [`Shells/Godot/assets/sprites`](Shells/Godot/assets/sprites).
 
 ## Play
 

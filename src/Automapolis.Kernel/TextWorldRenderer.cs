@@ -10,8 +10,8 @@ public static class TextWorldRenderer
     public static string Render(WorldSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
-        var beingsByPosition = snapshot.Beings
-            .GroupBy(static being => being.Position)
+        var forcesByPosition = snapshot.Forces
+            .GroupBy(static force => force.Position)
             .ToDictionary(static group => group.Key, static group => group.OrderByDescending(Priority).First());
         var tilesByPosition = snapshot.Tiles.ToDictionary(static tile => tile.Position);
         var builder = new StringBuilder();
@@ -24,7 +24,7 @@ public static class TextWorldRenderer
             for (var x = 0; x < snapshot.Width; x++)
             {
                 var point = new GridPoint(x, y);
-                var glyph = beingsByPosition.TryGetValue(point, out var being) ? being.Glyph : tilesByPosition[point].Glyph;
+                var glyph = forcesByPosition.TryGetValue(point, out var force) ? force.Glyph : tilesByPosition[point].Glyph;
                 builder.Append(glyph).Append(' ');
             }
 
@@ -32,7 +32,7 @@ public static class TextWorldRenderer
         }
 
         builder.Append('└').Append(new string('─', snapshot.Width * 2)).AppendLine("┘");
-        builder.AppendLine($"POP {snapshot.Metrics.Population}  BEINGS {snapshot.Metrics.Beings}  AETHER {snapshot.Metrics.TotalAether}  STABILITY {snapshot.Metrics.WorldStability}%");
+        builder.AppendLine($"HUMAN {snapshot.Metrics.HumanForces}  ALIEN {snapshot.Metrics.AlienForces}  POP {snapshot.Metrics.HumanPopulation}  RESONANCE {snapshot.Metrics.TotalResonance}  INTEGRITY {snapshot.Metrics.TheaterIntegrity}%");
         if (snapshot.Chronicle.Count > 0)
         {
             builder.AppendLine(snapshot.Chronicle[0]);
@@ -41,12 +41,12 @@ public static class TextWorldRenderer
         return builder.ToString();
     }
 
-    private static int Priority(BeingSnapshot being) => being.Kind switch
+    private static int Priority(ForceSnapshot force) => force.Kind switch
     {
-        BeingKind.Rift => 5,
-        BeingKind.Settlement => 4,
-        BeingKind.Oracle => 3,
-        BeingKind.SynthBeast => 2,
+        ForceKind.Bastion => 5,
+        ForceKind.BroodNode => 4,
+        ForceKind.Enclave => 3,
+        ForceKind.Ravener => 2,
         _ => 1
     };
 }

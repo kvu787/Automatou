@@ -7,17 +7,18 @@ namespace Automapolis.Kernel;
 public sealed class WorldKernel
 {
     private const int ChronicleLimit = 14;
+    private const int ForceLimit = 96;
     private readonly WorldConfig _config;
     private readonly TileState[,] _tiles;
-    private readonly List<BeingState> _beings = [];
+    private readonly List<ForceState> _forces = [];
     private readonly List<string> _chronicle = [];
-    private int _nextBeingId = 1;
+    private int _nextForceId = 1;
 
     public WorldKernel(WorldConfig config)
     {
         _config = config.Validate();
         _tiles = new TileState[_config.Width, _config.Height];
-        GenerateWorld();
+        GenerateTheater();
     }
 
     public int Turn { get; private set; }
@@ -26,19 +27,19 @@ public sealed class WorldKernel
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (_config.Mode is PlayerMode.Observer && command is not AdvanceTurn)
+        if (_config.Mode is PlayerMode.Witness && command is not AdvanceTurn)
         {
-            return new(false, "Observer mode accepts only AdvanceTurn; the world authors itself.", Snapshot());
+            return new(false, "Witness mode accepts only AdvanceTurn; field command is sealed.", Snapshot());
         }
 
         var message = command switch
         {
             AdvanceTurn => SimulateTurn(),
-            InfuseAether action => Infuse(action),
-            TransmuteTerrain action => Transmute(action),
-            CreateLife action => Create(action),
-            FoundSettlement action => Found(action),
-            InvokeCataclysm action => Cataclysm(action),
+            ChannelResonance action => Channel(action),
+            FortifyTerrain action => Fortify(action),
+            DeployForce action => Deploy(action),
+            EstablishEnclave action => Establish(action),
+            InvokePurge action => Purge(action),
             _ => throw new ArgumentOutOfRangeException(nameof(command), command, "Unknown world command.")
         };
 
@@ -56,36 +57,42 @@ public sealed class WorldKernel
                 tiles.Add(new(
                     tile.Position,
                     tile.Terrain,
-                    tile.Aether,
-                    tile.Vitality,
-                    tile.Stability,
+                    tile.Resonance,
+                    tile.Biomass,
+                    tile.Integrity,
                     TerrainGlyph(tile.Terrain),
-                    $"{TerrainName(tile.Terrain)} · aether {tile.Aether} · vitality {tile.Vitality} · stability {tile.Stability}"));
+                    $"{TerrainName(tile.Terrain)} · resonance {tile.Resonance} · biomass {tile.Biomass} · integrity {tile.Integrity}"));
             }
         }
 
-        var beings = _beings
-            .OrderBy(static being => being.Id)
-            .Select(static being => new BeingSnapshot(
-                being.Id,
-                being.Position,
-                being.Kind,
-                being.Name,
-                BeingGlyph(being.Kind),
-                being.Energy,
-                being.Population,
-                being.Age,
-                being.Intent))
+        var forces = _forces
+            .OrderBy(static force => force.Id)
+            .Select(static force => new ForceSnapshot(
+                force.Id,
+                force.Position,
+                force.Kind,
+                force.Name,
+                ForceGlyph(force.Kind),
+                force.Strength,
+                force.Population,
+                force.ServiceTurns,
+                force.Intent))
             .ToArray();
 
-        var population = _beings.Sum(static being => being.Kind is BeingKind.Settlement ? being.Population : 1);
+        var humanForces = _forces.Count(IsHuman);
+        var alienForces = _forces.Count(IsAlien);
+        var population = _forces
+            .Where(static force => force.Kind is ForceKind.Enclave)
+            .Sum(static force => force.Population);
         var metrics = new WorldMetrics(
-            tiles.Sum(static tile => tile.Aether),
-            tiles.Sum(static tile => tile.Vitality),
+            tiles.Sum(static tile => tile.Resonance),
+            tiles.Sum(static tile => tile.Biomass),
             population,
-            _beings.Count,
-            _beings.Count(static being => being.Kind is BeingKind.Settlement),
-            (int)Math.Round(tiles.Average(static tile => tile.Stability)));
+            humanForces,
+            alienForces,
+            _forces.Count(static force => force.Kind is ForceKind.Bastion),
+            _forces.Count(static force => force.Kind is ForceKind.Enclave),
+            (int)Math.Round(tiles.Average(static tile => tile.Integrity)));
 
         return new(
             _config.Name,
@@ -95,12 +102,12 @@ public sealed class WorldKernel
             _config.Height,
             Turn,
             tiles,
-            beings,
+            forces,
             metrics,
             _chronicle.ToArray());
     }
 
-    private void GenerateWorld()
+    private void GenerateTheater()
     {
         for (var y = 0; y < _config.Height; y++)
         {
@@ -109,56 +116,67 @@ public sealed class WorldKernel
                 var terrainRoll = DeterministicNoise.Range(_config.Seed, 0, x / 2, y / 2, 1, 100);
                 var terrain = terrainRoll switch
                 {
-                    < 18 => TerrainKind.AetherSea,
-                    < 34 => TerrainKind.AshDunes,
-                    < 51 => TerrainKind.IronSteppe,
-                    < 68 => TerrainKind.StarGlass,
-                    < 84 => TerrainKind.DreamMarsh,
-                    _ => TerrainKind.CrystalForest
+                    < 18 => TerrainKind.LeyChannel,
+                    < 34 => TerrainKind.AshWaste,
+                    < 51 => TerrainKind.FortifiedReach,
+                    < 68 => TerrainKind.ShatteredPlain,
+                    < 84 => TerrainKind.BroodMire,
+                    _ => TerrainKind.Xenoforest
                 };
 
                 _tiles[x, y] = new TileState
                 {
                     Position = new(x, y),
                     Terrain = terrain,
-                    Aether = BaseAether(terrain) + DeterministicNoise.Range(_config.Seed, 0, x, y, 2, 20),
-                    Vitality = BaseVitality(terrain) + DeterministicNoise.Range(_config.Seed, 0, x, y, 3, 18),
-                    Stability = 58 + DeterministicNoise.Range(_config.Seed, 0, x, y, 4, 40)
+                    Resonance = BaseResonance(terrain) + DeterministicNoise.Range(_config.Seed, 0, x, y, 2, 20),
+                    Biomass = BaseBiomass(terrain) + DeterministicNoise.Range(_config.Seed, 0, x, y, 3, 18),
+                    Integrity = BaseIntegrity(terrain) + DeterministicNoise.Range(_config.Seed, 0, x, y, 4, 24)
                 };
             }
         }
 
-        var initialBeings = Math.Clamp((_config.Width * _config.Height) / 35, 4, 18);
-        for (var index = 0; index < initialBeings; index++)
+        var alienSeeds = Math.Clamp((_config.Width * _config.Height) / 30, 5, 22);
+        for (var index = 0; index < alienSeeds; index++)
         {
-            var x = DeterministicNoise.Range(_config.Seed, 0, index, 0, 10, _config.Width);
-            var y = DeterministicNoise.Range(_config.Seed, 0, index, 0, 11, _config.Height);
-            var kind = index % 6 is 0 ? BeingKind.Oracle : index % 3 is 0 ? BeingKind.SynthBeast : BeingKind.Wanderer;
-            AddBeing(new(x, y), kind, GeneratedName(kind, index), 55 + index % 20);
+            var position = new GridPoint(
+                DeterministicNoise.Range(_config.Seed, 0, index, 0, 10, _config.Width),
+                DeterministicNoise.Range(_config.Seed, 0, index, 0, 11, _config.Height));
+            var kind = index % 4 is 0 ? ForceKind.BroodNode : ForceKind.Ravener;
+            AddForce(position, kind, GeneratedName(kind, index), 52 + index % 18);
         }
 
-        var capitalPosition = FindMostVitalTile();
-        AddSettlement(capitalPosition, "First Lantern", 24);
-        Record($"TURN 000 · {_config.Name} wakes beneath a fractured violet sun.");
+        var enclavePosition = FindHumanLanding();
+        AddEnclave(enclavePosition, "Vigil Enclave", 42);
+        foreach (var position in OrthogonalNeighbors(enclavePosition).Take(2))
+        {
+            AddForce(position, ForceKind.Legionary, GeneratedName(ForceKind.Legionary, _nextForceId), 62);
+        }
+
+        var bastion = AddForce(enclavePosition, ForceKind.Bastion, "Bastion Zero", 100);
+        bastion.Intent = "Standing between the enclave and extinction";
+        Record($"TURN 000 · CONTACT: {_config.Name} is overrun. One Bastion answers humanity's distress call.");
     }
 
     private string SimulateTurn()
     {
         Turn++;
-        EvolveTerrain();
-        ActBeings();
-        ResolveRifts();
-        SeedSpontaneousLife();
+        EvolveFront();
+        ActEnclaves();
+        MoveHumanForces();
+        MoveAlienForces();
+        ResolveEngagements();
+        SpawnBroodForces();
+        RemoveDestroyedForces();
 
         var summary = BuildTurnSummary();
         Record(summary);
-        return $"Turn {Turn} resolved autonomously.";
+        return $"Turn {Turn} resolved: the front moved.";
     }
 
-    private void EvolveTerrain()
+    private void EvolveFront()
     {
-        var nextAether = new int[_config.Width, _config.Height];
-        var nextVitality = new int[_config.Width, _config.Height];
+        var nextResonance = new int[_config.Width, _config.Height];
+        var nextBiomass = new int[_config.Width, _config.Height];
 
         for (var y = 0; y < _config.Height; y++)
         {
@@ -166,18 +184,23 @@ public sealed class WorldKernel
             {
                 var tile = _tiles[x, y];
                 var neighbors = OrthogonalNeighbors(tile.Position).Select(GetTile).ToArray();
-                var neighborAether = (int)neighbors.Average(static value => value.Aether);
+                var neighborResonance = (int)neighbors.Average(static value => value.Resonance);
+                var neighborBiomass = (int)neighbors.Average(static value => value.Biomass);
                 var pulse = DeterministicNoise.Range(_config.Seed, Turn, x, y, 20, 7) - 3;
-                var terrainGrowth = tile.Terrain switch
+                var biomassGrowth = tile.Terrain switch
                 {
-                    TerrainKind.CrystalForest => 3,
-                    TerrainKind.DreamMarsh => 2,
-                    TerrainKind.AshDunes => -2,
+                    TerrainKind.BroodMire => 4,
+                    TerrainKind.Xenoforest => 3,
+                    TerrainKind.AshWaste => -2,
+                    TerrainKind.FortifiedReach => -1,
                     _ => 0
                 };
 
-                nextAether[x, y] = Math.Clamp(tile.Aether + (neighborAether - tile.Aether) / 6 + pulse, 0, 100);
-                nextVitality[x, y] = Math.Clamp(tile.Vitality + terrainGrowth + tile.Aether / 35 - 1, 0, 100);
+                nextResonance[x, y] = Math.Clamp(
+                    tile.Resonance + (neighborResonance - tile.Resonance) / 7 + pulse +
+                    (tile.Terrain is TerrainKind.LeyChannel ? 2 : 0), 0, 100);
+                nextBiomass[x, y] = Math.Clamp(
+                    tile.Biomass + (neighborBiomass - tile.Biomass) / 8 + biomassGrowth, 0, 100);
             }
         }
 
@@ -186,218 +209,301 @@ public sealed class WorldKernel
             for (var x = 0; x < _config.Width; x++)
             {
                 var tile = _tiles[x, y];
-                tile.Aether = nextAether[x, y];
-                tile.Vitality = nextVitality[x, y];
-                tile.Stability = Math.Clamp(tile.Stability + (tile.Aether is > 80 ? -2 : 1), 0, 100);
+                tile.Resonance = nextResonance[x, y];
+                tile.Biomass = nextBiomass[x, y];
+                var humanPresence = _forces.Any(force => force.Position == tile.Position && IsHuman(force));
+                var alienPresence = _forces.Any(force => force.Position == tile.Position && IsAlien(force));
+                tile.Integrity = Math.Clamp(
+                    tile.Integrity + (humanPresence ? 2 : 0) - (alienPresence ? 3 : 0) - tile.Biomass / 45,
+                    0, 100);
 
-                if (tile.Vitality > 82 && tile.Terrain is TerrainKind.AshDunes or TerrainKind.IronSteppe)
+                if (tile.Biomass > 82)
                 {
-                    tile.Terrain = TerrainKind.CrystalForest;
+                    tile.Terrain = TerrainKind.BroodMire;
                 }
-                else if (tile.Stability < 18 && tile.Terrain is not TerrainKind.AetherSea)
+                else if (tile.Biomass > 66 && tile.Terrain is TerrainKind.ShatteredPlain or TerrainKind.FortifiedReach)
                 {
-                    tile.Terrain = TerrainKind.StarGlass;
+                    tile.Terrain = TerrainKind.Xenoforest;
+                }
+                else if (tile.Biomass < 18 && tile.Terrain is TerrainKind.Xenoforest or TerrainKind.BroodMire)
+                {
+                    tile.Terrain = TerrainKind.ShatteredPlain;
                 }
             }
         }
     }
 
-    private void ActBeings()
+    private void ActEnclaves()
     {
-        var newborns = new List<(GridPoint Position, BeingKind Kind, string Name, int Energy)>();
-
-        foreach (var being in _beings.OrderBy(static value => value.Id).ToArray())
+        var reinforcements = new List<GridPoint>();
+        foreach (var enclave in _forces.Where(static force => force.Kind is ForceKind.Enclave).OrderBy(static force => force.Id))
         {
-            being.Age++;
-            var tile = GetTile(being.Position);
+            enclave.ServiceTurns++;
+            var tile = GetTile(enclave.Position);
+            var threatened = _forces.Any(force => IsAlien(force) && Manhattan(force.Position, enclave.Position) <= 2);
+            var growth = tile.Integrity / 30 + tile.Resonance / 35 - tile.Biomass / 24 - (threatened ? 2 : 0);
+            enclave.Population = Math.Max(0, enclave.Population + growth);
+            enclave.Strength = Math.Clamp(enclave.Strength + tile.Resonance / 22 - (threatened ? 3 : 1), 0, 100);
+            enclave.Intent = threatened ? "Holding shelters against the swarm" : "Forging magitech arms for the front";
+            tile.Resonance = Math.Max(0, tile.Resonance - 2);
+            tile.Biomass = Math.Max(0, tile.Biomass - 1);
 
-            switch (being.Kind)
+            if (enclave.Population >= 58 && enclave.ServiceTurns % 7 is 0 && _forces.Count + reinforcements.Count < ForceLimit)
             {
-                case BeingKind.Settlement:
-                    var growth = tile.Vitality / 24 + tile.Aether / 40 - 2;
-                    being.Population = Math.Max(1, being.Population + growth);
-                    being.Energy = Math.Clamp(being.Energy + tile.Aether / 18 - 2, 0, 100);
-                    being.Intent = growth >= 0 ? "Cultivating a luminous district" : "Enduring a lean cycle";
-                    tile.Vitality = Math.Max(0, tile.Vitality - Math.Max(1, being.Population / 35));
-                    if (being.Population > 55 && being.Age % 9 is 0 && _beings.Count + newborns.Count < 80)
-                    {
-                        var destination = BestNeighbor(being, preferVitality: true);
-                        newborns.Add((destination, BeingKind.Wanderer, $"Pilgrim {being.Id}-{being.Age}", 48));
-                        being.Population -= 8;
-                    }
-
-                    break;
-
-                case BeingKind.Rift:
-                    being.Energy = Math.Max(0, being.Energy - 3);
-                    being.Intent = "Distorting adjacent reality";
-                    foreach (var point in OrthogonalNeighbors(being.Position).Append(being.Position))
-                    {
-                        var affected = GetTile(point);
-                        affected.Stability = Math.Max(0, affected.Stability - 4);
-                        affected.Aether = Math.Min(100, affected.Aether + 3);
-                    }
-
-                    break;
-
-                default:
-                    being.Position = BestNeighbor(being, preferVitality: being.Kind is not BeingKind.Oracle);
-                    tile = GetTile(being.Position);
-                    var harvest = Math.Min(tile.Aether, being.Kind is BeingKind.Oracle ? 3 : 6);
-                    tile.Aether -= harvest;
-                    being.Energy = Math.Clamp(being.Energy + harvest - 4, 0, 100);
-                    being.Intent = being.Kind switch
-                    {
-                        BeingKind.Oracle => "Reading tomorrow's ruins",
-                        BeingKind.SynthBeast => "Grazing on ferrous spores",
-                        _ => "Following aether currents"
-                    };
-
-                    if (being.Energy > 82 && being.Age % 7 is 0 && _beings.Count + newborns.Count < 80)
-                    {
-                        newborns.Add((being.Position, being.Kind, GeneratedName(being.Kind, being.Id + Turn), 42));
-                        being.Energy -= 24;
-                    }
-
-                    break;
+                reinforcements.Add(BestAdjacent(enclave.Position, static tile => tile.Integrity + tile.Resonance - tile.Biomass));
+                enclave.Population -= 8;
             }
         }
 
-        _beings.RemoveAll(static being => being.Energy <= 0 && being.Kind is not BeingKind.Settlement);
-        foreach (var newborn in newborns)
+        foreach (var position in reinforcements)
         {
-            AddBeing(newborn.Position, newborn.Kind, newborn.Name, newborn.Energy);
+            AddForce(position, ForceKind.Legionary, GeneratedName(ForceKind.Legionary, _nextForceId + Turn), 58);
         }
     }
 
-    private void ResolveRifts()
+    private void MoveHumanForces()
     {
-        var collapsed = _beings
-            .Where(static being => being.Kind is BeingKind.Rift && being.Energy <= 0)
+        foreach (var force in _forces.Where(force => force.Kind is ForceKind.Bastion or ForceKind.Legionary).OrderBy(static force => force.Id))
+        {
+            force.ServiceTurns++;
+            var target = NearestEnemy(force.Position, IsAlien);
+            if (target is not null)
+            {
+                force.Position = StepToward(force, target.Position);
+                force.Intent = force.Kind is ForceKind.Bastion
+                    ? $"Hunting {target.Name}"
+                    : $"Advancing in Bastion Zero's wake";
+            }
+            else
+            {
+                force.Intent = "Sweeping for alien spoor";
+            }
+
+            var tile = GetTile(force.Position);
+            var recovery = force.Kind is ForceKind.Bastion ? tile.Resonance / 12 : tile.Resonance / 25;
+            force.Strength = Math.Clamp(force.Strength + recovery - 1, 0, force.Kind is ForceKind.Bastion ? 100 : 75);
+            tile.Biomass = Math.Max(0, tile.Biomass - (force.Kind is ForceKind.Bastion ? 5 : 2));
+        }
+    }
+
+    private void MoveAlienForces()
+    {
+        foreach (var force in _forces.Where(static force => force.Kind is ForceKind.Ravener or ForceKind.BroodNode).OrderBy(static force => force.Id))
+        {
+            force.ServiceTurns++;
+            var tile = GetTile(force.Position);
+            if (force.Kind is ForceKind.BroodNode)
+            {
+                force.Intent = "Seeding a planetary nervous system";
+                force.Strength = Math.Clamp(force.Strength + tile.Biomass / 18 - 2, 0, 90);
+                tile.Biomass = Math.Min(100, tile.Biomass + 5);
+                tile.Integrity = Math.Max(0, tile.Integrity - 4);
+                continue;
+            }
+
+            var target = NearestEnemy(force.Position, IsHuman);
+            if (target is not null)
+            {
+                force.Position = StepToward(force, target.Position);
+                force.Intent = $"Closing on {target.Name}";
+            }
+            else
+            {
+                force.Intent = "Following human heat through the ruins";
+            }
+
+            tile = GetTile(force.Position);
+            var feeding = Math.Min(tile.Biomass, 6);
+            tile.Biomass -= feeding;
+            force.Strength = Math.Clamp(force.Strength + feeding - 3, 0, 80);
+        }
+    }
+
+    private void ResolveEngagements()
+    {
+        var contested = _forces
+            .GroupBy(static force => force.Position)
+            .Where(group => group.Any(IsHuman) && group.Any(IsAlien))
+            .OrderBy(static group => group.Key.Y)
+            .ThenBy(static group => group.Key.X)
             .ToArray();
 
-        foreach (var rift in collapsed)
+        foreach (var engagement in contested)
         {
-            GetTile(rift.Position).Stability = Math.Min(100, GetTile(rift.Position).Stability + 35);
-            _beings.Remove(rift);
-        }
-
-        if (Turn % 11 is 0)
-        {
-            var unstable = EnumerateTiles().OrderBy(static tile => tile.Stability).First();
-            if (unstable.Stability < 28 && !_beings.Any(being => being.Kind is BeingKind.Rift && being.Position == unstable.Position))
+            var humans = engagement.Where(IsHuman).OrderBy(HumanCasualtyPriority).ThenBy(static force => force.Id).ToArray();
+            var aliens = engagement.Where(IsAlien).OrderBy(static force => force.Kind is ForceKind.BroodNode ? 1 : 0).ThenBy(static force => force.Id).ToArray();
+            var humanAttack = humans.Sum(static force => force.Kind switch
             {
-                AddBeing(unstable.Position, BeingKind.Rift, $"Rift {Turn}", 28);
-                Record($"TURN {Turn:000} · A singing rift opens at {unstable.Position}.");
+                ForceKind.Bastion => 48,
+                ForceKind.Legionary => 17,
+                ForceKind.Enclave => 7,
+                _ => 0
+            });
+            var alienAttack = aliens.Sum(static force => force.Kind is ForceKind.Ravener ? 15 : 9);
+
+            DealDamage(aliens, humanAttack);
+            DealDamage(humans, alienAttack);
+
+            foreach (var enclave in humans.Where(static force => force.Kind is ForceKind.Enclave && force.Strength > 0))
+            {
+                enclave.Population = Math.Max(0, enclave.Population - Math.Max(1, alienAttack / 9));
+            }
+
+            var tile = GetTile(engagement.Key);
+            tile.Biomass = Math.Max(0, tile.Biomass - humanAttack / 6);
+            tile.Integrity = Math.Max(0, tile.Integrity - alienAttack / 5);
+            var bastionPresent = humans.Any(static force => force.Kind is ForceKind.Bastion && force.Strength > 0);
+            Record($"TURN {Turn:000} · ENGAGEMENT {engagement.Key}: {(bastionPresent ? "the Bastion breaks the swarm" : "human lines meet the swarm")}; {aliens.Count(force => force.Strength <= 0)} alien and {humans.Count(force => force.Strength <= 0)} human formations lost.");
+        }
+    }
+
+    private void SpawnBroodForces()
+    {
+        var hatchlings = new List<GridPoint>();
+        foreach (var node in _forces.Where(static force => force.Kind is ForceKind.BroodNode && force.Strength > 0))
+        {
+            if (node.ServiceTurns % 6 is 0 && GetTile(node.Position).Biomass >= 55 && _forces.Count + hatchlings.Count < ForceLimit)
+            {
+                hatchlings.Add(BestAdjacent(node.Position, static tile => tile.Biomass - tile.Integrity));
             }
         }
-    }
 
-    private void SeedSpontaneousLife()
-    {
-        if (Turn % 5 is not 0 || _beings.Count >= 80)
+        foreach (var position in hatchlings)
         {
-            return;
+            AddForce(position, ForceKind.Ravener, GeneratedName(ForceKind.Ravener, _nextForceId + Turn), 48);
         }
 
-        var fertile = EnumerateTiles()
-            .Where(static tile => tile.Vitality >= 75)
-            .OrderByDescending(static tile => tile.Vitality + tile.Aether)
-            .ThenBy(static tile => tile.Position.Y)
-            .ThenBy(static tile => tile.Position.X)
-            .FirstOrDefault();
-
-        if (fertile is not null)
+        if (Turn % 9 is 0 && _forces.Count + hatchlings.Count < ForceLimit)
         {
-            AddBeing(fertile.Position, BeingKind.SynthBeast, GeneratedName(BeingKind.SynthBeast, Turn), 52);
+            var infested = EnumerateTiles()
+                .Where(tile => !_forces.Any(force => force.Kind is ForceKind.BroodNode && force.Position == tile.Position))
+                .OrderByDescending(static tile => tile.Biomass - tile.Integrity)
+                .ThenBy(static tile => tile.Position.Y)
+                .ThenBy(static tile => tile.Position.X)
+                .First();
+            AddForce(infested.Position, ForceKind.BroodNode, GeneratedName(ForceKind.BroodNode, Turn), 55);
+            Record($"TURN {Turn:000} · INCURSION: a brood node roots itself at {infested.Position}.");
         }
     }
 
-    private string Infuse(InfuseAether action)
+    private string Channel(ChannelResonance action)
     {
         var tile = RequireTile(action.Position);
         var amount = Math.Clamp(action.Amount, 1, 100);
-        tile.Aether = Math.Clamp(tile.Aether + amount, 0, 100);
-        tile.Stability = Math.Max(0, tile.Stability - amount / 8);
-        var message = $"The Creator infused {action.Position} with {amount} aether.";
+        tile.Resonance = Math.Clamp(tile.Resonance + amount, 0, 100);
+        tile.Integrity = Math.Clamp(tile.Integrity + amount / 5, 0, 100);
+        tile.Biomass = Math.Max(0, tile.Biomass - amount / 8);
+        var message = $"Command channeled {amount} resonance into {action.Position}.";
         Record($"TURN {Turn:000} · {message}");
         return message;
     }
 
-    private string Transmute(TransmuteTerrain action)
+    private string Fortify(FortifyTerrain action)
     {
         var tile = RequireTile(action.Position);
         var former = tile.Terrain;
         tile.Terrain = action.Terrain;
-        tile.Vitality = Math.Clamp((tile.Vitality + BaseVitality(action.Terrain)) / 2, 0, 100);
-        var message = $"The Creator transmuted {TerrainName(former)} at {action.Position} into {TerrainName(action.Terrain)}.";
+        tile.Integrity = Math.Clamp((tile.Integrity + BaseIntegrity(action.Terrain)) / 2, 0, 100);
+        tile.Biomass = Math.Clamp((tile.Biomass + BaseBiomass(action.Terrain)) / 2, 0, 100);
+        var message = $"Command converted {TerrainName(former)} at {action.Position} into {TerrainName(action.Terrain)}.";
         Record($"TURN {Turn:000} · {message}");
         return message;
     }
 
-    private string Create(CreateLife action)
+    private string Deploy(DeployForce action)
     {
         RequireTile(action.Position);
-        if (action.Kind is BeingKind.Settlement or BeingKind.Rift)
+        if (action.Kind is not (ForceKind.Bastion or ForceKind.Legionary))
         {
-            throw new InvalidOperationException("Use the dedicated settlement or cataclysm command for that being kind.");
+            throw new InvalidOperationException("Command may deploy only human field forces.");
         }
 
-        var being = AddBeing(action.Position, action.Kind, GeneratedName(action.Kind, _nextBeingId + Turn), 65);
-        var message = $"The Creator shaped {being.Name} at {action.Position}.";
+        if (action.Kind is ForceKind.Bastion && _forces.Any(static force => force.Kind is ForceKind.Bastion && force.Strength > 0))
+        {
+            throw new InvalidOperationException("A living Bastion is already committed to this front.");
+        }
+
+        var force = AddForce(action.Position, action.Kind, GeneratedName(action.Kind, _nextForceId + Turn), action.Kind is ForceKind.Bastion ? 100 : 65);
+        var message = action.Kind is ForceKind.Bastion
+            ? $"A rare Bastion answered the front at {action.Position}."
+            : $"{force.Name} deployed at {action.Position}.";
         Record($"TURN {Turn:000} · {message}");
         return message;
     }
 
-    private string Found(FoundSettlement action)
+    private string Establish(EstablishEnclave action)
     {
         RequireTile(action.Position);
         if (string.IsNullOrWhiteSpace(action.Name) || action.Name.Length > 32)
         {
-            throw new ArgumentException("Settlement name must contain 1 to 32 characters.", nameof(action));
+            throw new ArgumentException("Enclave name must contain 1 to 32 characters.", nameof(action));
         }
 
-        AddSettlement(action.Position, action.Name.Trim(), 18);
-        var message = $"The Creator founded {action.Name.Trim()} at {action.Position}.";
+        AddEnclave(action.Position, action.Name.Trim(), 24);
+        var message = $"Command established {action.Name.Trim()} at {action.Position}.";
         Record($"TURN {Turn:000} · {message}");
         return message;
     }
 
-    private string Cataclysm(InvokeCataclysm action)
+    private string Purge(InvokePurge action)
     {
         RequireTile(action.Position);
         var radius = Math.Clamp(action.Radius, 0, 4);
         foreach (var tile in EnumerateTiles().Where(tile => Manhattan(tile.Position, action.Position) <= radius))
         {
-            tile.Aether = Math.Min(100, tile.Aether + 25);
-            tile.Vitality = Math.Max(0, tile.Vitality - 35);
-            tile.Stability = Math.Max(0, tile.Stability - 45);
-            tile.Terrain = TerrainKind.StarGlass;
+            tile.Resonance = Math.Max(0, tile.Resonance - 18);
+            tile.Biomass = Math.Max(0, tile.Biomass - 70);
+            tile.Integrity = Math.Max(0, tile.Integrity - 38);
+            tile.Terrain = TerrainKind.AshWaste;
         }
 
-        _beings.RemoveAll(being => Manhattan(being.Position, action.Position) <= radius && being.Kind is not BeingKind.Rift);
-        AddBeing(action.Position, BeingKind.Rift, $"Creator Rift {Turn}", 40);
-        var message = $"A radius-{radius} cataclysm remade the world around {action.Position}.";
+        foreach (var force in _forces.Where(force => Manhattan(force.Position, action.Position) <= radius))
+        {
+            force.Strength -= force.Kind is ForceKind.Bastion ? 25 : 100;
+            if (force.Kind is ForceKind.Enclave)
+            {
+                force.Population = Math.Max(0, force.Population - 20);
+            }
+        }
+
+        RemoveDestroyedForces();
+        var message = $"A radius-{radius} magitech purge burned the grid around {action.Position}.";
         Record($"TURN {Turn:000} · {message}");
         return message;
     }
 
-    private GridPoint BestNeighbor(BeingState being, bool preferVitality)
-    {
-        return OrthogonalNeighbors(being.Position)
-            .Append(being.Position)
-            .Select(point => new
-            {
-                Point = point,
-                Score = GetTile(point).Aether + (preferVitality ? GetTile(point).Vitality : GetTile(point).Stability) +
-                        DeterministicNoise.Range(_config.Seed, Turn, point.X, point.Y, being.Id, 9)
-            })
-            .OrderByDescending(static candidate => candidate.Score)
-            .ThenBy(static candidate => candidate.Point.Y)
-            .ThenBy(static candidate => candidate.Point.X)
-            .First()
-            .Point;
-    }
+    private ForceState? NearestEnemy(GridPoint origin, Func<ForceState, bool> predicate) => _forces
+        .Where(force => force.Strength > 0 && predicate(force))
+        .OrderBy(force => Manhattan(origin, force.Position))
+        .ThenBy(static force => force.Id)
+        .FirstOrDefault();
+
+    private GridPoint StepToward(ForceState force, GridPoint target) => OrthogonalNeighbors(force.Position)
+        .Append(force.Position)
+        .Select(point => new
+        {
+            Point = point,
+            Distance = Manhattan(point, target),
+            TerrainScore = IsHuman(force)
+                ? GetTile(point).Integrity + GetTile(point).Resonance - GetTile(point).Biomass
+                : GetTile(point).Biomass - GetTile(point).Integrity,
+            Noise = DeterministicNoise.Range(_config.Seed, Turn, point.X, point.Y, force.Id, 9)
+        })
+        .OrderBy(static candidate => candidate.Distance)
+        .ThenByDescending(static candidate => candidate.TerrainScore + candidate.Noise)
+        .ThenBy(static candidate => candidate.Point.Y)
+        .ThenBy(static candidate => candidate.Point.X)
+        .First()
+        .Point;
+
+    private GridPoint BestAdjacent(GridPoint origin, Func<TileState, int> score) => OrthogonalNeighbors(origin)
+        .Append(origin)
+        .Select(GetTile)
+        .OrderByDescending(score)
+        .ThenBy(static tile => tile.Position.Y)
+        .ThenBy(static tile => tile.Position.X)
+        .First()
+        .Position;
 
     private IEnumerable<GridPoint> OrthogonalNeighbors(GridPoint point)
     {
@@ -422,7 +528,7 @@ public sealed class WorldKernel
     {
         if (position.X < 0 || position.X >= _config.Width || position.Y < 0 || position.Y >= _config.Height)
         {
-            throw new ArgumentOutOfRangeException(nameof(position), position, "Position is outside the world grid.");
+            throw new ArgumentOutOfRangeException(nameof(position), position, "Position is outside the theater grid.");
         }
 
         return GetTile(position);
@@ -430,31 +536,61 @@ public sealed class WorldKernel
 
     private TileState GetTile(GridPoint position) => _tiles[position.X, position.Y];
 
-    private BeingState AddBeing(GridPoint position, BeingKind kind, string name, int energy)
+    private ForceState AddForce(GridPoint position, ForceKind kind, string name, int strength)
     {
-        var being = new BeingState
+        var force = new ForceState
         {
-            Id = _nextBeingId++,
+            Id = _nextForceId++,
             Position = position,
             Kind = kind,
             Name = name,
-            Energy = energy,
-            Population = 1
+            Strength = strength,
+            Population = 1,
+            Intent = kind switch
+            {
+                ForceKind.Bastion => "Awaiting the impossible mission",
+                ForceKind.Legionary => "Holding formation",
+                ForceKind.Ravener => "Scenting human heat",
+                ForceKind.BroodNode => "Rooting into the theater",
+                ForceKind.Enclave => "Maintaining the ward line",
+                _ => "Awaiting contact"
+            }
         };
-        _beings.Add(being);
-        return being;
+        _forces.Add(force);
+        return force;
     }
 
-    private BeingState AddSettlement(GridPoint position, string name, int population)
+    private ForceState AddEnclave(GridPoint position, string name, int population)
     {
-        var settlement = AddBeing(position, BeingKind.Settlement, name, 65);
-        settlement.Population = population;
-        settlement.Intent = "Mapping the newborn world";
-        return settlement;
+        var enclave = AddForce(position, ForceKind.Enclave, name, 75);
+        enclave.Population = population;
+        enclave.Intent = "Sheltering humanity behind resonance wards";
+        return enclave;
     }
 
-    private GridPoint FindMostVitalTile() => EnumerateTiles()
-        .OrderByDescending(static tile => tile.Vitality + tile.Stability)
+    private void RemoveDestroyedForces()
+    {
+        _forces.RemoveAll(static force => force.Strength <= 0 || force.Kind is ForceKind.Enclave && force.Population <= 0);
+    }
+
+    private static void DealDamage(IEnumerable<ForceState> targets, int damage)
+    {
+        var remaining = damage;
+        foreach (var target in targets)
+        {
+            if (remaining <= 0)
+            {
+                break;
+            }
+
+            var absorbed = Math.Min(Math.Max(0, target.Strength), remaining);
+            target.Strength -= remaining;
+            remaining -= absorbed;
+        }
+    }
+
+    private GridPoint FindHumanLanding() => EnumerateTiles()
+        .OrderByDescending(static tile => tile.Integrity + tile.Resonance - tile.Biomass * 2)
         .ThenBy(static tile => tile.Position.Y)
         .ThenBy(static tile => tile.Position.X)
         .First()
@@ -462,10 +598,12 @@ public sealed class WorldKernel
 
     private string BuildTurnSummary()
     {
-        var settlements = _beings.Count(static being => being.Kind is BeingKind.Settlement);
-        var living = _beings.Count(static being => being.Kind is not BeingKind.Rift);
-        var weakest = EnumerateTiles().Min(static tile => tile.Stability);
-        return $"TURN {Turn:000} · {living} beings wander; {settlements} lantern-cities endure; lowest stability is {weakest}.";
+        var bastion = _forces.SingleOrDefault(static force => force.Kind is ForceKind.Bastion);
+        var bastionState = bastion is null ? "BASTION LOST" : $"Bastion strength {bastion.Strength}";
+        var human = _forces.Count(IsHuman);
+        var alien = _forces.Count(IsAlien);
+        var enclaves = _forces.Count(static force => force.Kind is ForceKind.Enclave);
+        return $"TURN {Turn:000} · {bastionState}; {human} human formations hold {enclaves} enclaves against {alien} alien organisms.";
     }
 
     private void Record(string message)
@@ -477,66 +615,89 @@ public sealed class WorldKernel
         }
     }
 
-    private static int Manhattan(GridPoint left, GridPoint right) => Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
+    private static bool IsHuman(ForceState force) => force.Kind is ForceKind.Bastion or ForceKind.Legionary or ForceKind.Enclave;
 
-    private static int BaseAether(TerrainKind terrain) => terrain switch
+    private static bool IsAlien(ForceState force) => force.Kind is ForceKind.Ravener or ForceKind.BroodNode;
+
+    private static int HumanCasualtyPriority(ForceState force) => force.Kind switch
     {
-        TerrainKind.AetherSea => 68,
-        TerrainKind.CrystalForest => 45,
-        TerrainKind.DreamMarsh => 38,
-        TerrainKind.StarGlass => 52,
-        TerrainKind.IronSteppe => 24,
-        _ => 17
+        ForceKind.Legionary => 0,
+        ForceKind.Enclave => 1,
+        ForceKind.Bastion => 2,
+        _ => 3
     };
 
-    private static int BaseVitality(TerrainKind terrain) => terrain switch
+    private static int Manhattan(GridPoint left, GridPoint right) => Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
+
+    private static int BaseResonance(TerrainKind terrain) => terrain switch
     {
-        TerrainKind.CrystalForest => 65,
-        TerrainKind.DreamMarsh => 53,
-        TerrainKind.IronSteppe => 35,
-        TerrainKind.AetherSea => 28,
-        TerrainKind.StarGlass => 20,
+        TerrainKind.LeyChannel => 68,
+        TerrainKind.FortifiedReach => 44,
+        TerrainKind.ShatteredPlain => 32,
+        TerrainKind.AshWaste => 22,
+        TerrainKind.Xenoforest => 18,
+        _ => 12
+    };
+
+    private static int BaseBiomass(TerrainKind terrain) => terrain switch
+    {
+        TerrainKind.BroodMire => 70,
+        TerrainKind.Xenoforest => 58,
+        TerrainKind.ShatteredPlain => 25,
+        TerrainKind.LeyChannel => 18,
+        TerrainKind.FortifiedReach => 14,
+        _ => 8
+    };
+
+    private static int BaseIntegrity(TerrainKind terrain) => terrain switch
+    {
+        TerrainKind.FortifiedReach => 72,
+        TerrainKind.LeyChannel => 58,
+        TerrainKind.ShatteredPlain => 48,
+        TerrainKind.AshWaste => 34,
+        TerrainKind.Xenoforest => 24,
         _ => 12
     };
 
     private static string TerrainGlyph(TerrainKind terrain) => terrain switch
     {
-        TerrainKind.StarGlass => "◇",
-        TerrainKind.AshDunes => "∴",
-        TerrainKind.AetherSea => "≈",
-        TerrainKind.CrystalForest => "♢",
-        TerrainKind.IronSteppe => "≡",
-        TerrainKind.DreamMarsh => "~",
+        TerrainKind.ShatteredPlain => "·",
+        TerrainKind.AshWaste => "░",
+        TerrainKind.LeyChannel => "≈",
+        TerrainKind.Xenoforest => "♣",
+        TerrainKind.FortifiedReach => "▦",
+        TerrainKind.BroodMire => "~",
         _ => "?"
     };
 
-    private static string BeingGlyph(BeingKind kind) => kind switch
+    private static string ForceGlyph(ForceKind kind) => kind switch
     {
-        BeingKind.Wanderer => "w",
-        BeingKind.SynthBeast => "b",
-        BeingKind.Oracle => "o",
-        BeingKind.Settlement => "A",
-        BeingKind.Rift => "×",
+        ForceKind.Bastion => "B",
+        ForceKind.Legionary => "L",
+        ForceKind.Ravener => "r",
+        ForceKind.BroodNode => "N",
+        ForceKind.Enclave => "E",
         _ => "?"
     };
 
     private static string TerrainName(TerrainKind terrain) => terrain switch
     {
-        TerrainKind.StarGlass => "star-glass",
-        TerrainKind.AshDunes => "ash dunes",
-        TerrainKind.AetherSea => "aether sea",
-        TerrainKind.CrystalForest => "crystal forest",
-        TerrainKind.IronSteppe => "iron steppe",
-        TerrainKind.DreamMarsh => "dream marsh",
+        TerrainKind.ShatteredPlain => "shattered plain",
+        TerrainKind.AshWaste => "ash waste",
+        TerrainKind.LeyChannel => "ley channel",
+        TerrainKind.Xenoforest => "xenoforest",
+        TerrainKind.FortifiedReach => "fortified reach",
+        TerrainKind.BroodMire => "brood mire",
         _ => terrain.ToString()
     };
 
-    private static string GeneratedName(BeingKind kind, int number) => kind switch
+    private static string GeneratedName(ForceKind kind, int index) => kind switch
     {
-        BeingKind.Wanderer => $"Vagrant-{number:X}",
-        BeingKind.SynthBeast => $"Ferric Moth {number:X}",
-        BeingKind.Oracle => $"Oracle {number:X}",
-        BeingKind.Rift => $"Rift {number:X}",
-        _ => $"Being {number:X}"
+        ForceKind.Bastion => $"Bastion {index:00}",
+        ForceKind.Legionary => $"Aegis Cohort {index:00}",
+        ForceKind.Ravener => $"Ravener Strain {index:00}",
+        ForceKind.BroodNode => $"Brood Node {index:00}",
+        ForceKind.Enclave => $"Enclave {index:00}",
+        _ => $"Unknown {index:00}"
     };
 }

@@ -4,19 +4,19 @@ internal sealed class TileState
 {
     public required GridPoint Position { get; init; }
     public TerrainKind Terrain { get; set; }
-    public int Aether { get; set; }
-    public int Vitality { get; set; }
-    public int Stability { get; set; }
+    public int Resonance { get; set; }
+    public int Biomass { get; set; }
+    public int Integrity { get; set; }
 }
 
-internal sealed class BeingState
+internal sealed class ForceState
 {
     public int Id { get; init; }
     public required GridPoint Position { get; set; }
-    public BeingKind Kind { get; init; }
+    public ForceKind Kind { get; init; }
     public required string Name { get; init; }
-    public int Energy { get; set; }
+    public int Strength { get; set; }
     public int Population { get; set; }
-    public int Age { get; set; }
-    public string Intent { get; set; } = "Awakening";
+    public int ServiceTurns { get; set; }
+    public string Intent { get; set; } = "Awaiting orders";
 }
