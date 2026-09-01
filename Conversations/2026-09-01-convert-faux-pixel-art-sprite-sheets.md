@@ -46,3 +46,25 @@ splitter and background-mask stage, resize with BOX/area rather than LANCZOS,
 and resize premultiplied color and alpha to avoid halos. Generative AI is useful
 only as an optional masking aid; using it for the core conversion would invent
 details and make frames inconsistent.
+
+## User
+
+> Implement end-to-end a program that will build the pixel-perfect sprite sheet
+> and individual sprites from AI-generated pixel-style images like the input
+> images.
+
+## Assistant
+
+Implemented the Windows/.NET 10 `Automapolis.PixelPerfect` command-line tool. It
+accepts individual renders, complete sheets, or directories and performs
+automatic grid detection, card-frame trimming, robust quadratic background
+fitting, cast-shadow rejection, connected-component cleanup, premultiplied area
+resampling, binary-alpha hardening, small-hole repair, shared OKLab palette
+quantization without dithering, and individual or shared-scale composition.
+
+The tool exports individual PNGs, a transparent sheet, a nearest-neighbor
+checkerboard preview, PNG and GPL palettes, JSON provenance/atlas metadata, and
+optional mask diagnostics. Added six synthetic regression tests and generated a
+reproducible example from all three attached sheets: 36 exact 64x64 RGBA sprites,
+one 256x576 sheet, binary alpha, and 32 shared opaque colors. The full solution,
+the new converter tests, and the existing kernel tests all pass.
