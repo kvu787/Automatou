@@ -10,9 +10,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 
-SIZE = 64
-MARGIN = 3
-PALETTE = (
+DEFAULT_SIZE = 64
+STANDARD_PALETTE = (
     (8, 12, 18),
     (17, 24, 35),
     (27, 37, 52),
@@ -54,6 +53,44 @@ PALETTE = (
     (180, 165, 136),
     (237, 224, 195),
 )
+
+# Fewer shade steps keep small sprites organized into large readable masses.
+# Each unit uses the shared neutrals and cyan plus only its own accent pair.
+SIMPLIFIED_PALETTE = (
+    (8, 12, 18),
+    (17, 24, 35),
+    (32, 43, 59),
+    (55, 69, 89),
+    (91, 105, 126),
+    (151, 163, 180),
+    (232, 236, 240),
+    (0, 91, 114),
+    (0, 174, 204),
+    (86, 235, 241),
+    (173, 111, 9),
+    (246, 193, 38),
+    (174, 50, 0),
+    (255, 125, 31),
+    (119, 19, 26),
+    (226, 55, 58),
+    (16, 88, 91),
+    (60, 177, 169),
+    (63, 39, 88),
+    (145, 93, 188),
+    (20, 64, 132),
+    (52, 133, 221),
+    (66, 106, 9),
+    (153, 211, 27),
+    (104, 26, 88),
+    (213, 69, 174),
+    (119, 107, 88),
+    (226, 211, 179),
+)
+
+PALETTES = {
+    "standard": STANDARD_PALETTE,
+    "simplified": SIMPLIFIED_PALETTE,
+}
 
 
 def parse_source(value: str) -> tuple[str, Path]:
@@ -120,37 +157,48 @@ def remove_edge_connected_checkerboard(source: Path) -> Image.Image:
     return rgba.crop(bounds)
 
 
-def fixed_palette_image() -> Image.Image:
+def fixed_palette_image(palette: tuple[tuple[int, int, int], ...]) -> Image.Image:
     palette_image = Image.new("P", (1, 1))
-    values = [channel for color in PALETTE for channel in color]
+    values = [channel for color in palette for channel in color]
     values.extend([0] * (768 - len(values)))
     palette_image.putpalette(values)
     return palette_image
 
 
-def quantize_with_hard_alpha(image: Image.Image) -> Image.Image:
+def quantize_with_hard_alpha(
+    image: Image.Image,
+    palette: tuple[tuple[int, int, int], ...],
+) -> Image.Image:
     alpha = image.getchannel("A").point(lambda value: 255 if value >= 112 else 0)
-    rgb = Image.new("RGB", image.size, PALETTE[0])
+    rgb = Image.new("RGB", image.size, palette[0])
     rgb.paste(image.convert("RGB"), mask=alpha)
-    indexed = rgb.quantize(palette=fixed_palette_image(), dither=Image.Dither.NONE)
+    indexed = rgb.quantize(
+        palette=fixed_palette_image(palette),
+        dither=Image.Dither.NONE,
+    )
     result = indexed.convert("RGBA")
     result.putalpha(alpha)
     return result
 
 
-def make_sprite(source: Path) -> Image.Image:
+def make_sprite(
+    source: Path,
+    size: int,
+    palette: tuple[tuple[int, int, int], ...],
+) -> Image.Image:
     cleaned = remove_edge_connected_checkerboard(source)
-    available = SIZE - 2 * MARGIN
+    margin = max(2, round(size * 0.047))
+    available = size - 2 * margin
     scale = min(available / cleaned.width, available / cleaned.height)
     target = (
         max(1, round(cleaned.width * scale)),
         max(1, round(cleaned.height * scale)),
     )
     resized = cleaned.resize(target, Image.Resampling.LANCZOS)
-    canvas = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    position = ((SIZE - target[0]) // 2, (SIZE - target[1]) // 2)
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    position = ((size - target[0]) // 2, (size - target[1]) // 2)
     canvas.alpha_composite(resized, position)
-    return quantize_with_hard_alpha(canvas)
+    return quantize_with_hard_alpha(canvas, palette)
 
 
 def checkerboard(size: tuple[int, int], tile: int = 16) -> Image.Image:
@@ -166,7 +214,7 @@ def checkerboard(size: tuple[int, int], tile: int = 16) -> Image.Image:
     return image
 
 
-def build_preview(output: Path, sprite_ids: list[str]) -> None:
+def build_preview(output: Path, sprite_ids: list[str], size: int) -> None:
     columns = 4
     rows = (len(sprite_ids) + columns - 1) // columns
     cell_width = 272
@@ -181,7 +229,8 @@ def build_preview(output: Path, sprite_ids: list[str]) -> None:
         left = column * cell_width + 8
         top = row * cell_height + 8
         preview.paste(enlarged, (left, top), enlarged)
-        draw.text((left, top + 262), sprite_id.replace("-", " "), fill=(17, 24, 35))
+        label = f"{sprite_id.replace('-', ' ')} {size}x{size}"
+        draw.text((left, top + 262), label, fill=(17, 24, 35))
     preview.save(output / "preview.png", optimize=True)
 
 
@@ -189,22 +238,26 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", action="append", type=parse_source, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--size", type=int, choices=(32, 64), default=DEFAULT_SIZE)
+    parser.add_argument("--palette", choices=tuple(PALETTES), default="standard")
     args = parser.parse_args()
 
     args.output.mkdir(parents=True, exist_ok=True)
+    palette = PALETTES[args.palette]
     sprite_ids = []
     for sprite_id, source in args.source:
         if sprite_id in sprite_ids:
             raise ValueError(f"Duplicate sprite id: {sprite_id}")
         sprite_ids.append(sprite_id)
-        sprite = make_sprite(source)
+        sprite = make_sprite(source, args.size, palette)
         sprite.save(args.output / f"{sprite_id}.png", optimize=True)
 
-    build_preview(args.output, sprite_ids)
+    build_preview(args.output, sprite_ids, args.size)
     manifest = {
-        "size": SIZE,
+        "size": args.size,
         "format": "RGBA PNG",
-        "paletteColors": len(PALETTE),
+        "paletteMode": args.palette,
+        "paletteColors": len(palette),
         "sprites": [f"{sprite_id}.png" for sprite_id in sprite_ids],
     }
     (args.output / "manifest.json").write_text(

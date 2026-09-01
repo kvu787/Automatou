@@ -55,6 +55,15 @@ art. New units should look as though they belong beside these eight at native
 size. The earlier assets remain useful as subject and faction references, but
 they must be redrawn to this standard rather than enlarged or reused unchanged.
 
+#### Active simplification study
+
+The [`simplified v2 dual-resolution set`](art/sci-fi-units-simplified-v2/README.md)
+tests the current refinement target at both 64x64 and 32x32: fewer internal
+details, larger value masses, cleaner factory-new surfaces, and recognition
+driven by silhouette plus one or two signature features. It is a candidate for
+native-size evaluation and does not supersede the golden standard until it is
+explicitly approved.
+
 ## Bastion and soldier concept
 
 ![Bastion and soldier concept art](art/bastion-soldier-concept.png)

@@ -1,0 +1,25 @@
+{
+  "status": "candidate",
+  "sizes": [
+    {
+      "size": 64,
+      "directory": "64",
+      "manifest": "64/manifest.json"
+    },
+    {
+      "size": 32,
+      "directory": "32",
+      "manifest": "32/manifest.json"
+    }
+  ],
+  "sprites": [
+    "scout-drone",
+    "infantry-exosuit",
+    "assault-mech",
+    "hover-tank",
+    "artillery-walker",
+    "shield-projector",
+    "repair-drone",
+    "alien-bio-mech"
+  ]
+}
