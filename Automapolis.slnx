@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Automapolis.Kernel/Automapolis.Kernel.csproj" />
+    <Project Path="src/Automapolis.Kernel.Host/Automapolis.Kernel.Host.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Automapolis.Kernel.Tests/Automapolis.Kernel.Tests.csproj" />
+  </Folder>
+</Solution>

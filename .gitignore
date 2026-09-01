@@ -1,0 +1,7 @@
+bin/
+obj/
+.godot/
+Shells/Godot/build/
+Shells/Godot/KernelHost/
+*.user
+*.tmp
