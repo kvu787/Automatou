@@ -10,13 +10,21 @@ const MINT := Color("#4fe4c1")
 const GOLD := Color("#f4d47c")
 const ROSE := Color("#ef6da8")
 
-const TERRAIN_COLORS := {
-	"starGlass": Color("#443d7b"),
-	"ashDunes": Color("#604957"),
-	"aetherSea": Color("#214e70"),
-	"crystalForest": Color("#245d58"),
-	"ironSteppe": Color("#39445c"),
-	"dreamMarsh": Color("#573f70"),
+const TERRAIN_SPRITE_IDS := {
+	"starGlass": "star_glass",
+	"ashDunes": "ash_dunes",
+	"aetherSea": "aether_sea",
+	"crystalForest": "crystal_forest",
+	"ironSteppe": "iron_steppe",
+	"dreamMarsh": "dream_marsh",
+}
+
+const BEING_SPRITE_IDS := {
+	"wanderer": "wanderer",
+	"synthBeast": "synth_beast",
+	"oracle": "oracle",
+	"settlement": "settlement",
+	"rift": "rift",
 }
 
 var _pipe: FileAccess
@@ -149,11 +157,7 @@ func _build_world_panel() -> Control:
 	column.add_theme_constant_override("separation", 8)
 	panel.add_child(column)
 
-	var legend := Label.new()
-	legend.text = "  ◇ STAR-GLASS   ∴ ASH   ≈ AETHER   ♢ CRYSTAL   ≡ IRON   ~ DREAM"
-	legend.add_theme_font_size_override("font_size", 12)
-	legend.add_theme_color_override("font_color", MUTED)
-	column.add_child(legend)
+	column.add_child(_build_sprite_legend())
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -187,6 +191,7 @@ func _build_side_panel() -> Control:
 
 	_inspector = RichTextLabel.new()
 	_inspector.bbcode_enabled = true
+	_inspector.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_inspector.fit_content = false
 	_inspector.custom_minimum_size.y = 155
 	_inspector.add_theme_font_size_override("normal_font_size", 14)
@@ -201,11 +206,11 @@ func _build_side_panel() -> Control:
 	creator_heading.add_theme_color_override("font_color", ROSE)
 	_creator_panel.add_child(creator_heading)
 	_add_creator_button("INFUSE +25 AETHER", "infuse", VIOLET)
-	_add_creator_button("GROW CRYSTAL FOREST", "transmute", MINT, {"terrain": "crystalForest"})
-	_add_creator_button("SHAPE A WANDERER", "create_life", GOLD, {"kind": "wanderer"})
-	_add_creator_button("SHAPE AN ORACLE", "create_life", GOLD, {"kind": "oracle"})
-	_add_creator_button("FOUND A LANTERN-CITY", "found", MINT, {"name": "Lantern Annex"})
-	_add_creator_button("INVOKE LOCAL CATACLYSM", "cataclysm", ROSE, {"radius": 1})
+	_add_creator_button("GROW CRYSTAL FOREST", "transmute", MINT, {"terrain": "crystalForest"}, "crystal_forest")
+	_add_creator_button("SHAPE A WANDERER", "create_life", GOLD, {"kind": "wanderer"}, "wanderer")
+	_add_creator_button("SHAPE AN ORACLE", "create_life", GOLD, {"kind": "oracle"}, "oracle")
+	_add_creator_button("FOUND A LANTERN-CITY", "found", MINT, {"name": "Lantern Annex"}, "settlement")
+	_add_creator_button("INVOKE LOCAL CATACLYSM", "cataclysm", ROSE, {"radius": 1}, "rift")
 	side.add_child(_creator_panel)
 
 	var chronicle_heading := Label.new()
@@ -246,11 +251,45 @@ func _build_footer() -> Control:
 	return row
 
 
-func _add_creator_button(label_text: String, command: String, accent: Color, extras := {}) -> void:
+func _build_sprite_legend() -> Control:
+	var legend := HBoxContainer.new()
+	legend.add_theme_constant_override("separation", 11)
+	var entries := [
+		["starGlass", "STAR-GLASS"],
+		["ashDunes", "ASH"],
+		["aetherSea", "AETHER"],
+		["crystalForest", "CRYSTAL"],
+		["ironSteppe", "IRON"],
+		["dreamMarsh", "DREAM"],
+	]
+	for entry in entries:
+		var item := HBoxContainer.new()
+		item.add_theme_constant_override("separation", 4)
+		var sprite := TextureRect.new()
+		sprite.texture = load(_terrain_sprite_path(entry[0]))
+		sprite.custom_minimum_size = Vector2(20, 20)
+		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		item.add_child(sprite)
+		var label := Label.new()
+		label.text = entry[1]
+		label.add_theme_font_size_override("font_size", 11)
+		label.add_theme_color_override("font_color", MUTED)
+		item.add_child(label)
+		legend.add_child(item)
+	return legend
+
+
+func _add_creator_button(label_text: String, command: String, accent: Color, extras := {}, sprite_id := "") -> void:
 	var button := Button.new()
 	button.text = label_text
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.custom_minimum_size.y = 34
+	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if not sprite_id.is_empty():
+		button.icon = load(_sprite_path(sprite_id))
+		button.add_theme_constant_override("icon_max_width", 22)
 	_style_button(button, accent)
 	button.pressed.connect(func():
 		var payload := {"command": command, "x": _selected.x, "y": _selected.y}
@@ -362,15 +401,16 @@ func _render_snapshot() -> void:
 		var key := "%d,%d" % [x, y]
 		var button := Button.new()
 		var being = beings_by_cell.get(key)
-		button.text = str(being.glyph) if being != null else str(tile.glyph)
+		button.text = ""
 		button.tooltip_text = _cell_tooltip(tile, being)
-		button.custom_minimum_size = Vector2(42, 42)
-		button.add_theme_font_size_override("font_size", 21)
-		var terrain_color: Color = TERRAIN_COLORS.get(str(tile.terrain), PANEL_RAISED)
-		button.add_theme_stylebox_override("normal", _cell_style(terrain_color, x == _selected.x and y == _selected.y))
-		button.add_theme_stylebox_override("hover", _cell_style(terrain_color.lightened(0.13), true))
-		button.add_theme_stylebox_override("pressed", _cell_style(terrain_color.darkened(0.12), true))
-		button.add_theme_color_override("font_color", GOLD if being != null else INK)
+		button.custom_minimum_size = Vector2(36, 36)
+		button.clip_contents = true
+		button.add_theme_stylebox_override("normal", _cell_style(PANEL_RAISED, x == _selected.x and y == _selected.y))
+		button.add_theme_stylebox_override("hover", _cell_style(PANEL_RAISED.lightened(0.12), true))
+		button.add_theme_stylebox_override("pressed", _cell_style(PANEL_RAISED.darkened(0.12), true))
+		_add_sprite_layer(button, _terrain_sprite_path(str(tile.terrain)))
+		if being != null:
+			_add_sprite_layer(button, _being_sprite_path(str(being.kind)))
 		button.pressed.connect(_select_cell.bind(Vector2i(x, y)))
 		_grid.add_child(button)
 		_cell_buttons.append(button)
@@ -391,7 +431,7 @@ func _render_inspector() -> void:
 	if tile == null:
 		return
 	var text := "[color=#7e6bff][font_size=12]SELECTED // %02d,%02d[/font_size][/color]\n" % [_selected.x, _selected.y]
-	text += "[font_size=22]%s  %s[/font_size]\n" % [str(tile.glyph), _words(str(tile.terrain)).to_upper()]
+	text += "[img=48x48]%s[/img]  [font_size=22]%s[/font_size]\n" % [_terrain_sprite_path(str(tile.terrain)), _words(str(tile.terrain)).to_upper()]
 	text += "[color=#777f9e]%s[/color]\n" % str(tile.description)
 	var occupants := _beings_at(_selected)
 	if occupants.is_empty():
@@ -399,7 +439,7 @@ func _render_inspector() -> void:
 	else:
 		text += "\n[color=#4fe4c1]OCCUPANTS[/color]"
 		for being in occupants:
-			text += "\n%s  [b]%s[/b] · %s" % [being.glyph, being.name, being.intent]
+			text += "\n[img=24x24]%s[/img]  [b]%s[/b] · %s" % [_being_sprite_path(str(being.kind)), being.name, being.intent]
 	_inspector.text = text
 
 
@@ -435,6 +475,33 @@ func _cell_tooltip(tile, being) -> String:
 	if being != null:
 		result += "\n%s · %s" % [being.name, being.intent]
 	return result
+
+
+func _add_sprite_layer(button: Button, path: String) -> void:
+	var sprite := TextureRect.new()
+	sprite.texture = load(path)
+	sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	sprite.offset_left = 2
+	sprite.offset_top = 2
+	sprite.offset_right = -2
+	sprite.offset_bottom = -2
+	button.add_child(sprite)
+
+
+func _sprite_path(sprite_id: String) -> String:
+	return "res://assets/sprites/generated/%s.png" % sprite_id
+
+
+func _terrain_sprite_path(terrain: String) -> String:
+	return _sprite_path(TERRAIN_SPRITE_IDS.get(terrain, "star_glass"))
+
+
+func _being_sprite_path(kind: String) -> String:
+	return _sprite_path(BEING_SPRITE_IDS.get(kind, "wanderer"))
 
 
 func _being_priority(being) -> int:
