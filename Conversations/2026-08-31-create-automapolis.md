@@ -99,3 +99,13 @@ controls. The Kernel and JSON protocol remain unchanged and fully textual.
 Verified the complete Release pipeline with a warning-free solution build,
 deterministic asset generation, five passing Kernel tests, a Godot standalone
 export, Kernel-host publication, and visual review of the exported executable.
+
+## User
+
+> This is significantly better.
+
+## Assistant
+
+Acknowledged that the 16×16 tactical pixel-art direction is a meaningful
+improvement and should remain the visual foundation for subsequent prototype
+work.
