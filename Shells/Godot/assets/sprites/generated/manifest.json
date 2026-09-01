@@ -4,7 +4,7 @@
   "rows": 3,
   "sprites": [
     {
-      "id": "star_glass",
+      "id": "shattered_plain",
       "kind": "terrain",
       "atlasX": 0,
       "atlasY": 0,
@@ -12,7 +12,7 @@
       "height": 16
     },
     {
-      "id": "ash_dunes",
+      "id": "ash_waste",
       "kind": "terrain",
       "atlasX": 1,
       "atlasY": 0,
@@ -20,7 +20,7 @@
       "height": 16
     },
     {
-      "id": "aether_sea",
+      "id": "ley_channel",
       "kind": "terrain",
       "atlasX": 2,
       "atlasY": 0,
@@ -28,7 +28,7 @@
       "height": 16
     },
     {
-      "id": "crystal_forest",
+      "id": "xenoforest",
       "kind": "terrain",
       "atlasX": 3,
       "atlasY": 0,
@@ -36,7 +36,7 @@
       "height": 16
     },
     {
-      "id": "iron_steppe",
+      "id": "fortified_reach",
       "kind": "terrain",
       "atlasX": 0,
       "atlasY": 1,
@@ -44,7 +44,7 @@
       "height": 16
     },
     {
-      "id": "dream_marsh",
+      "id": "brood_mire",
       "kind": "terrain",
       "atlasX": 1,
       "atlasY": 1,
@@ -52,7 +52,7 @@
       "height": 16
     },
     {
-      "id": "wanderer",
+      "id": "bastion",
       "kind": "being",
       "atlasX": 2,
       "atlasY": 1,
@@ -60,7 +60,7 @@
       "height": 16
     },
     {
-      "id": "synth_beast",
+      "id": "ravener",
       "kind": "being",
       "atlasX": 3,
       "atlasY": 1,
@@ -68,7 +68,7 @@
       "height": 16
     },
     {
-      "id": "oracle",
+      "id": "legionary",
       "kind": "being",
       "atlasX": 0,
       "atlasY": 2,
@@ -76,7 +76,7 @@
       "height": 16
     },
     {
-      "id": "settlement",
+      "id": "enclave",
       "kind": "building",
       "atlasX": 1,
       "atlasY": 2,
@@ -84,7 +84,7 @@
       "height": 16
     },
     {
-      "id": "rift",
+      "id": "brood_node",
       "kind": "effect",
       "atlasX": 2,
       "atlasY": 2,

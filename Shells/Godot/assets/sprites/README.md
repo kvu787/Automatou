@@ -1,14 +1,15 @@
 # Automapolis sprite grammar
 
-Every current world object has one authoritative 16×16 palette-indexed sprite in `sprites.json`. Whitespace divides rows into four-pixel groups and is ignored by the compiler.
+Every current terrain and force has one authoritative 16x16 palette-indexed sprite in `sprites.json`. Whitespace divides rows into four-pixel groups and is ignored by the compiler.
 
 The source uses one global palette and these rules:
 
 - tactical top-down/three-quarter silhouettes;
-- fixed upper-left light;
-- hard pixel edges with no gradients, antialiasing, or freeform colors;
-- opaque, full-cell terrain and transparent beings, buildings, and effects;
-- no state indicators baked into sprites—selection and status remain Shell overlays.
+- squared gunmetal, gold, and cyan shapes for human magitech;
+- branching green, purple, and red shapes for alien biology;
+- fixed upper-left light and hard pixel edges;
+- opaque full-sector terrain and transparent forces, structures, and organisms;
+- no state indicators baked into sprites; selection and status remain Shell overlays.
 
 Run the asset compiler with:
 

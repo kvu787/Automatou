@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d33826eyv0rb6"
-path="res://.godot/imported/star_glass.png-8e20f9230afdab9d74b6d0394c934151.ctex"
+uid="uid://dv7dp1clvb7nu"
+path="res://.godot/imported/fortified_reach.png-8f10748bd00e000dceffa72a840554da.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/star_glass.png"
-dest_files=["res://.godot/imported/star_glass.png-8e20f9230afdab9d74b6d0394c934151.ctex"]
+source_file="res://assets/sprites/generated/fortified_reach.png"
+dest_files=["res://.godot/imported/fortified_reach.png-8f10748bd00e000dceffa72a840554da.ctex"]
 
 [params]
 

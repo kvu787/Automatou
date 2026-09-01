@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cub2ottxd6d8q"
-path="res://.godot/imported/settlement.png-f599cfe83f2b608a08928c40b8d65720.ctex"
+uid="uid://uoyjrxmi526y"
+path="res://.godot/imported/shattered_plain.png-1c0a160a2a0398c3761ad7e11725435f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/settlement.png"
-dest_files=["res://.godot/imported/settlement.png-f599cfe83f2b608a08928c40b8d65720.ctex"]
+source_file="res://assets/sprites/generated/shattered_plain.png"
+dest_files=["res://.godot/imported/shattered_plain.png-1c0a160a2a0398c3761ad7e11725435f.ctex"]
 
 [params]
 

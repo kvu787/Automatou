@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bbqxb0448frci"
-path="res://.godot/imported/wanderer.png-6c062da61d13dfbafdb6ec13e9bf7698.ctex"
+uid="uid://cijg8i7sl5r2m"
+path="res://.godot/imported/bastion.png-d3159fb82934b5aac02ba302015f182c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/wanderer.png"
-dest_files=["res://.godot/imported/wanderer.png-6c062da61d13dfbafdb6ec13e9bf7698.ctex"]
+source_file="res://assets/sprites/generated/bastion.png"
+dest_files=["res://.godot/imported/bastion.png-d3159fb82934b5aac02ba302015f182c.ctex"]
 
 [params]
 

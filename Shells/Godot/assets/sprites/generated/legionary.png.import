@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c0ix5cukulrip"
-path="res://.godot/imported/synth_beast.png-6431f18bfe409a0f7cbd0c543eaafd13.ctex"
+uid="uid://dfa7o72bwrfa2"
+path="res://.godot/imported/legionary.png-f18b0b8ca79cf340b240675be14059c6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/synth_beast.png"
-dest_files=["res://.godot/imported/synth_beast.png-6431f18bfe409a0f7cbd0c543eaafd13.ctex"]
+source_file="res://assets/sprites/generated/legionary.png"
+dest_files=["res://.godot/imported/legionary.png-f18b0b8ca79cf340b240675be14059c6.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bn5jtqs1ua6ln"
-path="res://.godot/imported/dream_marsh.png-f8a26c33dd4a00511328408e45c5c5ab.ctex"
+uid="uid://cma4m1v5iljet"
+path="res://.godot/imported/ley_channel.png-372f301a4569a7fa5ceaa6ee78998c93.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/dream_marsh.png"
-dest_files=["res://.godot/imported/dream_marsh.png-f8a26c33dd4a00511328408e45c5c5ab.ctex"]
+source_file="res://assets/sprites/generated/ley_channel.png"
+dest_files=["res://.godot/imported/ley_channel.png-372f301a4569a7fa5ceaa6ee78998c93.ctex"]
 
 [params]
 

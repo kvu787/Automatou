@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c6c6mxn1wfna"
-path="res://.godot/imported/oracle.png-8af91a7c248927f3cc41250f101ae46d.ctex"
+uid="uid://0hqrnoh76p3c"
+path="res://.godot/imported/brood_node.png-413b0a9c1ef664193fc7d1ac3fd7991c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/oracle.png"
-dest_files=["res://.godot/imported/oracle.png-8af91a7c248927f3cc41250f101ae46d.ctex"]
+source_file="res://assets/sprites/generated/brood_node.png"
+dest_files=["res://.godot/imported/brood_node.png-413b0a9c1ef664193fc7d1ac3fd7991c.ctex"]
 
 [params]
 

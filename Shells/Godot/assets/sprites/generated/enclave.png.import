@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://boicpc3mk0u21"
-path="res://.godot/imported/rift.png-f8aa7da56eb6bcaa8097f9bba6299253.ctex"
+uid="uid://bjm6bwbnomrer"
+path="res://.godot/imported/enclave.png-08d05c441f39caef80662b5d27b6d3a9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/rift.png"
-dest_files=["res://.godot/imported/rift.png-f8aa7da56eb6bcaa8097f9bba6299253.ctex"]
+source_file="res://assets/sprites/generated/enclave.png"
+dest_files=["res://.godot/imported/enclave.png-08d05c441f39caef80662b5d27b6d3a9.ctex"]
 
 [params]
 

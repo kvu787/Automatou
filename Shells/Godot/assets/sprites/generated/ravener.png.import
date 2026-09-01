@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgd444duti8ie"
-path="res://.godot/imported/iron_steppe.png-ad43029badb07e60c82ac3df126db3b0.ctex"
+uid="uid://bby24pyp3xpig"
+path="res://.godot/imported/ravener.png-8ce52022494983ee0e08d0cdf43892b6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/iron_steppe.png"
-dest_files=["res://.godot/imported/iron_steppe.png-ad43029badb07e60c82ac3df126db3b0.ctex"]
+source_file="res://assets/sprites/generated/ravener.png"
+dest_files=["res://.godot/imported/ravener.png-8ce52022494983ee0e08d0cdf43892b6.ctex"]
 
 [params]
 

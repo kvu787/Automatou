@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwdkf7qhb0xky"
-path="res://.godot/imported/ash_dunes.png-c8ce8f1f495cc15e8ea10e55dcf88007.ctex"
+uid="uid://b40iytykyxsjc"
+path="res://.godot/imported/ash_waste.png-524b034f205f619cabba3f3eafa20145.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/ash_dunes.png"
-dest_files=["res://.godot/imported/ash_dunes.png-c8ce8f1f495cc15e8ea10e55dcf88007.ctex"]
+source_file="res://assets/sprites/generated/ash_waste.png"
+dest_files=["res://.godot/imported/ash_waste.png-524b034f205f619cabba3f3eafa20145.ctex"]
 
 [params]
 

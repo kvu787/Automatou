@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bwqvm4kmrmikk"
-path="res://.godot/imported/aether_sea.png-b12d44399aad1bd960b509e94c7362c0.ctex"
+uid="uid://dhj5h12ta2thp"
+path="res://.godot/imported/xenoforest.png-69a8845f5c1430a0a7a4806d39152eb1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/aether_sea.png"
-dest_files=["res://.godot/imported/aether_sea.png-b12d44399aad1bd960b509e94c7362c0.ctex"]
+source_file="res://assets/sprites/generated/xenoforest.png"
+dest_files=["res://.godot/imported/xenoforest.png-69a8845f5c1430a0a7a4806d39152eb1.ctex"]
 
 [params]
 
