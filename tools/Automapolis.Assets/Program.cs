@@ -72,14 +72,83 @@ for (var index = 0; index < sprites.Count; index++)
 }
 
 PngWriter.Write(Path.Combine(outputDirectory, "atlas.png"), atlasWidth, atlasHeight, atlasPixels);
+
+var unitSprites = sprites.Where(static sprite => sprite.Kind.EndsWith("-unit", StringComparison.Ordinal)).ToArray();
+var unitAtlas = BuildAtlas(unitSprites, atlasColumns);
+PngWriter.Write(Path.Combine(outputDirectory, "units.png"), unitAtlas.Width, unitAtlas.Height, unitAtlas.Pixels);
+var unitPreview = CompositeOnChecker(ScaleNearest(unitAtlas.Pixels, unitAtlas.Width, unitAtlas.Height, 8), unitAtlas.Width * 8, unitAtlas.Height * 8, 16);
+PngWriter.Write(Path.Combine(outputDirectory, "units-preview.png"), unitAtlas.Width * 8, unitAtlas.Height * 8, unitPreview);
+
 File.WriteAllText(
     Path.Combine(outputDirectory, "manifest.json"),
     JsonSerializer.Serialize(
         new { tileSize = spriteSize, columns = atlasColumns, rows = atlasRows, sprites = manifestSprites },
         new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) + Environment.NewLine);
 
-Console.WriteLine($"Generated {sprites.Count} sprites and a {atlasWidth}x{atlasHeight} atlas from {Path.GetRelativePath(repositoryRoot, sourcePath)}.");
+Console.WriteLine($"Generated {sprites.Count} sprites, a {atlasWidth}x{atlasHeight} atlas, and a {unitAtlas.Width}x{unitAtlas.Height} unit sheet from {Path.GetRelativePath(repositoryRoot, sourcePath)}.");
 return;
+
+static (int Width, int Height, Rgba32[] Pixels) BuildAtlas(IReadOnlyList<CompiledSprite> sprites, int columns)
+{
+    var rows = (int)Math.Ceiling(sprites.Count / (double)columns);
+    var width = columns * spriteSize;
+    var height = rows * spriteSize;
+    var pixels = Enumerable.Repeat(Rgba32.Transparent, width * height).ToArray();
+    for (var index = 0; index < sprites.Count; index++)
+    {
+        var sprite = sprites[index];
+        var atlasX = index % columns;
+        var atlasY = index / columns;
+        for (var y = 0; y < spriteSize; y++)
+        {
+            Array.Copy(sprite.Pixels, y * spriteSize, pixels, (atlasY * spriteSize + y) * width + atlasX * spriteSize, spriteSize);
+        }
+    }
+
+    return (width, height, pixels);
+}
+
+static Rgba32[] ScaleNearest(IReadOnlyList<Rgba32> source, int width, int height, int scale)
+{
+    var resultWidth = width * scale;
+    var result = new Rgba32[resultWidth * height * scale];
+    for (var y = 0; y < height; y++)
+    {
+        for (var x = 0; x < width; x++)
+        {
+            var pixel = source[y * width + x];
+            for (var offsetY = 0; offsetY < scale; offsetY++)
+            {
+                var targetRow = (y * scale + offsetY) * resultWidth;
+                for (var offsetX = 0; offsetX < scale; offsetX++)
+                {
+                    result[targetRow + x * scale + offsetX] = pixel;
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+static Rgba32[] CompositeOnChecker(IReadOnlyList<Rgba32> source, int width, int height, int tileSize)
+{
+    var light = new Rgba32(216, 224, 232, byte.MaxValue);
+    var dark = new Rgba32(135, 146, 165, byte.MaxValue);
+    var result = new Rgba32[source.Count];
+    for (var y = 0; y < height; y++)
+    {
+        for (var x = 0; x < width; x++)
+        {
+            var pixel = source[y * width + x];
+            result[y * width + x] = pixel.A == 0
+                ? ((x / tileSize + y / tileSize) % 2 == 0 ? light : dark)
+                : pixel;
+        }
+    }
+
+    return result;
+}
 
 static string FindRepositoryRoot(string start)
 {
