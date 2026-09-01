@@ -21,6 +21,12 @@ The two sides must read before the individual unit does:
 - Strong silhouettes take priority over internal detail.
 - Selection, damage, ownership, and targeting remain separate Shell overlays.
 
+## Bastion and soldier concept
+
+![Bastion and soldier concept art](art/bastion-soldier-concept.png)
+
+This comparison sheet is the current shape-language reference for human forces. The Bastion is a walking fortress whose recessed operator, immense shoulder mass, powered joints, and heavy weapon make it immediately distinct from the conventionally proportioned, mobile Soldier. Future low-resolution sprites should preserve those silhouettes before attempting surface detail.
+
 ## Historical direction reference
 
 ![Early sprite direction reference](art/sprite-direction-reference.png)
