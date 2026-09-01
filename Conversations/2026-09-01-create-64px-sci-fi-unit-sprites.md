@@ -22,3 +22,16 @@ catalog, a manifest, full prompt documentation, and art-direction notes.
 
 Validated every sprite as 64x64 RGBA with only alpha values 0 and 255, between
 21 and 28 used RGBA colors, and at least three pixels of transparent padding.
+
+## User
+
+> these are excellent. record in the art direction that these sprites should be treated as the current golden standard
+
+## Assistant
+
+Recorded the 64x64 sci-fi unit set as the current visual golden standard for all
+new and redesigned unit sprites. Updated the document's target resolution and
+visual grammar, established that this set takes precedence over older 16x16
+grids and prior studies when their guidance conflicts, and clarified that the
+existing 16x16 atlas is a transitional runtime implementation rather than the
+authority for future unit art.
