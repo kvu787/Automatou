@@ -195,3 +195,34 @@ cherry-picking is still required before another branch receives the change,
 and that removing a worktree does not remove commits or its branch. Also noted
 the special case of detached `HEAD`, where a commit does not advance a named
 branch and should be attached to one before the worktree is removed.
+
+## User
+
+> Okay, roughly speaking, what I want from a multi-agent is similar to how many
+> existing software projects and organizations work. Each serialized task
+> should have its own Git worktree and branch. For example, the ongoing
+> art/visual-direction fixes should have their own worktree instead of multiple
+> parallel ones, because I need to review and approve each step before moving
+> to the next. However, there should be a separate gameplay-mechanics worktree
+> that uses whatever the current stable GUI is and works separately from the
+> art/visual worktree. Then, at points that I decide, there should be a
+> synchronization fence in which I pull work that is ready from the worktrees
+> into the main stable branch.
+
+## Assistant
+
+Confirmed the model and refined its durable unit from an individual worker or
+small ticket to a serialized workstream lane. Proposed a persistent visual lane
+and a persistent gameplay lane, each with one worktree and branch. Work inside
+each lane is serialized, while the lanes themselves run concurrently. The
+gameplay lane treats `main` as the current stable GUI baseline and therefore
+does not consume unapproved visual changes.
+
+Defined `main` as always playable and proposed a user-triggered synchronization
+fence. At a fence, the Director pauses dispatch, verifies clean lane commits,
+selects accepted work, combines it first on a temporary integration branch,
+runs the full build/test/export/playtest gate, advances `main` only if the
+combined candidate passes, and then refreshes each clean workstream from the
+new stable baseline. Recommended keeping visual work out of Kernel contracts
+and gameplay work out of presentation files where practical, with cross-layer
+changes handled explicitly during integration.
