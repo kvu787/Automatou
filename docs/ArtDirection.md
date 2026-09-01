@@ -31,7 +31,13 @@ This comparison sheet is the current shape-language reference for human forces. 
 
 ![Bastion and soldier sprite resolution studies](art/sprite-studies/preview.png)
 
-The [`8x8` through `128x128` sprite catalog](art/sprite-studies/catalog.html) explores how each character's defining mass, stance, weapon, and cyan energy landmarks survive at progressively tighter pixel budgets. These are review assets; choosing a production resolution remains a separate decision.
+The [`8x8` through `128x128` pixel-art catalog](art/sprite-studies/catalog.html) records an unsuccessful attempt to translate the concept into a hard-pixel aesthetic. It remains process history, but it is superseded by the full-color render approach below.
+
+### Full-color sprite renders
+
+![Bastion and soldier full-color sprite renders](art/sprite-renders/preview.png)
+
+The [`128x128` through `1024x1024` render catalog](art/sprite-renders/catalog.html) isolates each character from the approved concept and preserves the original painted design. The 1024x1024 cutouts are the masters; 512x512, 256x256, and 128x128 are direct high-quality downscales rather than separate reinterpretations.
 
 ## Historical direction reference
 
