@@ -21,6 +21,14 @@ The two sides must read before the individual unit does:
 - Strong silhouettes take priority over internal detail.
 - Selection, damage, ownership, and targeting remain separate Shell overlays.
 
+## Unit roster expansion
+
+![Sci-fi tactical unit roster design reference](art/sci-fi-unit-roster-reference.png)
+
+This generated design sheet established a broader silhouette vocabulary for compact tactical units: tracked armor, walkers, missile racks, lift fans, rotorcraft, aircraft, drones, arthropods, armored beasts, burrowers, rooted artillery, flyers, and biomass carriers. It is a design reference rather than production art; the authoritative game assets are the exact 16x16 palette grids in `sprites.json`.
+
+The production roster deliberately reduces each design to one dominant outline and one signature feature. Human machines share squared gunmetal construction, cyan energy, and restrained gold command marks. Alien organisms share red carapace, purple flesh, toxic green organs, asymmetry, and branching limbs.
+
 ## Bastion and soldier concept
 
 ![Bastion and soldier concept art](art/bastion-soldier-concept.png)

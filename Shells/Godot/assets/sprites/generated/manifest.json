@@ -1,7 +1,7 @@
 {
   "tileSize": 16,
   "columns": 4,
-  "rows": 3,
+  "rows": 7,
   "sprites": [
     {
       "id": "shattered_plain",
@@ -76,10 +76,138 @@
       "height": 16
     },
     {
+      "id": "recon_bike",
+      "kind": "human-unit",
+      "atlasX": 1,
+      "atlasY": 2,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "striker_tank",
+      "kind": "human-unit",
+      "atlasX": 2,
+      "atlasY": 2,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "siege_crawler",
+      "kind": "human-unit",
+      "atlasX": 3,
+      "atlasY": 2,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "missile_carrier",
+      "kind": "human-unit",
+      "atlasX": 0,
+      "atlasY": 3,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "hover_transport",
+      "kind": "human-unit",
+      "atlasX": 1,
+      "atlasY": 3,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "gunship",
+      "kind": "human-unit",
+      "atlasX": 2,
+      "atlasY": 3,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "interceptor",
+      "kind": "human-unit",
+      "atlasX": 3,
+      "atlasY": 3,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "combat_drone",
+      "kind": "human-unit",
+      "atlasX": 0,
+      "atlasY": 4,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "skitterling",
+      "kind": "alien-unit",
+      "atlasX": 1,
+      "atlasY": 4,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "acid_spitter",
+      "kind": "alien-unit",
+      "atlasX": 2,
+      "atlasY": 4,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "carapace_beast",
+      "kind": "alien-unit",
+      "atlasX": 3,
+      "atlasY": 4,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "burrower",
+      "kind": "alien-unit",
+      "atlasX": 0,
+      "atlasY": 5,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "living_artillery",
+      "kind": "alien-unit",
+      "atlasX": 1,
+      "atlasY": 5,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "winged_hunter",
+      "kind": "alien-unit",
+      "atlasX": 2,
+      "atlasY": 5,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "leviathan",
+      "kind": "alien-unit",
+      "atlasX": 3,
+      "atlasY": 5,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "biomass_harvester",
+      "kind": "alien-unit",
+      "atlasX": 0,
+      "atlasY": 6,
+      "width": 16,
+      "height": 16
+    },
+    {
       "id": "enclave",
       "kind": "building",
       "atlasX": 1,
-      "atlasY": 2,
+      "atlasY": 6,
       "width": 16,
       "height": 16
     },
@@ -87,7 +215,7 @@
       "id": "brood_node",
       "kind": "effect",
       "atlasX": 2,
-      "atlasY": 2,
+      "atlasY": 6,
       "width": 16,
       "height": 16
     }
