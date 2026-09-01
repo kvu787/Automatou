@@ -1,0 +1,95 @@
+{
+  "tileSize": 16,
+  "columns": 4,
+  "rows": 3,
+  "sprites": [
+    {
+      "id": "star_glass",
+      "kind": "terrain",
+      "atlasX": 0,
+      "atlasY": 0,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "ash_dunes",
+      "kind": "terrain",
+      "atlasX": 1,
+      "atlasY": 0,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "aether_sea",
+      "kind": "terrain",
+      "atlasX": 2,
+      "atlasY": 0,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "crystal_forest",
+      "kind": "terrain",
+      "atlasX": 3,
+      "atlasY": 0,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "iron_steppe",
+      "kind": "terrain",
+      "atlasX": 0,
+      "atlasY": 1,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "dream_marsh",
+      "kind": "terrain",
+      "atlasX": 1,
+      "atlasY": 1,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "wanderer",
+      "kind": "being",
+      "atlasX": 2,
+      "atlasY": 1,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "synth_beast",
+      "kind": "being",
+      "atlasX": 3,
+      "atlasY": 1,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "oracle",
+      "kind": "being",
+      "atlasX": 0,
+      "atlasY": 2,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "settlement",
+      "kind": "building",
+      "atlasX": 1,
+      "atlasY": 2,
+      "width": 16,
+      "height": 16
+    },
+    {
+      "id": "rift",
+      "kind": "effect",
+      "atlasX": 2,
+      "atlasY": 2,
+      "width": 16,
+      "height": 16
+    }
+  ]
+}

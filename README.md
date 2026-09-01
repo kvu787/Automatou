@@ -4,6 +4,8 @@ A deterministic, turn-based sci-fi fantasy world simulation. Watch a text-author
 
 The game is split strictly into a mandatory [.NET Kernel](src/Automapolis.Kernel) and optional [Shells](Shells). The included Shell is built with Godot 4.7.2. See [the architecture](docs/Architecture.md) for the boundary and protocol.
 
+The Godot Shell represents every terrain, being, building, and effect with a deterministic 16×16 tactical pixel-art sprite. The palette-indexed source, compiler, generated PNGs, and browser-viewable catalog live in [`Shells/Godot/assets/sprites`](Shells/Godot/assets/sprites). See the [art direction](docs/ArtDirection.md) for the palette and visual grammar.
+
 ## Play
 
 On Windows, double-click `Run.cmd`. It publishes the Kernel host, exports the Godot game, and launches the standalone executable. Godot 4.7.2 must be installed at `%UserProfile%\Program\Godot_v4.7.2-stable_win64.exe`, or its path can be supplied through `GODOT_EXE`.
