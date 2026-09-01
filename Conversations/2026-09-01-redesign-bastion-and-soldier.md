@@ -37,3 +37,13 @@ Verified deterministic generation of all eleven sprites, a warning-free .NET 10 
 Generated a polished character comparison sheet before attempting another sprite revision. The Bastion is a massive, heavily plated walking fortress with a recessed helmet, oversized powered joints, cyan ward-energy, restrained gold trim, and an integrated heavy weapon. The Soldier shares the same industrial magitech language but remains conventionally human in proportion, with practical medium armor and a service rifle.
 
 Saved the concept sheet as `docs/art/bastion-soldier-concept.png` and established it in `docs/ArtDirection.md` as the current silhouette reference for future human-force sprites.
+
+## User
+
+> the concept art is good. now, create square pixel art sprites based on that concept art at various sizes ranging 8x8 to 128x128
+
+## Assistant
+
+Created separate Bastion and Soldier sprite studies at 8x8, 16x16, 32x32, 64x64, and 128x128. Each resolution received its own ImageGen pass against the approved concept reference so detail could be simplified deliberately rather than merely shrinking one master image. The final sprites use the project's shared gunmetal, gray, gold, and cyan palette on true-alpha square PNG canvases.
+
+The generated 8x8 reductions were not readable enough, so those two smallest silhouettes were corrected directly at the logical pixel level. Added a nearest-neighbor comparison sheet and a browser-viewable catalog under `docs/art/sprite-studies`, and linked the studies from `docs/ArtDirection.md` without replacing the current production sprites.
