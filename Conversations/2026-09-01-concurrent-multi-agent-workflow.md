@@ -89,3 +89,35 @@ Proposed a later behavior-preserving partition of the Kernel and Godot hot
 files, followed by a trial with two concurrent implementation lanes and a
 single integrator. Deferred CI, scheduling, and more elaborate orchestration
 until the basic workflow has been exercised and measured.
+
+## User
+
+> Okay, this is straying away from the core issue. I want to be able to review
+> the repo, playtest the game, and define tasks, directions, feedback, etc.
+> without getting bogged down in coordination details. The AI agents should
+> just be a compute resource continuously developing the game based on that.
+> Me having to coordinate the agents is inefficient.
+
+## Assistant
+
+Accepted the correction and reframed the target as a self-driving game studio,
+not a user-operated multi-agent workflow. Proposed one persistent Director as
+the only human-facing interface. The Director would interpret product feedback,
+maintain priorities, decompose work, allocate isolated workers, review their
+results, integrate safe changes, keep `main` playable, and present concise
+playtest checkpoints. Worktrees, branches, task briefs, merge ordering, and
+worker supervision would remain internal machinery rather than user duties.
+
+Recommended a continuous loop of direction, autonomous implementation and
+verification, a playable checkpoint with a focused change summary, and new
+human feedback. The system should continue useful independent work when one
+creative decision is blocked, surface only high-value product questions, and
+reserve user attention for reviewing the game and deciding its direction.
+
+Proposed using a durable Codex goal or project-teammate task as the Director,
+with a recurring heartbeat when continuous background progress is desired.
+Recommended only a small amount of repository-visible state: durable game
+direction, AI-maintained development state, a one-command non-interactive
+verification pipeline, and a one-command review build. Detailed task queues and
+worker coordination should be generated and managed by the Director, not by
+the user.
