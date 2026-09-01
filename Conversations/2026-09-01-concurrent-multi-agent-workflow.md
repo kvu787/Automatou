@@ -121,3 +121,39 @@ direction, AI-maintained development state, a one-command non-interactive
 verification pipeline, and a one-command review build. Detailed task queues and
 worker coordination should be generated and managed by the Director, not by
 the user.
+
+## User
+
+> This is interesting, but I'm wondering if there isn't already some solid
+> off-the-shelf solutions that do this. I am 100% sure there are many other
+> people looking for this workflow.
+
+## Assistant
+
+Confirmed that a rapidly developing product category now targets this workflow,
+usually described as software factories, agent orchestration, managed agent
+fleets, background agents, or agent mission control. Distinguished products
+that merely present parallel task dashboards from systems that attempt the full
+intake, planning, execution, review, and release loop.
+
+Identified OpenAI Symphony as the clearest open-source expression of the desired
+architecture: a long-running service that monitors project work, creates
+isolated workspaces, dispatches Codex sessions, collects proof, and allows the
+human to manage work rather than supervise agents. Noted that it is explicitly
+an engineering preview, is issue-tracker driven, and lacks a polished product
+direction or playtesting interface.
+
+Identified Factory Software Factory as the closest commercial description of a
+24/7 full-SDLC autonomous system; Devin managed sessions as the closest
+conversational coordinator that decomposes work across isolated workers; Cursor
+Automations and Cloud Agents as a strong always-on event/schedule platform; and
+GitHub Copilot Agents as a mature backlog and mission-control surface. Noted
+that Conductor and Vibe Kanban primarily make human-managed parallel agents
+easier and therefore do not remove the coordination burden at the center of
+the user's request.
+
+Concluded that no evaluated product fully supplies continuous game-design
+judgment and native Windows/Godot playtesting out of the box. Recommended
+evaluating Symphony, Factory, and Devin before building orchestration, and
+adding only an Automapolis-specific direction and playtest feedback layer on
+top of the selected substrate.
