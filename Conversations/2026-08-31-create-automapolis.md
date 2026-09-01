@@ -72,3 +72,30 @@ authoritative source, then generating PNG atlases and contact sheets for visual
 review. This preserves AI editability, human-readable diffs, repeatability, and
 Godot compatibility. Advised using generative image models for concepts and
 mood exploration rather than canonical individual assets.
+
+## User
+
+> Okay, let's try 16×16 sprites that are inspired by Advance Wars and Fire
+> Emblem pixel art sprites. Do this change end-to-end and I'll review.
+
+## Assistant
+
+Replaced the colored-glyph world presentation end-to-end with original 16×16
+tactical pixel art. Used the built-in image-generation tool for a non-authoritative
+science-fantasy direction sheet, then translated that direction into eleven
+palette-indexed production sprites: six terrains, Wanderer, Synth Beast, Oracle,
+Settlement, and Rift.
+
+Added a dependency-free .NET 10 asset compiler that validates the text-grid
+source and deterministically generates individual PNGs, a packed atlas, and a
+manifest. Added a browser catalog, documented the shared palette and visual
+grammar, preserved the direction sheet and prompt, and integrated asset
+generation into `Run.cmd`.
+
+Changed the Godot 4.7.2 Shell to use nearest-neighbor rendering and layered
+terrain/object images throughout the grid, inspector, legend, and Creator
+controls. The Kernel and JSON protocol remain unchanged and fully textual.
+
+Verified the complete Release pipeline with a warning-free solution build,
+deterministic asset generation, five passing Kernel tests, a Godot standalone
+export, Kernel-host publication, and visual review of the exported executable.
