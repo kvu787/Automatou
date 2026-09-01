@@ -29,6 +29,16 @@ This generated design sheet established a broader silhouette vocabulary for comp
 
 The production roster deliberately reduces each design to one dominant outline and one signature feature. Human machines share squared gunmetal construction, cyan energy, and restrained gold command marks. Alien organisms share red carapace, purple flesh, toxic green organs, asymmetry, and branching limbs.
 
+### 64x64 unit exploration
+
+![64x64 sci-fi unit sprite roster](art/sci-fi-units-64/preview.png)
+
+The [`64x64 sci-fi unit catalog`](art/sci-fi-units-64/catalog.html) explores a
+higher-resolution tactical style across eight combat and support silhouettes.
+Each individual PNG has true hard alpha, a controlled palette, and exact 64x64
+dimensions. This collection is an art-direction candidate rather than a
+replacement for the current deterministic 16x16 production atlas.
+
 ## Bastion and soldier concept
 
 ![Bastion and soldier concept art](art/bastion-soldier-concept.png)

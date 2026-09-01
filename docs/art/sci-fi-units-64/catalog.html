@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automapolis 64x64 sci-fi unit sprites</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #070b12; color: #d8e0e8; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 32px auto; }
+    h1 { margin-bottom: 8px; }
+    p { color: #8792a5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    figure { margin: 0; padding: 16px; border: 1px solid #263245; background: #111827; border-radius: 8px; }
+    .stage { height: 272px; display: grid; place-items: center; background-color: #dce1e8; background-image: linear-gradient(45deg, #eef1f5 25%, transparent 25%), linear-gradient(-45deg, #eef1f5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #eef1f5 75%), linear-gradient(-45deg, transparent 75%, #eef1f5 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
+    img { width: 256px; height: 256px; object-fit: contain; image-rendering: pixelated; }
+    figcaption { margin-top: 12px; text-transform: capitalize; }
+    code { color: #55d6d2; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>64x64 sci-fi unit sprites</h1>
+    <p>Each image is an exact 64x64 RGBA PNG displayed at 4x with nearest-neighbor scaling.</p>
+    <div class="grid">
+      <figure><div class="stage"><img src="scout-drone.png" alt="Scout drone"></div><figcaption>scout drone</figcaption></figure>
+      <figure><div class="stage"><img src="infantry-exosuit.png" alt="Infantry exosuit"></div><figcaption>infantry exosuit</figcaption></figure>
+      <figure><div class="stage"><img src="assault-mech.png" alt="Assault mech"></div><figcaption>assault mech</figcaption></figure>
+      <figure><div class="stage"><img src="hover-tank.png" alt="Hover tank"></div><figcaption>hover tank</figcaption></figure>
+      <figure><div class="stage"><img src="artillery-walker.png" alt="Artillery walker"></div><figcaption>artillery walker</figcaption></figure>
+      <figure><div class="stage"><img src="shield-projector.png" alt="Shield projector"></div><figcaption>shield projector</figcaption></figure>
+      <figure><div class="stage"><img src="repair-drone.png" alt="Repair drone"></div><figcaption>repair drone</figcaption></figure>
+      <figure><div class="stage"><img src="alien-bio-mech.png" alt="Alien bio-mech"></div><figcaption>alien bio-mech</figcaption></figure>
+    </div>
+  </main>
+</body>
+</html>
