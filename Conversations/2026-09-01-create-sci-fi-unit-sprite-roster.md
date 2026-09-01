@@ -30,3 +30,15 @@ Validated all twenty-seven project sprites as exact 16x16 palette grids, complet
 Inspected the reference at native resolution and searched the repository for related outputs. Confirmed that no faithful pixel-perfect version exists. The reference is a 1254x1254 RGB image with a baked checkerboard and image-model-simulated pixel texture, not artwork constructed on a consistent logical pixel grid. The 64x64 `units.png` sheet is technically pixel-perfect and transparent, but contains the unsuccessful 16x16 reinterpretations rather than faithful versions of the reference designs.
 
 Recommended reconstructing the successful reference designs as new native-grid sprites at a resolution large enough to retain their silhouettes and signature details, likely 48x48 or 64x64, with true alpha and nearest-neighbor previews.
+
+## User
+
+> how was `C:\Users\k\Repository\CSharp\Automapolis\docs\art\sci-fi-unit-roster-reference.png` constructed? i need to determine the proper prompt and/or procedure so i can generate other sprites that achieve that quality
+
+## Assistant
+
+Verified by SHA-256 hash that the repository image is a byte-for-byte copy of a single built-in ImageGen output. It was generated without reference images and copied into `docs/art` unchanged; there was no resizing, sharpening, palette conversion, background removal, or other post-processing. The built-in tool selected the 1254x1254 RGB output automatically.
+
+Recovered the complete structured prompt used for the generation and explained which constraints produced the successful result: a single cohesive contact sheet, an explicit roster, consistent three-quarter viewpoint and upper-left lighting, strongly separated faction palettes, large value masses, and unique silhouettes. Clarified that the model interpreted the 16x16 requirement as a readability cue rather than an output grid, producing high-resolution simulated pixel art and a baked checkerboard.
+
+Recommended using the successful sheet as a style reference for future contact sheets, describing new units explicitly while preserving viewpoint, density, outline weight, palette, and silhouette rules. Distinguished that high-quality generation workflow from the separate deterministic reconstruction needed for genuinely pixel-perfect production sprites, preferably at a native 64x64 or similarly adequate logical resolution rather than 16x16.
