@@ -8,7 +8,7 @@ public sealed record ChannelResonance(GridPoint Position, int Amount = 25) : Wor
 
 public sealed record FortifyTerrain(GridPoint Position, TerrainKind Terrain) : WorldCommand;
 
-public sealed record DeployForce(GridPoint Position, ForceKind Kind = ForceKind.Legionary) : WorldCommand;
+public sealed record DeployForce(GridPoint Position, ForceKind Kind = ForceKind.Soldier) : WorldCommand;
 
 public sealed record EstablishEnclave(GridPoint Position, string Name) : WorldCommand;
 

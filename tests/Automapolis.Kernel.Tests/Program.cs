@@ -40,7 +40,7 @@ static void Determinism()
         new AdvanceTurn(),
         new ChannelResonance(new(2, 3), 18),
         new AdvanceTurn(),
-        new DeployForce(new(4, 4), ForceKind.Legionary),
+        new DeployForce(new(4, 4), ForceKind.Soldier),
         new AdvanceTurn()
     ];
 

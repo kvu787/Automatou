@@ -10,7 +10,7 @@ The Shell starts the adjacent `KernelHost` process and exchanges one JSON object
 - Press Space, Enter, or **Advance the Front** to resolve exactly one autonomous turn.
 - Select Witness or Command, enter an integer seed, and click **Open Front** to start a new deterministic theater.
 - Witness mode hides field authority controls and the Kernel rejects attempted intervention.
-- Command mode can channel resonance, fortify sectors, deploy cohorts, replace a lost Bastion, establish enclaves, and authorize magitech purges.
+- Command mode can channel resonance, fortify sectors, deploy soldiers, replace a lost Bastion, establish enclaves, and authorize magitech purges.
 
 ## Platform exports
 

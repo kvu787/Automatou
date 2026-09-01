@@ -31,7 +31,7 @@ keyboard / mouse / file / bot / network
 
 ## Simulation model
 
-The Kernel generates resonance, biomass, and integrity for each sector; a human enclave, cohorts, and exactly one Bastion; and an opposing mix of raveners and brood nodes. On each explicit turn, alien terrain spreads, enclaves grow or suffer, both sides maneuver, co-located forces fight, brood nodes spawn organisms, and a deterministic dispatch records the new state.
+The Kernel generates resonance, biomass, and integrity for each sector; a human enclave, soldiers, and exactly one Bastion; and an opposing mix of raveners and brood nodes. On each explicit turn, alien terrain spreads, enclaves grow or suffer, both sides maneuver, co-located forces fight, brood nodes spawn organisms, and a deterministic dispatch records the new state.
 
 ## Command protocol
 
@@ -42,7 +42,7 @@ Write one JSON object per line to standard input. Read one response object per l
 {"command":"advance"}
 {"command":"channel","x":5,"y":3,"amount":25}
 {"command":"fortify","x":5,"y":3,"terrain":"fortifiedReach"}
-{"command":"deploy","x":5,"y":3,"kind":"legionary"}
+{"command":"deploy","x":5,"y":3,"kind":"soldier"}
 {"command":"establish","x":5,"y":3,"name":"Vigil Annex"}
 {"command":"purge","x":5,"y":3,"radius":1}
 ```

@@ -19,11 +19,11 @@ The tactical contrast is intentional:
 
 A **Bastion** is a human one-person army: a rare magitech super-soldier deployed only to fronts important or desperate enough to justify one. “Bastion” is a role or class, not the name of a faction, species, building, or ordinary military rank.
 
-A Bastion is not merely a stronger legionary. The prototype expresses the distinction through rules:
+A Bastion is not merely a stronger soldier. The prototype expresses the distinction through rules:
 
 - a front begins with exactly one Bastion;
 - command cannot deploy another while that Bastion lives;
-- a Bastion has far greater strength, recovery, and anti-swarm power than a cohort;
+- a Bastion has far greater strength, recovery, and anti-swarm power than a soldier;
 - the simulation names and reports the Bastion separately from all formations;
 - losing the Bastion changes the front's status and permits a replacement to be committed.
 
@@ -37,7 +37,7 @@ The source of Bastions, their exact capabilities, their culture, and the cost of
 | integrity | How defensible and structurally coherent a sector remains |
 | biomass | Alien biological saturation and capacity to sustain the swarm |
 | enclave | A fortified human population center and production base |
-| legionary | An ordinary human field formation represented at sector scale |
+| soldier | An ordinary armored human combatant represented at sector scale |
 | ravener | A mobile alien combat organism; a provisional generic name |
 | brood node | A rooted alien organism that corrupts terrain and spawns forces |
 | xenoforest | Dense alien growth capable of spreading into damaged territory |

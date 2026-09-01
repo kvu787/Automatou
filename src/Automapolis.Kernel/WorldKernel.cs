@@ -149,7 +149,7 @@ public sealed class WorldKernel
         AddEnclave(enclavePosition, "Vigil Enclave", 42);
         foreach (var position in OrthogonalNeighbors(enclavePosition).Take(2))
         {
-            AddForce(position, ForceKind.Legionary, GeneratedName(ForceKind.Legionary, _nextForceId), 62);
+            AddForce(position, ForceKind.Soldier, GeneratedName(ForceKind.Soldier, _nextForceId), 62);
         }
 
         var bastion = AddForce(enclavePosition, ForceKind.Bastion, "Bastion Zero", 100);
@@ -257,13 +257,13 @@ public sealed class WorldKernel
 
         foreach (var position in reinforcements)
         {
-            AddForce(position, ForceKind.Legionary, GeneratedName(ForceKind.Legionary, _nextForceId + Turn), 58);
+            AddForce(position, ForceKind.Soldier, GeneratedName(ForceKind.Soldier, _nextForceId + Turn), 58);
         }
     }
 
     private void MoveHumanForces()
     {
-        foreach (var force in _forces.Where(force => force.Kind is ForceKind.Bastion or ForceKind.Legionary).OrderBy(static force => force.Id))
+        foreach (var force in _forces.Where(force => force.Kind is ForceKind.Bastion or ForceKind.Soldier).OrderBy(static force => force.Id))
         {
             force.ServiceTurns++;
             var target = NearestEnemy(force.Position, IsAlien);
@@ -335,7 +335,7 @@ public sealed class WorldKernel
             var humanAttack = humans.Sum(static force => force.Kind switch
             {
                 ForceKind.Bastion => 48,
-                ForceKind.Legionary => 17,
+                ForceKind.Soldier => 17,
                 ForceKind.Enclave => 7,
                 _ => 0
             });
@@ -413,7 +413,7 @@ public sealed class WorldKernel
     private string Deploy(DeployForce action)
     {
         RequireTile(action.Position);
-        if (action.Kind is not (ForceKind.Bastion or ForceKind.Legionary))
+        if (action.Kind is not (ForceKind.Bastion or ForceKind.Soldier))
         {
             throw new InvalidOperationException("Command may deploy only human field forces.");
         }
@@ -549,7 +549,7 @@ public sealed class WorldKernel
             Intent = kind switch
             {
                 ForceKind.Bastion => "Awaiting the impossible mission",
-                ForceKind.Legionary => "Holding formation",
+                ForceKind.Soldier => "Holding formation",
                 ForceKind.Ravener => "Scenting human heat",
                 ForceKind.BroodNode => "Rooting into the theater",
                 ForceKind.Enclave => "Maintaining the ward line",
@@ -615,13 +615,13 @@ public sealed class WorldKernel
         }
     }
 
-    private static bool IsHuman(ForceState force) => force.Kind is ForceKind.Bastion or ForceKind.Legionary or ForceKind.Enclave;
+    private static bool IsHuman(ForceState force) => force.Kind is ForceKind.Bastion or ForceKind.Soldier or ForceKind.Enclave;
 
     private static bool IsAlien(ForceState force) => force.Kind is ForceKind.Ravener or ForceKind.BroodNode;
 
     private static int HumanCasualtyPriority(ForceState force) => force.Kind switch
     {
-        ForceKind.Legionary => 0,
+        ForceKind.Soldier => 0,
         ForceKind.Enclave => 1,
         ForceKind.Bastion => 2,
         _ => 3
@@ -673,7 +673,7 @@ public sealed class WorldKernel
     private static string ForceGlyph(ForceKind kind) => kind switch
     {
         ForceKind.Bastion => "B",
-        ForceKind.Legionary => "L",
+        ForceKind.Soldier => "S",
         ForceKind.Ravener => "r",
         ForceKind.BroodNode => "N",
         ForceKind.Enclave => "E",
@@ -694,7 +694,7 @@ public sealed class WorldKernel
     private static string GeneratedName(ForceKind kind, int index) => kind switch
     {
         ForceKind.Bastion => $"Bastion {index:00}",
-        ForceKind.Legionary => $"Aegis Cohort {index:00}",
+        ForceKind.Soldier => $"Soldier {index:00}",
         ForceKind.Ravener => $"Ravener Strain {index:00}",
         ForceKind.BroodNode => $"Brood Node {index:00}",
         ForceKind.Enclave => $"Enclave {index:00}",

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfa7o72bwrfa2"
-path="res://.godot/imported/legionary.png-f18b0b8ca79cf340b240675be14059c6.ctex"
+uid="uid://chrpoorvw0pkn"
+path="res://.godot/imported/soldier.png-94d2b7d503c9610d6b6aec45063ea695.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/legionary.png"
-dest_files=["res://.godot/imported/legionary.png-f18b0b8ca79cf340b240675be14059c6.ctex"]
+source_file="res://assets/sprites/generated/soldier.png"
+dest_files=["res://.godot/imported/soldier.png-94d2b7d503c9610d6b6aec45063ea695.ctex"]
 
 [params]
 

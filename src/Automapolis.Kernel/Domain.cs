@@ -19,7 +19,7 @@ public enum TerrainKind
 public enum ForceKind
 {
     Bastion,
-    Legionary,
+    Soldier,
     Ravener,
     BroodNode,
     Enclave

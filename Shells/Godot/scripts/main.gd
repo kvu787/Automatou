@@ -21,7 +21,7 @@ const TERRAIN_SPRITE_IDS := {
 
 const FORCE_SPRITE_IDS := {
 	"bastion": "bastion",
-	"legionary": "legionary",
+	"soldier": "soldier",
 	"ravener": "ravener",
 	"broodNode": "brood_node",
 	"enclave": "enclave",
@@ -207,7 +207,7 @@ func _build_side_panel() -> Control:
 	_command_panel.add_child(command_heading)
 	_add_command_button("CHANNEL +25 RESONANCE", "channel", VIOLET)
 	_add_command_button("FORTIFY THE REACH", "fortify", MINT, {"terrain": "fortifiedReach"}, "fortified_reach")
-	_add_command_button("DEPLOY AEGIS COHORT", "deploy", GOLD, {"kind": "legionary"}, "legionary")
+	_add_command_button("DEPLOY SOLDIER", "deploy", GOLD, {"kind": "soldier"}, "soldier")
 	_add_command_button("COMMIT BASTION · IF LOST", "deploy", GOLD, {"kind": "bastion"}, "bastion")
 	_add_command_button("ESTABLISH VIGIL ANNEX", "establish", MINT, {"name": "Vigil Annex"}, "enclave")
 	_add_command_button("AUTHORIZE MAGITECH PURGE", "purge", ROSE, {"radius": 1}, "ash_waste")
@@ -501,11 +501,11 @@ func _terrain_sprite_path(terrain: String) -> String:
 
 
 func _force_sprite_path(kind: String) -> String:
-	return _sprite_path(FORCE_SPRITE_IDS.get(kind, "legionary"))
+	return _sprite_path(FORCE_SPRITE_IDS.get(kind, "soldier"))
 
 
 func _force_priority(force) -> int:
-	return {"bastion": 5, "broodNode": 4, "enclave": 3, "ravener": 2, "legionary": 1}.get(str(force.kind), 0)
+	return {"bastion": 5, "broodNode": 4, "enclave": 3, "ravener": 2, "soldier": 1}.get(str(force.kind), 0)
 
 
 func _words(camel: String) -> String:

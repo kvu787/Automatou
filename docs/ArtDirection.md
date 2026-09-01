@@ -9,7 +9,8 @@ The two sides must read before the individual unit does:
 - humanity uses squared armor, deliberate symmetry, gunmetal, ward-cyan, and command gold;
 - the aliens use low predatory silhouettes, branching limbs, wet reds, bruise-purple, and toxic green;
 - human terrain is reinforced and geometric, while alien terrain looks grown and interconnected;
-- the Bastion is broader, brighter, and more heavily armored than the legionary, with a cyan core and gold command plating.
+- the Bastion is a bulky, intimidating, roughly human-shaped wall of armor with oversized shoulders, a recessed helmet, a cyan core, and gold command plating;
+- the soldier is recognizably human and armored, but slimmer, lighter, and more conventionally equipped than the Bastion.
 
 ## Visual grammar
 
