@@ -39,6 +39,12 @@ The essential landmarks are:
 - Soldier: conventional human proportions, one cyan visor, compact shoulder pads, a simple chest plate, restrained limb armor, and a recognizable service rifle;
 - both: dark gunmetal bodies, a few large gold accent groups, and no dependency on tiny panels, cables, lights, pouches, scratches, or other surface texture.
 
+### Simplified-concept pixel sprites
+
+![Bastion and Soldier simplified-concept pixel sprites](art/pixel-sprites/preview.png)
+
+The [`8x8` through `1024x1024` pixel-sprite catalog](art/pixel-sprites/catalog.html) translates the simplified concept into a compact twelve-color palette with true transparency and hard pixel edges. The 8x8 versions are deliberate icon-scale abstractions that preserve only silhouette, visor, core, gold armor grouping, and weapon direction. From 16x16 upward, the designs progressively recover the large forms of the generated pixel-art masters without reintroducing the original concept's surface noise.
+
 ### Resolution studies
 
 ![Bastion and soldier sprite resolution studies](art/sprite-studies/preview.png)
