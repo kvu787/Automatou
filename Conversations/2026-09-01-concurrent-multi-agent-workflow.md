@@ -157,3 +157,23 @@ judgment and native Windows/Godot playtesting out of the box. Recommended
 evaluating Symphony, Factory, and Devin before building orchestration, and
 adding only an Automapolis-specific direction and playtest feedback layer on
 top of the selected substrate.
+
+## User
+
+> Okay, I understand now. The current product/service landscape is not quite at
+> the level I want right now, so it makes sense to "roll my own" manager for
+> now.
+
+## Assistant
+
+Agreed with building the missing manager layer while reusing existing agent and
+version-control infrastructure. Defined the intended boundary: Automapolis
+would own product memory, feedback interpretation, prioritization, task
+decomposition, worker delegation, integration policy, verification, and
+playable review checkpoints, but would not implement its own language model,
+coding-agent runtime, source-control system, or general workflow engine.
+
+Recommended treating the first version as a thin local Director around Codex,
+Git worktrees, and the existing build/test/export pipeline. Deferred all
+implementation until the user releases the restriction protecting the other
+agent's active changes.
