@@ -47,3 +47,15 @@ Saved the concept sheet as `docs/art/bastion-soldier-concept.png` and establishe
 Created separate Bastion and Soldier sprite studies at 8x8, 16x16, 32x32, 64x64, and 128x128. Each resolution received its own ImageGen pass against the approved concept reference so detail could be simplified deliberately rather than merely shrinking one master image. The final sprites use the project's shared gunmetal, gray, gold, and cyan palette on true-alpha square PNG canvases.
 
 The generated 8x8 reductions were not readable enough, so those two smallest silhouettes were corrected directly at the logical pixel level. Added a nearest-neighbor comparison sheet and a browser-viewable catalog under `docs/art/sprite-studies`, and linked the studies from `docs/ArtDirection.md` without replacing the current production sprites.
+
+## User
+
+> okay, clearly the "pixel art aesthetic" is not being successfully generated. however, the higher resolution sprites that look simply like downscaled versions of the original concept art look fine. so we'll pivot to that approach.
+>
+> generate sprites from the original concept art that range from 128x128 to 1024x1024.
+
+## Assistant
+
+Pivoted from palette-quantized pixel art to faithful full-color concept-derived sprites. Used the approved concept as an edit target to isolate one clean Bastion master and one clean Soldier master, removed the generated checker backgrounds and edge fringe, and preserved the painted armor, fabric, weapons, lighting, cyan energy, and gold accents.
+
+Exported true-alpha square PNGs at 1024x1024, then derived exact 512x512, 256x256, and 128x128 versions from each master with high-quality full-color downscaling. Added a comparison sheet and browser catalog under `docs/art/sprite-renders`, and marked the previous pixel-art studies as superseded process history without replacing production game assets.
