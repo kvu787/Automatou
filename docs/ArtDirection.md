@@ -27,6 +27,12 @@ The two sides must read before the individual unit does:
 
 This comparison sheet is the current shape-language reference for human forces. The Bastion is a walking fortress whose recessed operator, immense shoulder mass, powered joints, and heavy weapon make it immediately distinct from the conventionally proportioned, mobile Soldier. Future low-resolution sprites should preserve those silhouettes before attempting surface detail.
 
+### Resolution studies
+
+![Bastion and soldier sprite resolution studies](art/sprite-studies/preview.png)
+
+The [`8x8` through `128x128` sprite catalog](art/sprite-studies/catalog.html) explores how each character's defining mass, stance, weapon, and cyan energy landmarks survive at progressively tighter pixel budgets. These are review assets; choosing a production resolution remains a separate decision.
+
 ## Historical direction reference
 
 ![Early sprite direction reference](art/sprite-direction-reference.png)
