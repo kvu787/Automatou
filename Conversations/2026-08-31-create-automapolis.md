@@ -45,3 +45,30 @@ and launches the standalone Windows game.
 Verified the .NET solution with a clean warning-free build, five passing
 behavioral tests, a live Kernel/Shell process integration run, a Godot 4.7.2
 standalone export, and visual QA of the rendered application.
+
+## User
+
+> The first blocker to getting this to an acceptable prototype is clear: this
+> visual style is unacceptable.
+>
+> Let's change direction. Each "thing" (unit, terrain, building, etc.) should be
+> represented by a simple square 32x32 pixel art image. How well does that work
+> with AI-driven development? What visual styles are optimal for AI-driven
+> development?
+
+## Assistant
+
+Agreed that the existing colored-glyph interface should be replaced rather
+than polished. Assessed 32x32 pixel art as a strong fit for AI-driven
+development when consistency is enforced through a restricted art grammar and
+deterministic asset pipeline, rather than by independently prompting a general
+image generator for every sprite.
+
+Recommended top-down tactical pixel icons drawn on a 16x16 logical grid and
+scaled losslessly to 32x32, using a shared small palette, fixed lighting,
+strong silhouettes, and separate terrain, object, and UI-overlay layers.
+Recommended keeping a compact palette-indexed text representation as the
+authoritative source, then generating PNG atlases and contact sheets for visual
+review. This preserves AI editability, human-readable diffs, repeatability, and
+Godot compatibility. Advised using generative image models for concepts and
+mood exploration rather than canonical individual assets.
