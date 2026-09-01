@@ -177,3 +177,21 @@ Recommended treating the first version as a thin local Director around Codex,
 Git worktrees, and the existing build/test/export pipeline. Deferred all
 implementation until the user releases the restriction protecting the other
 agent's active changes.
+
+## User
+
+> Explain what happens when a commit to a Git worktree is made.
+
+## Assistant
+
+Explained that a commit is created from the worktree-specific index, written to
+the repository's shared object database, and then advances the branch checked
+out in that worktree. The commit and moved branch reference become immediately
+visible from every linked worktree, but no other worktree's checked-out files,
+index, or uncommitted changes are altered.
+
+Clarified that the remote repository is unchanged until a push, that merging or
+cherry-picking is still required before another branch receives the change,
+and that removing a worktree does not remove commits or its branch. Also noted
+the special case of detached `HEAD`, where a commit does not advance a named
+branch and should be attached to one before the worktree is removed.
