@@ -31,3 +31,7 @@ If I attach images to prompts, you save and record these in the conversation log
 ## Compatibility
 
 Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
+
+# Repository-specific
+
+Do not edit anything in the Lore folder.
