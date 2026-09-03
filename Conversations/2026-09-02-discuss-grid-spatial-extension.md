@@ -159,3 +159,31 @@ is the strongest alternative if the design needs a meaningful 2x2 unit smaller
 than a human, a central cell, or more detailed building interiors. Recommended
 not choosing `H >= 4` without first identifying a specific mechanic that requires
 it.
+
+## User
+
+> okay, let's lock in at 2x2 for a human for now.
+>
+> we need to start a mechanics design doc. create a document called Mechanics.md in the docs folder and fill it in with what we have so far.
+
+## Assistant
+
+Created `docs/Mechanics.md` as the authoritative starting point for game
+mechanics. Recorded the Advance Wars-style orthogonal base grid, terrain at
+base-cell resolution, `H = 2`, 2x2 humans, and 1x1 cats and dogs.
+
+Defined movable entities as units with positive-integer square `NxN`
+footprints, while buildings are immovable and may use different integer widths
+and heights. Preserved the separation between spatial footprint and combat
+power, allowing a human-sized Bastion to be far stronger than physically larger
+entities.
+
+Recorded the connection to the established three-quarter, down-right art
+direction: logical footprints are independent of sprite silhouettes and do not
+rotate, while long movable subjects can be coiled, diagonally composed, or
+foreshortened within square compositions.
+
+Kept proposals from becoming accidental decisions by listing unresolved rules
+for anchoring even footprints, stacking, movement, pathfinding, range,
+adjacency, area effects, mixed terrain, building interiors, maximum dimensions,
+human-relative scaling, and occupancy layers.
