@@ -43,3 +43,41 @@ Identified the next design question as whether the desired payoff is primarily
 visual scale or actual spatial consequences. If it is spatial, the most important
 consequences to choose are blocking, frontage, facing, multi-point adjacency,
 and vulnerability to area attacks.
+
+## User
+
+> my concern about this is that it then becomes natural to model very oblong things (like a long serpent beast or a long space cruiser) as 1x2, 1x3, 1x4, etc. if we have those kinds of units, it becomes natural to expect to "rotate" the units.
+>
+> another issue is that the art style is this: three-quarter top-down view, facing the "bottom-right" of the image. if we support "long" units, it becomes awkward to also follow that art style strictly.
+>
+> so, let's avoid these complications by saying that all movable units must have square NxN dimensions
+
+## Assistant
+
+Agreed that requiring every movable unit to have a square N-by-N footprint is a
+strong simplifying constraint. Rotation then has no effect on occupancy, so the
+simulation does not need orientation-aware placement, cornering, pathfinding, or
+multiple footprint masks. The art can retain one canonical three-quarter,
+bottom-right presentation without implying four directional sprite sets.
+
+Clarified that the logical footprint should describe the maneuvering room claimed
+by a unit rather than trace its hull or body pixel for pixel. Long creatures can
+coil, curl, crouch, or run diagonally through their square composition; long
+vehicles can be shown with bottom-right foreshortening. The opaque sprite may
+also rise or overhang outside its ground footprint as long as its base and shadow
+make the occupied square legible.
+
+Proposed treating orientation as absent from the authoritative game state, with
+facing used only as a consistent visual convention. Suggested 1x1 for ordinary
+units, 2x2 for large units, and 3x3 for colossal units, with larger squares
+reserved for exceptional set pieces because the current theater is only 16x12.
+Physical footprint remains separate from power, so a Bastion can stay 1x1 while
+a less individually powerful but physically enormous organism occupies 2x2.
+
+Noted a few rules that will eventually need precise definitions: the anchor cell
+for even-sized footprints; full-footprint passability; range measured between
+the nearest occupied cells; and area effects damaging an entity once rather than
+once per covered cell unless large-target vulnerability is an intentional rule.
+Recommended applying the square requirement specifically to movable units while
+leaving immovable structures undecided, rather than accidentally committing
+buildings to the same rule before their placement behavior is explored.
