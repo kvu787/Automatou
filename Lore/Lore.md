@@ -19,5 +19,6 @@ However, it diverges it several key ways:
     - A human occupies 4 squares
     - 
 
-Bastion Absolute is the story of humanity's struggle against a massive, deadly, and coordinated
-alien threat. 
+Bastion Absolute is the story of humanity's struggle against an existential alien threat.
+
+A Bastion is a type of human soldier.
