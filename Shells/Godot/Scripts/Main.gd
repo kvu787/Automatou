@@ -63,6 +63,9 @@ var _command_panel: VBoxContainer
 
 
 func _ready() -> void:
+	# Hex centers require fractional coordinates. Godot otherwise rounds each
+	# Control's render transform independently, opening seams between cells.
+	get_viewport().gui_snap_controls_to_pixels = false
 	_build_interface()
 	_start_kernel()
 	get_window().min_size = Vector2i(1000, 680)

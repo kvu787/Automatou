@@ -61,3 +61,10 @@ Publish the Kernel host into `Shells/Godot/KernelHost`, then run Godot with
 root. This checks the live protocol, hex selection (including overlapping cell
 bounding boxes), turn advancement, resized maps, and player interventions. The test
 scripts are excluded from standalone exports.
+
+For rendered seam regression checks, run Godot without `--headless` and add
+`-- --render-check` to the integration command. This scans the board interior
+for exposed background pixels at five outline widths (including zero and 8.5)
+and three window sizes, including 2560×1392. Preview images are saved in `Build`.
+The shell disables GUI pixel snapping so fractional hex positions remain intact
+in the rendered transforms as well as the layout geometry.

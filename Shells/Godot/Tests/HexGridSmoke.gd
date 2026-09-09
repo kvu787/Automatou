@@ -103,6 +103,8 @@ func run() -> void:
     check(established, "Player intervention was not accepted")
     check(not shell._snapshot.has("mode"), "Obsolete mode field remains")
     await process_frame
+    if "--render-check" in OS.get_cmdline_user_args():
+        await check_rendered_grid(shell)
     if "--capture" in OS.get_cmdline_user_args():
         await RenderingServer.frame_post_draw
         root.get_texture().get_image().save_png("res://Build/HexGridPreview.png")
@@ -110,3 +112,31 @@ func run() -> void:
     shell.queue_free()
     await process_frame
     quit(failures)
+
+# Run with a real renderer; headless dummy rendering cannot read pixels.
+func check_rendered_grid(shell: Control) -> void:
+    for window_size in [Vector2i(1280, 800), Vector2i(1600, 1000), Vector2i(2560, 1392)]:
+        root.size = window_size
+        for outline_width in [0.0, 0.25, 2.0, 8.5, 12.0]:
+            shell.hex_outline_width = outline_width
+            await process_frame
+            await process_frame
+            await RenderingServer.frame_post_draw
+            var rendered := root.get_texture().get_image()
+            var first = shell._cell_buttons[0]
+            var transform: Transform2D = root.get_stretch_transform() * first.get_global_transform_with_canvas()
+            # This rectangle stays inside the board and crosses all three edge
+            # directions, both row parities, and many fractional column offsets.
+            var start: Vector2 = transform * Vector2(first.HEX_WIDTH, first.RADIUS * 2.0)
+            var finish: Vector2 = transform * Vector2(first.HEX_WIDTH * 15.0, first.ROW_STEP * 10.0)
+            check(start.x >= 0 and start.y >= 0 and finish.x < rendered.get_width() and finish.y < rendered.get_height(), "Raster sample falls outside viewport")
+            var gaps := 0
+            for y in range(ceili(start.y), mini(floori(finish.y), rendered.get_height())):
+                for x in range(ceili(start.x), mini(floori(finish.x), rendered.get_width())):
+                    var pixel := rendered.get_pixel(x, y)
+                    if pixel.r < 0.15 and pixel.g < 0.15 and pixel.b < 0.25:
+                        gaps += 1
+            check(gaps == 0, "%d background pixels inside grid at %s, outline %.2f" % [gaps, window_size, outline_width])
+            if outline_width == 8.5:
+                rendered.save_png("res://Build/HexGridOutline%s.png" % window_size.x)
+    shell.hex_outline_width = 2.0
