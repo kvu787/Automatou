@@ -91,3 +91,21 @@ Removed the gaps. Hex cells now meet edge to edge with adjustable outlines.
 Adjust **Hex Outline Width** on the `Automapolis` root node in Godot’s Inspector: default **2**, range **0–12**.
 
 Godot checks passed. Implementation and conversation/screenshot committed separately.
+
+## User
+
+expose the outline width in the shell ui
+
+## Assistant
+
+I’ll add an outline-width control to the shell UI that updates the grid immediately.
+
+## Assistant
+
+The slider is now below the legend, with a live numeric readout. It ranges from 0 to 12 and retains its value across selections, turns, and new fronts during the session. The preview looks correct, and the Godot integration check passed.
+
+## Assistant
+
+Added an **Outline Width** slider below the legend. It updates immediately, ranges from **0–12**, and displays the current value.
+
+Verified visually; Godot checks passed. Changes committed.
