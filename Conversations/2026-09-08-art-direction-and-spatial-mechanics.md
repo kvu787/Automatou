@@ -126,3 +126,64 @@ My visual preference would be **square footprints for roughly square models and 
 
 I’ve recorded this as an open design question; no replacement footprint rule has been chosen.
 
+
+## User
+
+what are potential mechanics for units for rectangular footprints
+
+## Assistant
+
+I’ll lay out a few movement and turning models, with examples of how each would make rectangular units behave. These will be options, not decisions.
+
+## Assistant
+
+**Rectangular footprints can support anything from simple board-game movement to vehicles that need room to maneuver.** The central choice is how a unit changes from, say, a 2×4 footprint to a 4×2 footprint when turning.
+
+**1. Slide and pivot freely**
+
+A unit can move in any cardinal direction without changing its facing, and rotate in place when the destination footprint fits.
+
+- Easy to control; a player chooses a destination and final facing.
+- Length matters for fitting through passages and occupying space.
+- Checking only the final footprint can allow a turn whose animation passes through nearby walls or units.
+
+This suits an abstract tactical game, or creatures and walkers that can step sideways.
+
+**2. Slide and pivot, but require turning clearance**
+
+Movement works as above, but a turn also requires clear space around the unit. You could check the area swept by the rotating rectangle, or use a simpler predefined clearance pattern.
+
+- A long unit can enter a narrow passage but cannot turn around inside it.
+- Courtyards and wider intersections become useful maneuvering spaces.
+- A blanket “clear square around the unit” rule is easy to explain but may reject turns that would physically fit. Its dimensions also need care: the rotating rectangle can extend beyond either endpoint footprint.
+
+This makes bulk tangible without requiring vehicle-style steering.
+
+**3. Forward movement, reversing, and stationary turns**
+
+A unit normally moves along its facing. It can reverse, and it can pivot where there is sufficient clearance; sideways movement is unavailable or reserved for certain unit types.
+
+- A tank can back out of an alley while continuing to face its entrance.
+- Repositioning a long unit takes more planning.
+- Turning and reversing can have different movement costs, if that produces useful choices.
+
+This is a plausible stylized starting point for tracked vehicles.
+
+**4. Turns that also move the unit**
+
+A turn is a predefined maneuver that changes both position and facing—such as advancing through a right-angle bend. The maneuver needs a clear route through the cells it crosses.
+
+- Long vehicles need wide corners and approach space.
+- Some vehicles might need a multi-point turn to reverse direction.
+- Movement previews become essential: players should see the complete maneuver before committing.
+
+This suits wheeled vehicles or anything whose maneuverability should be a defining limitation.
+
+Across these options, a few rules need explicit choices:
+
+- **Pivot location:** center, front, rear, or a defined grid anchor. A 2×3 rectangle cannot rotate 90° about its exact center and remain aligned to the same cell boundaries without shifting its center, so mixed odd/even dimensions need a convention.
+- **Occupied space:** normally the entire rectangle blocks other ground units, including visually empty corners.
+- **Combat:** front/side/rear armor, firing arcs, and separate turret facing are possible additions. Rectangular shape alone does not require them.
+
+**For Automapolis, I’d explore option 2 first:** rectangular occupation with deliberate turning clearance. It would let long models fit naturally into the world and make their size meaningful. Option 3 could then distinguish vehicles from units that can sidestep, without making every unit use elaborate steering.
+
