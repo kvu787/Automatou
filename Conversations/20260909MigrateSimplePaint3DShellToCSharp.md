@@ -36,3 +36,21 @@ Renamed the folder and project to **SimplePaint3DShell** and migrated all shell 
 Verified clean Debug/Release builds, 12 Kernel tests, 275 integration/rendering checks, and standalone startup.
 
 Launch with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Shells/SimplePaint3DShell/Run.cmd). Changes and conversation are committed; the working tree is clean.
+
+## User
+
+can slnx be used instead of sln: C:\Users\k\Repository\CSharp\Automapolis\Shells\SimplePaint3DShell\SimplePaint3DShell.sln
+
+## Assistant
+
+I’ll check whether Godot 4.7.2’s C# tooling supports `.slnx` and convert the shell solution if it does.
+
+## Assistant
+
+Yes—Godot 4.7.2 explicitly supports `.slnx`. I’ll convert the solution, preserve its three build configurations, and remove the `.sln` so Godot finds only one matching solution.
+
+## Assistant
+
+Yes. Converted it to [SimplePaint3DShell.slnx](C:/Users/k/Repository/CSharp/Automapolis/Shells/SimplePaint3DShell/SimplePaint3DShell.slnx).
+
+All three configurations, Godot’s editor build, and Windows export pass. Removed the old `.sln` and committed the changes.
