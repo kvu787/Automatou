@@ -251,10 +251,18 @@ func _build_symbol_legend() -> Control:
 		row.add_theme_constant_override("v_separation", 4)
 		for entry in symbols.values():
 			var label := Label.new()
-			label.text = "%s  %s" % [entry[0], entry[1]]
+			label.text = str(entry[1]) if symbols == TERRAIN_SYMBOLS else "%s  %s" % [entry[0], entry[1]]
 			label.add_theme_font_size_override("font_size", 13)
 			label.add_theme_color_override("font_color", entry[2])
-			row.add_child(label)
+			var item := HBoxContainer.new()
+			if symbols == TERRAIN_SYMBOLS:
+				var swatch := ColorRect.new()
+				swatch.custom_minimum_size = Vector2(14, 14)
+				swatch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+				swatch.color = PANEL_RAISED.lerp(entry[2], 0.35)
+				item.add_child(swatch)
+			item.add_child(label)
+			row.add_child(item)
 		legend.add_child(row)
 	return legend
 
@@ -381,9 +389,9 @@ func _render_snapshot() -> void:
 			if force == null or _force_priority(occupant) > _force_priority(force):
 				force = occupant
 		var terrain_color := _terrain_color(str(tile.terrain))
-		var background := PANEL_RAISED.lerp(terrain_color, 0.14)
+		var background := PANEL_RAISED.lerp(terrain_color, 0.35)
 		var symbol_color := terrain_color if force == null else _force_color(str(force.kind))
-		button.text = str(tile.glyph) if force == null else str(force.glyph)
+		button.text = "" if force == null else str(force.glyph)
 		button.tooltip_text = _cell_tooltip(tile, occupants)
 		button.size = Vector2(HexCell.HEX_WIDTH, 2.0 * HexCell.RADIUS)
 		button.position = HexCell.cell_position(x, y)
@@ -391,8 +399,6 @@ func _render_snapshot() -> void:
 		button.background = background
 		button.symbol_color = symbol_color
 		button.selected = x == _selected.x and y == _selected.y
-		if force != null:
-			_add_corner_label(button, str(tile.glyph), terrain_color, false)
 		if occupants.size() > 1:
 			_add_corner_label(button, str(occupants.size()), INK, true)
 		button.pressed.connect(_select_cell.bind(Vector2i(x, y)))

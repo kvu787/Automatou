@@ -14,20 +14,14 @@ The 2d shell starts the adjacent `KernelHost` process and exchanges one JSON obj
 
 ## Symbols
 
-The grid uses the Kernel's glyphs, with terrain colors and distinct force colors.
-Occupied cells show a large force symbol, the terrain symbol in the lower-left,
-and an occupant count in the upper-right when multiple forces share the cell.
-The legend identifies every terrain and force type. Hover or select a cell to
-inspect all occupants.
+The grid represents terrain with colored fills; empty cells contain no symbol.
+Occupied cells show a large Kernel force glyph over the terrain color, with an
+occupant count in the upper-right when multiple forces share the cell.
+The legend uses color swatches for terrain and symbols for forces. Hover or
+select a cell to inspect all occupants.
 
-| Symbol | Terrain or force  |
+| Symbol | Force             |
 | ------ | ----------------- |
-| ·      | Shattered plain   |
-| :      | Ash waste         |
-| ≈      | Ley channel       |
-| ^      | Xenoforest        |
-| #      | Fortified reach   |
-| ~      | Brood mire        |
 | B      | Bastion           |
 | S      | Soldier           |
 | r      | Ravener           |
