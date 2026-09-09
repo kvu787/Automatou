@@ -41,12 +41,12 @@ occlusion treatment.
 ## Unit orientation and model visibility
 
 The main Shell should allow most angles of unit models to be seen over the
-course of play. The chosen approach is to give units four directional facings
+course of play. The chosen approach is to give units six directional facings
 and rotate their models accordingly. Keeping model rotations static and relying
 on a rotatable camera to expose other sides is not the desired approach.
 The standard orthographic 3/4 overhead camera aesthetic remains required.
 
-Four facings expose different sides of a unit; this does not imply unrestricted
+Six facings expose different sides of a unit; this does not imply unrestricted
 inspection from every elevation. Building orientation and other model-viewing
 controls remain undecided. See [Mechanics](Mechanics.md) for the facing decision
 and its unresolved gameplay effects.
@@ -75,12 +75,14 @@ rotation. Camera angle, turn animation, and harmless visual overhang belong to
 presentation; authoritative facing, movement, occupation, and collision belong
 to the Kernel. See [Mechanics](Mechanics.md).
 
-## Oblong models and footprint experiments
+## Model proportions and hex footprints
 
-For now, all units use square `NxN` footprints, including units with oblong
-models. This accepts the possibility of empty ground within their footprints.
-Stationary buildings may have any footprint shape aligned to base-cell
-boundaries; they are not restricted to squares or rectangles.
+The game now uses a hex grid. The previous square `N×N` unit footprint rule is
+superseded; multi-hex footprint shapes and physical scale remain to be designed.
+Larger entities must still be able to occupy more ground and visual space.
+The current 2d shell shows the prototype's single-hex forces on pointy-top hexes,
+with odd rows shifted right. This does not implement the main 3D Shell.
 
-Rectangular unit footprints and other options will be evaluated in separate
-experiments. No experimental alternative replaces the current square-unit rule.
+Oblong model proportions and earlier rectangular-footprint experiments remain
+relevant references, but do not define the new hex footprint rules. The main
+Shell retains the required orthographic 3/4 miniature-world aesthetic.

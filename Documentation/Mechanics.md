@@ -7,32 +7,26 @@ unresolved details are listed separately rather than decided by implication.
 
 ## Grid and scale
 
-Automapolis uses an Advance Wars-style orthogonal square grid. A **base cell** is
-the smallest addressable unit of ground area.
+Automapolis uses a **pointy-top hexagonal grid**. A base cell is one hexagon.
+Each interior cell has six edge-sharing neighbors, with travel axes 60 degrees
+apart. This replaces the previous orthogonal square grid.
 
-- Terrain is defined one base cell at a time.
-- All footprints align to base-cell boundaries.
+- Coordinates are odd-row offset: `X` is column, `Y` is row, and odd rows are
+  shifted half a hex to the right. Width and height count columns and rows.
+- The Kernel converts offset coordinates to axial coordinates for hex distance.
+  Movement, threat range, diffusion, spawning adjacency, and purge radii use
+  this topology. Radius counts hex steps, not Manhattan distance.
+- Terrain is defined one hex at a time. Footprints are sets of occupied hexes.
 - Footprint measures physical occupation and maneuvering room, not combat power.
-- A small, powerful entity can occupy less space than a large, weak entity.
-- A logical footprint does not need to trace an entity's visible silhouette.
+- Variable entity sizes remain a design requirement. The current prototype
+  still represents each force or building at a single hex and permits sharing.
+- The previous `N×N` square footprint rule and `H = 2` human scale are superseded.
+  Multi-hex footprint shapes and the human/animal scale need a hex-specific
+  design before variable footprints are implemented.
 
-The scale reference is `H`, the side length of an ordinary human's square
-footprint measured in base cells. The current design sets:
-
-- `H = 2`;
-- an ordinary human occupies 2×2 base cells;
-- a cat or dog occupies 1×1 base cell.
-
-Consequently, one human occupies the same ground area as four 1×1 entities.
-Eight 1×1 positions can share an orthogonal boundary with a 2×2 human in open
-ground. These are spatial consequences, not automatic rules for stacking or the
-number of creatures allowed to attack at once.
-
-`H = 2` is the current working scale because it provides one meaningful size
-below a human while retaining the grid's board-game simplicity. A larger value
-would increase positioning and architectural resolution, but would also increase
-map area, pathfinding space, packing density, and visual demands approximately
-with the square of `H`.
+The six axes are considered an acceptable directional resolution. Paid turns
+can still favor long straight segments over alternating hex steps; that
+remaining limitation is understood and is not a reason to retain squares.
 
 ## Spatial entities
 
@@ -40,36 +34,26 @@ with the square of `H`.
 
 A **unit** is an object that may translate and rotate.
 
-- Every unit occupies a square `N×N` footprint, where `N` is a positive integer.
-- A unit's footprint moves as one indivisible shape.
-- Movable rectangular footprints such as 1×2, 1×3, or 2×4 are not allowed.
-- Footprint size is independent of strength, durability, range, and narrative
-  importance. A Bastion can therefore remain human-sized despite exceptional
-  power.
+The intended orientation system has six facings along the hex neighbor axes:
+east, southeast, southwest, west, northwest, and northeast. Adjacent facings
+are 60 degrees apart. The main Shell will rotate models to represent facing.
+The prototype does not yet store facing or implement paid rotation.
 
-Units have an orientation with four possible facings aligned to the square
-grid's cardinal directions. This is a design decision, not yet an implemented
-system. It replaces the earlier assumption that unit orientation is purely
-visual. The main Shell will rotate unit models to represent their facing.
+The high-level motion design remains that most units translate forward and
+rotate to change travel direction, with both translation and rotation costing
+action. Exact costs, exceptions, and attack interactions remain undecided.
+The current autonomous prototype instead advances a mobile force up to one
+neighboring hex per explicit turn, without an action-point or facing system.
 
-Square footprints keep occupied cells unchanged across the four facings;
-introducing facing does not change the square-footprint requirement.
-
-Translation and rotation should broadly resemble real-world motion, simplified
-to the square grid. Most units may translate only forward; to travel in another
-direction, they must rotate first. Both translation and rotation cost some
-amount of action. Exact costs, action-budget structure, exceptions to forward-only
-translation, and interactions with attacks remain undecided.
-
-Rectangular unit footprints and their alternative movement/turning rules are deferred
-to separate experiments. For now, all units retain square footprints, including
-units with oblong models.
+Footprint size remains independent of combat strength. Multi-hex unit shapes,
+anchors, and rotation clearance are unresolved. Earlier rectangular-footprint
+experiments remain separate from the implemented game.
 
 ### Buildings
 
 A **building** is a stationary object: it does not translate or rotate.
 
-- A building may have any footprint shape, aligned to base-cell boundaries.
+- A building may have any footprint shape, composed of base hexes.
 - Building footprints are not restricted to squares or rectangles.
 - Whether buildings are enterable remains undecided.
 
@@ -85,12 +69,12 @@ Production art will use Blender models with SimplePaint materials. The current
 2d shell represents entities with symbols. Both presentations are independent
 of the spatial rules:
 
-- unit models show their four-direction facing; facing does not change the
-  cells occupied by a square unit footprint;
+- the main Shell will show six-direction unit facing; multi-hex rotation
+  rules remain undecided;
 - an entity's appearance may extend beyond its occupied area without changing
   collision or movement;
-- logical occupation remains defined by the square unit and arbitrary building
-  footprints above.
+- logical occupation is defined by occupied hexes, independently of projected
+  screen coverage.
 
 Camera and model composition choices are part of [Art direction](ArtDirection.md).
 The standard 3D view is orthographic 3/4 overhead, a hard aesthetic requirement.
@@ -106,7 +90,7 @@ alone does not determine turning rules or orientation-aware footprint masks.
 
 The following rules must be decided before variable footprints are implemented:
 
-- how an entity's position identifies an even-sized footprint such as 2×2;
+- shapes and anchors for multi-hex unit footprints, including rotation;
 - whether allied or opposing entities may overlap or stack;
 - how movement cost and passability combine across every covered cell;
 - how paths account for the complete moving footprint and narrow clearances;
@@ -119,7 +103,7 @@ The following rules must be decided before variable footprints are implemented:
 - whether buildings contain traversable interior cells;
 - maximum unit and building footprint dimensions;
 - how movement speed, weapon range, and generated feature widths scale relative
-  to `H`;
+  to the eventual hex-based human scale;
 - whether air, ground, underground, structure, and effect layers can share the
   same cells.
 

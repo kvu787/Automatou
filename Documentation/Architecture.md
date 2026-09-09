@@ -63,3 +63,15 @@ Write one JSON object per line to standard input. Read one response object per l
 ```
 
 Enum input is case-insensitive. Invalid commands return an error response without ending the host process.
+
+## Hex spatial contract
+
+Snapshots declare `topology: "hexagonal"` and `coordinates: "oddRowOffset"`.
+All command and snapshot `x,y` positions mean zero-based column and row, with
+odd rows shifted right by half a hex. Width and height bound the offset array.
+`HexGrid` owns six-neighbor adjacency and hex-step distance in the Kernel.
+Shells map these coordinates to pointy-top hex centers for presentation;
+text output indents odd rows. Renderers do not determine simulation adjacency.
+
+The implementation still uses single-hex forces and autonomous movement.
+Six-direction facing, paid turning, and variable footprints are future systems.

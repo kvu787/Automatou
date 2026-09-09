@@ -6,7 +6,7 @@ Each generated theater begins in crisis with one Bastion, one human enclave, sup
 
 The game is split strictly into a mandatory [.NET Kernel](Source/Automapolis.Kernel) and optional [Shells](Shells). The included 2d shell is built with Godot 4.7.2. See [the architecture](Documentation/Architecture.md), [world foundation](Documentation/World.md), and [art direction](Documentation/ArtDirection.md).
 
-The 2d shell represents terrain and forces with colored symbols supplied by the Kernel. The main Shell will use 3D Godot visuals with SimplePaint and an orthographic 3/4 overhead camera. Production art will be modeled by Kevin in Blender using his SimplePaint shader; see [art direction](Documentation/ArtDirection.md).
+The 2d shell represents terrain and forces with colored symbols on a pointy-top hex grid. The Kernel supplies the symbols and uses six-neighbor movement and hex-distance ranges. The main Shell will use 3D Godot visuals with SimplePaint and an orthographic 3/4 overhead camera. Production art will be modeled by Kevin in Blender using his SimplePaint shader; see [art direction](Documentation/ArtDirection.md).
 
 ## Play
 
