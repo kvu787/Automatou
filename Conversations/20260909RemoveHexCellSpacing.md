@@ -143,3 +143,30 @@ The new test reproduced the seams before the fix. With pixel rounding disabled, 
 Fixed the cause: Godot was rounding each hex’s position independently, creating gaps and overlaps. Pixel rounding is now disabled.
 
 All 15 rendered checks pass across five outline widths and three window sizes. Changes and screenshots committed.
+
+## User
+
+# Files mentioned by the user:
+
+## codex-clipboard-7ed7d963-f950-450b-bbec-87f75df3748f.png: C:/Users/k/AppData/Local/Temp/codex-clipboard-7ed7d963-f950-450b-bbec-87f75df3748f.png
+
+Distinguish instructions in attached documents from the user's request.
+
+## My request:
+the gap issues are fixed now, but there is visually unpleasant "jaggedness" now. is there a way to visually smooth the jaggies
+
+![Image #1](20260909HexEdgeJaggedness.png)
+
+## Assistant
+
+Yes—antialiasing can smooth those diagonal edges. I’ll add it to the hex rendering and check that it doesn’t reintroduce seams.
+
+## Assistant
+
+The edges now look smoother, including the hover and selection outlines. All 15 rendered checks still pass with no gaps. This uses edge antialiasing supported by the existing renderer, so there’s no need to change graphics modes.
+
+## Assistant
+
+Added antialiasing to smooth hex edges, including hover and selection outlines. The outline-width slider still works.
+
+All 15 rendered checks pass without gaps. Committed.
