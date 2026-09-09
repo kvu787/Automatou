@@ -147,7 +147,7 @@ public sealed class WorldKernel
 
         var enclavePosition = FindHumanLanding();
         AddEnclave(enclavePosition, "Vigil Enclave", 42);
-        foreach (var position in OrthogonalNeighbors(enclavePosition).Take(2))
+        foreach (var position in Neighbors(enclavePosition).Take(2))
         {
             AddForce(position, ForceKind.Soldier, GeneratedName(ForceKind.Soldier, _nextForceId), 62);
         }
@@ -183,7 +183,7 @@ public sealed class WorldKernel
             for (var x = 0; x < _config.Width; x++)
             {
                 var tile = _tiles[x, y];
-                var neighbors = OrthogonalNeighbors(tile.Position).Select(GetTile).ToArray();
+                var neighbors = Neighbors(tile.Position).Select(GetTile).ToArray();
                 var neighborResonance = (int)neighbors.Average(static value => value.Resonance);
                 var neighborBiomass = (int)neighbors.Average(static value => value.Biomass);
                 var pulse = DeterministicNoise.Range(_config.Seed, Turn, x, y, 20, 7) - 3;
@@ -240,7 +240,7 @@ public sealed class WorldKernel
         {
             enclave.ServiceTurns++;
             var tile = GetTile(enclave.Position);
-            var threatened = _forces.Any(force => IsAlien(force) && Manhattan(force.Position, enclave.Position) <= 2);
+            var threatened = _forces.Any(force => IsAlien(force) && HexGrid.Distance(force.Position, enclave.Position) <= 2);
             var growth = tile.Integrity / 30 + tile.Resonance / 35 - tile.Biomass / 24 - (threatened ? 2 : 0);
             enclave.Population = Math.Max(0, enclave.Population + growth);
             enclave.Strength = Math.Clamp(enclave.Strength + tile.Resonance / 22 - (threatened ? 3 : 1), 0, 100);
@@ -449,7 +449,7 @@ public sealed class WorldKernel
     {
         RequireTile(action.Position);
         var radius = Math.Clamp(action.Radius, 0, 4);
-        foreach (var tile in EnumerateTiles().Where(tile => Manhattan(tile.Position, action.Position) <= radius))
+        foreach (var tile in EnumerateTiles().Where(tile => HexGrid.Distance(tile.Position, action.Position) <= radius))
         {
             tile.Resonance = Math.Max(0, tile.Resonance - 18);
             tile.Biomass = Math.Max(0, tile.Biomass - 70);
@@ -457,7 +457,7 @@ public sealed class WorldKernel
             tile.Terrain = TerrainKind.AshWaste;
         }
 
-        foreach (var force in _forces.Where(force => Manhattan(force.Position, action.Position) <= radius))
+        foreach (var force in _forces.Where(force => HexGrid.Distance(force.Position, action.Position) <= radius))
         {
             force.Strength -= force.Kind is ForceKind.Bastion ? 25 : 100;
             if (force.Kind is ForceKind.Enclave)
@@ -474,16 +474,16 @@ public sealed class WorldKernel
 
     private ForceState? NearestEnemy(GridPoint origin, Func<ForceState, bool> predicate) => _forces
         .Where(force => force.Strength > 0 && predicate(force))
-        .OrderBy(force => Manhattan(origin, force.Position))
+        .OrderBy(force => HexGrid.Distance(origin, force.Position))
         .ThenBy(static force => force.Id)
         .FirstOrDefault();
 
-    private GridPoint StepToward(ForceState force, GridPoint target) => OrthogonalNeighbors(force.Position)
+    private GridPoint StepToward(ForceState force, GridPoint target) => Neighbors(force.Position)
         .Append(force.Position)
         .Select(point => new
         {
             Point = point,
-            Distance = Manhattan(point, target),
+            Distance = HexGrid.Distance(point, target),
             TerrainScore = IsHuman(force)
                 ? GetTile(point).Integrity + GetTile(point).Resonance - GetTile(point).Biomass
                 : GetTile(point).Biomass - GetTile(point).Integrity,
@@ -496,7 +496,7 @@ public sealed class WorldKernel
         .First()
         .Point;
 
-    private GridPoint BestAdjacent(GridPoint origin, Func<TileState, int> score) => OrthogonalNeighbors(origin)
+    private GridPoint BestAdjacent(GridPoint origin, Func<TileState, int> score) => Neighbors(origin)
         .Append(origin)
         .Select(GetTile)
         .OrderByDescending(score)
@@ -505,13 +505,8 @@ public sealed class WorldKernel
         .First()
         .Position;
 
-    private IEnumerable<GridPoint> OrthogonalNeighbors(GridPoint point)
-    {
-        if (point.X > 0) yield return point with { X = point.X - 1 };
-        if (point.X + 1 < _config.Width) yield return point with { X = point.X + 1 };
-        if (point.Y > 0) yield return point with { Y = point.Y - 1 };
-        if (point.Y + 1 < _config.Height) yield return point with { Y = point.Y + 1 };
-    }
+    private IEnumerable<GridPoint> Neighbors(GridPoint point) =>
+        HexGrid.Neighbors(point, _config.Width, _config.Height);
 
     private IEnumerable<TileState> EnumerateTiles()
     {
@@ -626,8 +621,6 @@ public sealed class WorldKernel
         ForceKind.Bastion => 2,
         _ => 3
     };
-
-    private static int Manhattan(GridPoint left, GridPoint right) => Math.Abs(left.X - right.X) + Math.Abs(left.Y - right.Y);
 
     private static int BaseResonance(TerrainKind terrain) => terrain switch
     {

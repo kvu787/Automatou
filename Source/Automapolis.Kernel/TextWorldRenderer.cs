@@ -17,21 +17,19 @@ public static class TextWorldRenderer
         var builder = new StringBuilder();
 
         builder.AppendLine($"{snapshot.Name} // TURN {snapshot.Turn:000} // {snapshot.Mode.ToString().ToUpperInvariant()}");
-        builder.Append('┌').Append(new string('─', snapshot.Width * 2)).AppendLine("┐");
+        builder.AppendLine("HEX GRID // odd rows shifted right // coordinates: column,row");
         for (var y = 0; y < snapshot.Height; y++)
         {
-            builder.Append('│');
+            builder.Append($"{y:00} ").Append((y & 1) == 1 ? "  " : "");
             for (var x = 0; x < snapshot.Width; x++)
             {
                 var point = new GridPoint(x, y);
                 var glyph = forcesByPosition.TryGetValue(point, out var force) ? force.Glyph : tilesByPosition[point].Glyph;
-                builder.Append(glyph).Append(' ');
+                builder.Append('[').Append(glyph).Append("] ");
             }
-
-            builder.AppendLine("│");
+            builder.AppendLine();
         }
 
-        builder.Append('└').Append(new string('─', snapshot.Width * 2)).AppendLine("┘");
         builder.AppendLine($"HUMAN {snapshot.Metrics.HumanForces}  ALIEN {snapshot.Metrics.AlienForces}  POP {snapshot.Metrics.HumanPopulation}  RESONANCE {snapshot.Metrics.TotalResonance}  INTEGRITY {snapshot.Metrics.TheaterIntegrity}%");
         if (snapshot.Chronicle.Count > 0)
         {

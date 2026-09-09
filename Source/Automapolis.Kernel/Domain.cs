@@ -25,6 +25,7 @@ public enum ForceKind
     Enclave
 }
 
+/// <summary>Odd-row offset hex coordinates: column X and row Y.</summary>
 public readonly record struct GridPoint(int X, int Y)
 {
     public override string ToString() => $"{X},{Y}";
@@ -98,6 +99,10 @@ public sealed record WorldSnapshot(
     IReadOnlyList<TileSnapshot> Tiles,
     IReadOnlyList<ForceSnapshot> Forces,
     WorldMetrics Metrics,
-    IReadOnlyList<string> Chronicle);
+    IReadOnlyList<string> Chronicle)
+{
+    public string Topology => HexGrid.Topology;
+    public string Coordinates => HexGrid.Coordinates;
+}
 
 public sealed record CommandResult(bool Accepted, string Message, WorldSnapshot Snapshot);
