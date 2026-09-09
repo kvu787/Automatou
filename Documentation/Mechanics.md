@@ -28,8 +28,8 @@ apart. This replaces the previous orthogonal square grid.
   still represents each force or building at a single hex and permits sharing.
 - The previous `N×N` square footprint rule and `H = 2` human scale are superseded.
   Units must have regular hexagonal footprints at different sizes; buildings
-  may have arbitrary footprints. Exact occupied-cell masks and the human/animal
-  scale remain to be decided before variable footprints are implemented.
+  may have arbitrary footprints. Unit size counts the center cell plus complete
+  surrounding rings, as specified below.
 
 The six axes are considered an acceptable directional resolution. Paid turns
 can still favor long straight segments over alternating hex steps; that
@@ -56,11 +56,24 @@ Units must have regular hexagonal footprints, small or large; oblong unit
 footprints are not allowed. Neither units nor buildings are limited to one hex.
 Footprint size remains independent of combat strength.
 
-The precise discrete representation is still open: a regular hexagonal extent
-must be mapped to occupied base cells. A center cell plus complete surrounding
-rings is one candidate, not an adopted rule. Allowed sizes, anchors, and
-rotation clearance remain unresolved. Earlier rectangular-footprint experiments
-remain separate from the implemented game.
+A unit's position identifies its center hex. Size is a positive integer:
+size `S` occupies the center plus `S - 1` complete rings, equivalently every
+base hex at hex distance at most `S - 1` from the center. The occupied-cell
+count is `1 + 3 * S * (S - 1)`, giving 1, 7, 19, 37, ... cells.
+
+- Pets are size 1: one occupied cell.
+- Ordinary humans are size 2: seven occupied cells.
+- Larger unit sizes continue the same complete-ring sequence.
+
+The footprint follows the actual base-cell boundaries. Its sixfold symmetry
+means that rotating about its center in 60-degree increments leaves the
+occupied-cell set unchanged. **Do not perform swept collision checks during
+rotation or require additional swept clearance.** Intermediate model angles
+are presentation, not additional logical occupation.
+
+Earlier rectangular-footprint experiments remain separate from the implemented
+game. The complete-ring footprints and reference sizes are design decisions;
+the prototype still uses single-cell entities.
 
 ### Buildings
 
@@ -82,8 +95,8 @@ Production art will use Blender models with SimplePaint materials. The current
 2d shell represents entities with symbols. Both presentations are independent
 of the spatial rules:
 
-- the main Shell will show six-direction unit facing; multi-hex rotation
-  rules remain undecided;
+- the main Shell will show six-direction unit facing; turns preserve the
+  complete-ring occupied footprint and do not use swept collision checks;
 - an entity's appearance may extend beyond its occupied area without changing
   collision or movement;
 - logical occupation is defined by occupied hexes, independently of projected
@@ -99,12 +112,11 @@ remains an unresolved presentation and interaction decision.
 Unit facing is an explicit design decision described above. Camera composition
 alone does not determine turning rules or orientation-aware footprint masks.
 
-## Unresolved spatial rules
+## Deferred spatial TODOs
 
-The following rules must be decided before variable footprints are implemented:
+The following questions are deferred; they do not reopen the footprint, scale,
+or no-sweep decisions above:
 
-- discrete masks, allowed sizes, and anchors for regular hexagonal unit footprints;
-- whether turns require clearance beyond the start/end occupied cells;
 - whether allied or opposing entities may overlap or stack;
 - how movement cost and passability combine across every covered cell;
 - how paths account for the complete moving footprint and narrow clearances;
@@ -117,11 +129,11 @@ The following rules must be decided before variable footprints are implemented:
 - whether buildings contain traversable interior cells;
 - maximum unit and building footprint dimensions;
 - how movement speed, weapon range, and generated feature widths scale relative
-  to the eventual hex-based human scale;
+  to the size-2 human reference;
 - whether air, ground, underground, structure, and effect layers can share the
   same cells.
 
-## Unresolved facing rules
+## Deferred facing TODOs
 
 - Whether turning is automatic, explicitly commanded, or both.
 - The action costs of translation and rotation, their shared or separate budgets,
@@ -129,13 +141,13 @@ The following rules must be decided before variable footprints are implemented:
 - Which units may reverse or move sideways as exceptions to forward-only travel.
 - How final facing and attacks interact with paid rotation.
 - Whether facing affects attack arcs, defense, vision, or other mechanics.
-- How turns are animated and how visual clearance is handled during a turn.
+- How turns are animated and visual overlap is presented, without swept
+  collision checks.
 - How a building's fixed orientation is chosen at placement; buildings remain
   stationary after placement.
 
-## Decisions to review after the hex conversion
+## Other deferred TODOs
 
-- Human/animal reference scale and the spacing between allowed unit sizes.
 - Placement and boundaries of arbitrary building footprints, including holes,
   interiors, and the visual fit of rectangular architecture to hex cells.
 - Corridor, road, doorway, and bridge widths for different unit sizes.

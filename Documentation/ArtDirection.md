@@ -79,8 +79,14 @@ to the Kernel. See [Mechanics](Mechanics.md).
 
 The game now uses a hex grid. The previous square `N×N` unit footprint rule is
 superseded. Units must have regular hexagonal footprints at different sizes,
-with no oblong footprints. Buildings may have any footprint. Exact base-cell
-masks, size increments, and physical scale remain to be designed.
+with no oblong footprints. Size `S` consists of a center hex and `S - 1`
+complete rings: 1, 7, 19, 37, ... occupied cells. Pets are size 1 (one cell);
+ordinary humans are size 2 (seven cells). Buildings may have any footprint.
+
+Rotation does not use swept collision checks or add intermediate occupied
+cells. The Shell may animate between the six facings; visual overlap during
+animation is a deferred presentation TODO. The logical footprint retains its
+base-cell boundary, regardless of how its outline is drawn.
 Larger entities must still be able to occupy more ground and visual space.
 The current 2d shell shows the prototype's single-hex forces on pointy-top hexes,
 with odd rows shifted right. This does not implement the main 3D Shell.
