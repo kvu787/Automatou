@@ -26,8 +26,7 @@ apart. This replaces the previous orthogonal square grid.
 - Footprint measures physical occupation and maneuvering room, not combat power.
 - Variable entity sizes remain a design requirement. The current prototype
   still represents each force or building at a single hex and permits sharing.
-- The previous `N×N` square footprint rule and `H = 2` human scale are superseded.
-  Units must have regular hexagonal footprints at different sizes; buildings
+- Units must have regular hexagonal footprints at different sizes; buildings
   may have arbitrary footprints. Unit size counts the center cell plus complete
   surrounding rings, as specified below.
 
@@ -80,8 +79,7 @@ the prototype still uses single-cell entities.
 A **building** is a stationary object: it does not translate or rotate.
 
 - A building may have any footprint shape, composed of base hexes.
-- Building footprints are not restricted to squares or rectangles.
-- Whether buildings are enterable remains undecided.
+- Buildings aren't enterable.
 
 ### Terrain
 
@@ -108,9 +106,6 @@ Model height can occlude cells outside the ground footprint: a one-cell tower
 may hide other cells without occupying them. This camera occlusion does not by
 itself establish gameplay line-of-sight or cover rules. Occlusion handling
 remains an unresolved presentation and interaction decision.
-
-Unit facing is an explicit design decision described above. Camera composition
-alone does not determine turning rules or orientation-aware footprint masks.
 
 ## Deferred spatial TODOs
 
