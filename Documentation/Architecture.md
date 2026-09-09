@@ -74,5 +74,13 @@ odd rows shifted right by half a hex. Width and height bound the offset array.
 Shells map these coordinates to pointy-top hex centers for presentation;
 text output indents odd rows. Renderers do not determine simulation adjacency.
 
-The implementation still uses single-hex forces and autonomous movement.
-Six-direction facing, paid turning, and variable footprints are future systems.
+The implementation still uses single-hex forces and autonomous movement, and
+permits forces to share a hex, including with enclaves and brood nodes. This
+prototype co-location does not represent entering a building.
+
+[Mechanics](Mechanics.md) defines the design for future spatial implementation:
+units use complete-ring hex footprints, six facings, and paid translation and
+rotation, with no swept collision checks during rotation. Buildings are
+stationary and non-enterable, with arbitrary footprints composed of base hexes.
+These footprint and facing systems are not yet implemented; their remaining
+open questions are listed in Mechanics.

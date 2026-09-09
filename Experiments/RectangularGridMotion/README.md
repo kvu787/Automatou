@@ -2,6 +2,12 @@
 
 A self-contained Godot 4.7.2 experiment comparing integer-only turn rejection rules on a 12 x 12 square grid. Every rule uses the same rear pivot and final quarter-turn. Sweep check defaults to **Off**, preserving destination-only movement.
 
+This experiment preserves the earlier rectangular-motion investigation. Its square
+grid, oblong footprints, rear pivot, and optional sweep checks are experimental
+rules, separate from Automapolis's current hex-grid design. The game uses
+complete-ring unit footprints and does not perform swept collision checks during
+rotation.
+
 Double-click `Run.cmd` to import, verify, export, and launch `Build/RectangularGridMotion.exe`. The launcher closes an existing instance before export so Windows can replace the executable. This resets the running experiment. If it cannot close the old window, close it manually and try again. Set `GODOT_EXE` to override the default Godot 4.7.2 executable in `%UserProfile%\Program`. Matching Windows export templates are required.
 
 ## Controls and preview

@@ -121,7 +121,6 @@ or no-sweep decisions above:
   cell;
 - how cover, hazards, and other terrain effects combine beneath a multi-cell
   entity;
-- whether buildings contain traversable interior cells;
 - maximum unit and building footprint dimensions;
 - how movement speed, weapon range, and generated feature widths scale relative
   to the size-2 human reference;
@@ -143,14 +142,15 @@ or no-sweep decisions above:
 
 ## Other deferred TODOs
 
-- Placement and boundaries of arbitrary building footprints, including holes,
-  interiors, and the visual fit of rectangular architecture to hex cells.
-- Corridor, road, doorway, and bridge widths for different unit sizes.
+- Placement and boundaries of arbitrary building footprints, including holes
+  and the visual fit of rectangular architecture to hex cells. Buildings remain
+  non-enterable.
+- Outdoor passage, road, and bridge widths for different unit sizes.
 - Whether translation distance is measured per base hex independently of size.
 - Facing sectors and boundary cases if directional combat or vision is added.
 - Footprint overlays and occlusion handling in the required main Shell camera.
 
 The six-facing design, paid translation/rotation direction, variable-size
-requirement, stationary buildings, and orthographic 3/4 miniature-world aesthetic
-remain in effect. The prototype still uses single-cell forces; these footprint
+requirement, stationary non-enterable buildings, and orthographic 3/4
+miniature-world aesthetic remain in effect. The prototype still uses single-cell forces; these footprint
 requirements are design decisions rather than implemented features.

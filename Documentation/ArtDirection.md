@@ -47,20 +47,22 @@ on a rotatable camera to expose other sides is not the desired approach.
 The standard orthographic 3/4 overhead camera aesthetic remains required.
 
 Six facings expose different sides of a unit; this does not imply unrestricted
-inspection from every elevation. Building orientation and other model-viewing
-controls remain undecided. See [Mechanics](Mechanics.md) for the facing decision
+inspection from every elevation. Buildings do not translate or rotate; how their
+fixed orientation is chosen at placement and other model-viewing controls remain
+undecided. See [Mechanics](Mechanics.md) for the facing decision
 and its unresolved gameplay effects.
 
 ## Current 2d shell presentation
 
-The 2d shell uses the Kernel's text symbols for terrain and forces. Color
-helps distinguish terrain and factions, while symbols and labels identify them
-without depending on color alone.
+The 2d shell uses colored fills for terrain and the Kernel's text symbols for
+forces. Terrain names and descriptions remain available in the inspector and
+hover text.
 
-- Terrain symbols remain visible in occupied cells.
-- Force symbols take the central position in occupied cells.
+- Empty cells show only their terrain color, with no terrain symbol.
+- Force symbols take the central position over the terrain color in occupied cells.
 - A count identifies cells with multiple occupants; the inspector lists them all.
-- The legend, inspector, and command controls use the same symbol vocabulary.
+- The legend uses terrain color swatches and force symbols. The inspector and
+  command controls retain the Kernel's terrain and force symbol vocabulary.
 - Selection and hover remain separate interface treatments.
 
 The symbol presentation allows gameplay work and playtesting to continue while
@@ -81,7 +83,8 @@ The game now uses a hex grid. The previous square `N×N` unit footprint rule is
 superseded. Units must have regular hexagonal footprints at different sizes,
 with no oblong footprints. Size `S` consists of a center hex and `S - 1`
 complete rings: 1, 7, 19, 37, ... occupied cells. Pets are size 1 (one cell);
-ordinary humans are size 2 (seven cells). Buildings may have any footprint.
+ordinary humans are size 2 (seven cells). Buildings may have arbitrary footprints
+composed of base hexes and are non-enterable.
 
 Rotation does not use swept collision checks or add intermediate occupied
 cells. The Shell may animate between the six facings; visual overlap during

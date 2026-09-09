@@ -1,6 +1,6 @@
 # 2d shell (Godot)
 
-This is the currently implemented symbolic 2d shell, distinct from the planned main 3D Shell. This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical hex grid with symbols with sector inspection, front dispatches, and Command controls, but contains no simulation rules.
+This is the currently implemented symbolic 2d shell, distinct from the planned main 3D Shell. This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical hex grid with terrain colors, force symbols, sector inspection, front dispatches, and Command controls, but contains no simulation rules.
 
 The 2d shell starts the adjacent `KernelHost` process and exchanges one JSON object per line. It can therefore be replaced without changing the game.
 
