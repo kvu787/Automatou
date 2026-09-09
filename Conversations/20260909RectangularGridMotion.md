@@ -280,3 +280,21 @@ The launcher now successfully closes the old experiment window, rebuilds the exe
 The previous experiment was still running, so Windows prevented replacing its executable.
 
 Fixed `Run.cmd` to close that window before rebuilding. Tested successfully with the experiment already running. Committed—you can run it again.
+
+## User
+
+Remove "center sweep" and "rear pivot sweep" entirely. this means there should no longer be a select box.
+
+## Assistant
+
+I’ll remove both swept approaches and the approach selector, leaving only destination checking.
+
+## Assistant
+
+Both sweep implementations are removed. I also replaced the remaining rotation math with integer quarter-turns and doubled integer coordinates for pivots, as required. The movement checks pass; I’m finishing the UI checks and rebuild.
+
+## Assistant
+
+Removed both swept approaches and their collision logic. Only **destination snap** remains, using integer math.
+
+No select boxes remain; footprint sizes use buttons. Movement and keyboard checks pass, the executable is rebuilt, and changes are committed.
