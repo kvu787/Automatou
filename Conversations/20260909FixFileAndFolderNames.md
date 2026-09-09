@@ -21,3 +21,15 @@ The renames and references are updated. The Release build passed with no warning
 Renamed files and folders to follow `AGENTS.md` and updated references. Preserved tool-required filenames and left `Lore` untouched.
 
 Verified: clean Release build, all eight tests passing, and successful Godot resource import. Changes and conversation logs are committed separately.
+
+## User
+
+rename ReadMe.md back to README.md
+
+## Assistant
+
+I’ll rename all three `ReadMe.md` files back to `README.md` and update their links.
+
+## Assistant
+
+Renamed all three files back to `README.md`, updated the link, and committed the changes.
