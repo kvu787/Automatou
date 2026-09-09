@@ -68,3 +68,8 @@ for exposed background pixels at five outline widths (including zero and 8.5)
 and three window sizes, including 2560×1392. Preview images are saved in `Build`.
 The shell disables GUI pixel snapping so fractional hex positions remain intact
 in the rendered transforms as well as the layout geometry.
+
+Hex fills and outlines use antialiased edge strokes over opaque polygons to
+smooth diagonal edges without opening gaps. The edge stroke scales to one screen
+pixel and refreshes when the window is resized. This works with the existing
+Compatibility renderer; no graphics-mode change is required.

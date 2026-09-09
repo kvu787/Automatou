@@ -14,6 +14,7 @@ var outline_width := 2.0:
         queue_redraw()
 
 func _ready() -> void:
+    get_tree().root.size_changed.connect(queue_redraw)
     mouse_entered.connect(queue_redraw)
     mouse_exited.connect(queue_redraw)
     focus_entered.connect(queue_redraw)
@@ -56,14 +57,24 @@ func _draw() -> void:
     if outline_width > 0.0:
         # Each neighbor contributes half the shared outline, entirely inside
         # its own hex. No overlapping strokes or draw-order-dependent widths.
-        draw_colored_polygon(points, border)
+        _draw_smooth_polygon(points, border)
         if outline_width < HEX_WIDTH:
-            draw_colored_polygon(polygon(outline_width / 2.0), fill)
+            _draw_smooth_polygon(polygon(outline_width / 2.0), fill)
     else:
-        draw_colored_polygon(points, fill)
+        _draw_smooth_polygon(points, fill)
     if has_focus():
         draw_circle(Vector2(HEX_WIDTH / 2.0, 8.0), 2.0, Color.WHITE)
     var font := get_theme_font("font", "Button")
     var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22)
     draw_string(font, Vector2((HEX_WIDTH - text_size.x) / 2.0, RADIUS + 7.0), text,
         HORIZONTAL_ALIGNMENT_LEFT, -1, 22, symbol_color)
+
+func _draw_smooth_polygon(points: PackedVector2Array, color: Color) -> void:
+    # Keep the opaque, tessellated fill so antialiasing cannot expose seams.
+    # Godot's Compatibility renderer supports antialiased lines, not 2D MSAA.
+    draw_colored_polygon(points, color)
+    var edge := points.duplicate()
+    edge.append(edge[0])
+    var transform := get_viewport().get_stretch_transform() * get_global_transform_with_canvas()
+    var pixel_width := 1.0 / maxf(transform.get_scale().x, 0.001)
+    draw_polyline(edge, color, pixel_width, true)
