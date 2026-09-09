@@ -35,3 +35,24 @@ Done. SimplePaint3DShell now targets Windows x64 only, with other platform expor
 [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Shells/SimplePaint3DShell/Run.cmd) is a three-line wrapper around [Run.ps1](C:/Users/k/Repository/CSharp/Automapolis/Shells/SimplePaint3DShell/Run.ps1). Use `Run.cmd -BuildOnly` to skip launching.
 
 Verified build/export, 12 Kernel tests, 236 integration checks, bundled runtimes, and launcher error handling. Implementation and conversation committed separately; working tree clean.
+
+## User
+
+C:\Users\k\Repository\CSharp\Automapolis\Shells\SimplePaint3DShell\project.godot
+
+why is gl still present:
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+renderer/rendering_method="gl_compatibility"
+
+## Assistant
+
+I’ll check how those rendering settings relate to the Windows x64 changes and record this follow-up in the conversation log.
+
+## Assistant
+
+I preserved the existing renderer during the Windows x64 rewrite. **Windows x64 supports OpenGL**, so those settings remain valid.
+
+- `"GL Compatibility"` identifies the project’s renderer in its feature list.
+- `renderer/rendering_method="gl_compatibility"` selects that renderer.
+
+Godot’s Compatibility renderer suits the current 2D prototype. For the planned modern 3D presentation, **Forward+** offers more rendering features and can use **Vulkan or Direct3D 12** on Windows. That would be a separate renderer change. [Godot renderer documentation](https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html).
