@@ -50,3 +50,24 @@ The screenshot shows a quoting bug in `Run.cmd`: the trailing backslash in the p
 Fixed the path quoting in [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Experiments/RectangularGridMotion/Run.cmd). My earlier checks missed this because they bypassed the launcher.
 
 Tested the actual launcher: verification passed, export succeeded, and the executable started. You can double-click `Run.cmd` again. Fix and conversation committed separately.
+
+## User
+
+i tried the experiment and it's not really what i want.
+
+first, don't waste tokens on implementing smooth animations.
+second, don't try to display the approaches simultaneously and side-by-side. have a select box to select between each individual approach, and show each individually. this will be less complex and good enough.
+
+## Assistant
+
+I’ll remove the animations and replace the three boards with one board and an approach selector.
+
+## Assistant
+
+The experiment now has one board and an approach dropdown. Moves and turns apply immediately, and switching approaches preserves the current unit position and obstacles. The motion checks pass; I’m rebuilding the executable.
+
+## Assistant
+
+Updated: one board, an approach dropdown, and instant movement and rotation. Removed animations and slow-motion controls.
+
+Checks passed and the executable is rebuilt. Launch it with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Experiments/RectangularGridMotion/Run.cmd). Changes committed.
