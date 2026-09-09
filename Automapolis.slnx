@@ -1,4 +1,10 @@
 <Solution>
+  <Folder Name="/Shells/">
+    <Project Path="Shells/SimplePaint3DShell/SimplePaint3DShell.csproj">
+      <BuildType Solution="Debug|*" Project="Debug" />
+      <BuildType Solution="Release|*" Project="ExportRelease" />
+    </Project>
+  </Folder>
   <Folder Name="/Source/">
     <Project Path="Source/Automapolis.Kernel/Automapolis.Kernel.csproj" />
     <Project Path="Source/Automapolis.Kernel.Host/Automapolis.Kernel.Host.csproj" />

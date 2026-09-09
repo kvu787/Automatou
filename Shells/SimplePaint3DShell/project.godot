@@ -1,11 +1,11 @@
-; Godot 4.7.2 project. The scene tree and styling are code-authored for reviewability.
+; Godot 4.7.2 .NET project. The scene tree and styling are code-authored for reviewability.
 config_version=5
 
 [application]
 
 config/name="SimplePaint3DShell"
 run/main_scene="res://Main.tscn"
-config/features=PackedStringArray("4.7")
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://Icon.svg"
 
 [display]
@@ -32,3 +32,7 @@ advance_turn={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":32,"unicode":32), Object(InputEventKey,"physical_keycode":4194309)]
 }
+
+[dotnet]
+
+project/assembly_name="SimplePaint3DShell"
