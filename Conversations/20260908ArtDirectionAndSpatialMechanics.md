@@ -334,3 +334,25 @@ Paid rotation, variable footprints, and the main 3D Shell remain unimplemented.
 
 Launch with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Run.cmd).
 
+
+## User
+
+also, remove the "witness" (0 player) mode entirely. for now it adds unnecessary complexity and we can just say that 1 player mode is equivalent to witness mode if the player doesn't submit any commands other than "advance turn"
+
+## Assistant
+
+I’ll remove Witness mode and the mode selector. The game will always allow player commands; advancing turns without intervening will provide the same passive experience.
+
+## Assistant
+
+Witness mode is removed from the Kernel, protocol, text output, and UI. All 12 tests pass, including a check that the player can intervene after several turns of passive play. The live Godot test also passes. I’m rebuilding the standalone game with these changes.
+
+## Assistant
+
+Done and committed. The game now uses a hex grid, and Witness mode is removed entirely—including its selector, protocol fields, and command restrictions.
+
+Passive play means using only **Advance Turn**; player commands remain available anytime.
+
+Verified: 12 tests pass, Godot integration passes, and the standalone game builds and starts successfully.
+
+Launch with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Run.cmd). Paid rotation and multi-hex footprints remain future work.
