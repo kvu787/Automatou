@@ -662,10 +662,10 @@ public sealed class WorldKernel
     private static string TerrainGlyph(TerrainKind terrain) => terrain switch
     {
         TerrainKind.ShatteredPlain => "·",
-        TerrainKind.AshWaste => "░",
+        TerrainKind.AshWaste => ":",
         TerrainKind.LeyChannel => "≈",
-        TerrainKind.Xenoforest => "♣",
-        TerrainKind.FortifiedReach => "▦",
+        TerrainKind.Xenoforest => "^",
+        TerrainKind.FortifiedReach => "#",
         TerrainKind.BroodMire => "~",
         _ => "?"
     };

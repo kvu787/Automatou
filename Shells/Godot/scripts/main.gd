@@ -10,21 +10,22 @@ const MINT := Color("#55d6c2")
 const GOLD := Color("#f2c66d")
 const ROSE := Color("#ef5b66")
 
-const TERRAIN_SPRITE_IDS := {
-	"shatteredPlain": "shattered_plain",
-	"ashWaste": "ash_waste",
-	"leyChannel": "ley_channel",
-	"xenoforest": "xenoforest",
-	"fortifiedReach": "fortified_reach",
-	"broodMire": "brood_mire",
+# Legend labels and colors are presentation only. Map symbols come from Kernel glyphs.
+const TERRAIN_SYMBOLS := {
+	"shatteredPlain": ["·", "SHATTERED", Color("#a1adc4")],
+	"ashWaste": [":", "ASH", Color("#c7aaa0")],
+	"leyChannel": ["≈", "LEY", Color("#9b99ff")],
+	"xenoforest": ["^", "XENO", Color("#72bd8b")],
+	"fortifiedReach": ["#", "FORTIFIED", Color("#65d3cf")],
+	"broodMire": ["~", "BROOD", Color("#d88bac")],
 }
 
-const FORCE_SPRITE_IDS := {
-	"bastion": "bastion",
-	"soldier": "soldier",
-	"ravener": "ravener",
-	"broodNode": "brood_node",
-	"enclave": "enclave",
+const FORCE_SYMBOLS := {
+	"bastion": ["B", "BASTION", GOLD],
+	"soldier": ["S", "SOLDIER", MINT],
+	"ravener": ["r", "RAVENER", ROSE],
+	"broodNode": ["N", "BROOD NODE", ROSE],
+	"enclave": ["E", "ENCLAVE", MINT],
 }
 
 var _pipe: FileAccess
@@ -157,7 +158,7 @@ func _build_world_panel() -> Control:
 	column.add_theme_constant_override("separation", 8)
 	panel.add_child(column)
 
-	column.add_child(_build_sprite_legend())
+	column.add_child(_build_symbol_legend())
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -191,9 +192,8 @@ func _build_side_panel() -> Control:
 
 	_inspector = RichTextLabel.new()
 	_inspector.bbcode_enabled = true
-	_inspector.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_inspector.fit_content = false
-	_inspector.custom_minimum_size.y = 155
+	_inspector.custom_minimum_size.y = 220
 	_inspector.add_theme_font_size_override("normal_font_size", 14)
 	_inspector.add_theme_color_override("default_color", INK)
 	_inspector.add_theme_stylebox_override("normal", _panel_style(PANEL, Color("#282e55"), 1, 8))
@@ -206,11 +206,11 @@ func _build_side_panel() -> Control:
 	command_heading.add_theme_color_override("font_color", ROSE)
 	_command_panel.add_child(command_heading)
 	_add_command_button("CHANNEL +25 RESONANCE", "channel", VIOLET)
-	_add_command_button("FORTIFY THE REACH", "fortify", MINT, {"terrain": "fortifiedReach"}, "fortified_reach")
-	_add_command_button("DEPLOY SOLDIER", "deploy", GOLD, {"kind": "soldier"}, "soldier")
-	_add_command_button("COMMIT BASTION · IF LOST", "deploy", GOLD, {"kind": "bastion"}, "bastion")
-	_add_command_button("ESTABLISH VIGIL ANNEX", "establish", MINT, {"name": "Vigil Annex"}, "enclave")
-	_add_command_button("AUTHORIZE MAGITECH PURGE", "purge", ROSE, {"radius": 1}, "ash_waste")
+	_add_command_button("FORTIFY THE REACH", "fortify", MINT, {"terrain": "fortifiedReach"}, str(TERRAIN_SYMBOLS.fortifiedReach[0]))
+	_add_command_button("DEPLOY SOLDIER", "deploy", GOLD, {"kind": "soldier"}, str(FORCE_SYMBOLS.soldier[0]))
+	_add_command_button("COMMIT BASTION · IF LOST", "deploy", GOLD, {"kind": "bastion"}, str(FORCE_SYMBOLS.bastion[0]))
+	_add_command_button("ESTABLISH VIGIL ANNEX", "establish", MINT, {"name": "Vigil Annex"}, str(FORCE_SYMBOLS.enclave[0]))
+	_add_command_button("AUTHORIZE MAGITECH PURGE", "purge", ROSE, {"radius": 1}, str(TERRAIN_SYMBOLS.ashWaste[0]))
 	side.add_child(_command_panel)
 
 	var chronicle_heading := Label.new()
@@ -251,45 +251,28 @@ func _build_footer() -> Control:
 	return row
 
 
-func _build_sprite_legend() -> Control:
-	var legend := HBoxContainer.new()
-	legend.add_theme_constant_override("separation", 11)
-	var entries := [
-		["shatteredPlain", "SHATTERED"],
-		["ashWaste", "ASH"],
-		["leyChannel", "LEY"],
-		["xenoforest", "XENO"],
-		["fortifiedReach", "FORTIFIED"],
-		["broodMire", "BROOD"],
-	]
-	for entry in entries:
-		var item := HBoxContainer.new()
-		item.add_theme_constant_override("separation", 4)
-		var sprite := TextureRect.new()
-		sprite.texture = load(_terrain_sprite_path(entry[0]))
-		sprite.custom_minimum_size = Vector2(20, 20)
-		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		item.add_child(sprite)
-		var label := Label.new()
-		label.text = entry[1]
-		label.add_theme_font_size_override("font_size", 11)
-		label.add_theme_color_override("font_color", MUTED)
-		item.add_child(label)
-		legend.add_child(item)
+func _build_symbol_legend() -> Control:
+	var legend := VBoxContainer.new()
+	legend.add_theme_constant_override("separation", 4)
+	for symbols in [TERRAIN_SYMBOLS, FORCE_SYMBOLS]:
+		var row := HFlowContainer.new()
+		row.add_theme_constant_override("h_separation", 14)
+		row.add_theme_constant_override("v_separation", 4)
+		for entry in symbols.values():
+			var label := Label.new()
+			label.text = "%s  %s" % [entry[0], entry[1]]
+			label.add_theme_font_size_override("font_size", 13)
+			label.add_theme_color_override("font_color", entry[2])
+			row.add_child(label)
+		legend.add_child(row)
 	return legend
 
 
-func _add_command_button(label_text: String, command: String, accent: Color, extras := {}, sprite_id := "") -> void:
+func _add_command_button(label_text: String, command: String, accent: Color, extras := {}, symbol := "") -> void:
 	var button := Button.new()
-	button.text = label_text
+	button.text = label_text if symbol.is_empty() else "%s   %s" % [symbol, label_text]
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.custom_minimum_size.y = 34
-	button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	if not sprite_id.is_empty():
-		button.icon = load(_sprite_path(sprite_id))
-		button.add_theme_constant_override("icon_max_width", 22)
 	_style_button(button, accent)
 	button.pressed.connect(func():
 		var payload := {"command": command, "x": _selected.x, "y": _selected.y}
@@ -390,8 +373,9 @@ func _render_snapshot() -> void:
 	var forces_by_cell := {}
 	for force in _snapshot.get("forces", []):
 		var key := "%d,%d" % [int(force.position.x), int(force.position.y)]
-		if not forces_by_cell.has(key) or _force_priority(force) > _force_priority(forces_by_cell[key]):
-			forces_by_cell[key] = force
+		if not forces_by_cell.has(key):
+			forces_by_cell[key] = []
+		forces_by_cell[key].append(force)
 
 	var tiles: Array = _snapshot.get("tiles", [])
 	for index in range(mini(tiles.size(), width * height)):
@@ -400,17 +384,30 @@ func _render_snapshot() -> void:
 		var y := index / width
 		var key := "%d,%d" % [x, y]
 		var button := Button.new()
-		var force = forces_by_cell.get(key)
-		button.text = ""
-		button.tooltip_text = _cell_tooltip(tile, force)
-		button.custom_minimum_size = Vector2(36, 36)
+		var occupants: Array = forces_by_cell.get(key, [])
+		var force = null
+		for occupant in occupants:
+			if force == null or _force_priority(occupant) > _force_priority(force):
+				force = occupant
+		var terrain_color := _terrain_color(str(tile.terrain))
+		var background := PANEL_RAISED.lerp(terrain_color, 0.14)
+		var symbol_color := terrain_color if force == null else _force_color(str(force.kind))
+		button.text = str(tile.glyph) if force == null else str(force.glyph)
+		button.tooltip_text = _cell_tooltip(tile, occupants)
+		button.custom_minimum_size = Vector2(38, 38)
 		button.clip_contents = true
-		button.add_theme_stylebox_override("normal", _cell_style(PANEL_RAISED, x == _selected.x and y == _selected.y))
-		button.add_theme_stylebox_override("hover", _cell_style(PANEL_RAISED.lightened(0.12), true))
-		button.add_theme_stylebox_override("pressed", _cell_style(PANEL_RAISED.darkened(0.12), true))
-		_add_sprite_layer(button, _terrain_sprite_path(str(tile.terrain)))
+		button.add_theme_font_size_override("font_size", 22)
+		button.add_theme_color_override("font_color", symbol_color)
+		button.add_theme_color_override("font_hover_color", symbol_color.lightened(0.2))
+		button.add_theme_color_override("font_pressed_color", symbol_color)
+		button.add_theme_color_override("font_focus_color", symbol_color)
+		button.add_theme_stylebox_override("normal", _cell_style(background, x == _selected.x and y == _selected.y))
+		button.add_theme_stylebox_override("hover", _cell_style(background.lightened(0.12), true))
+		button.add_theme_stylebox_override("pressed", _cell_style(background.darkened(0.12), true))
 		if force != null:
-			_add_sprite_layer(button, _force_sprite_path(str(force.kind)))
+			_add_corner_label(button, str(tile.glyph), terrain_color, false)
+		if occupants.size() > 1:
+			_add_corner_label(button, str(occupants.size()), INK, true)
 		button.pressed.connect(_select_cell.bind(Vector2i(x, y)))
 		_grid.add_child(button)
 		_cell_buttons.append(button)
@@ -431,7 +428,7 @@ func _render_inspector() -> void:
 	if tile == null:
 		return
 	var text := "[color=#7e6bff][font_size=12]SELECTED // %02d,%02d[/font_size][/color]\n" % [_selected.x, _selected.y]
-	text += "[img=48x48]%s[/img]  [font_size=22]%s[/font_size]\n" % [_terrain_sprite_path(str(tile.terrain)), _words(str(tile.terrain)).to_upper()]
+	text += "[color=#%s][font_size=22]%s  %s[/font_size][/color]\n" % [_terrain_color(str(tile.terrain)).to_html(false), str(tile.glyph), _words(str(tile.terrain)).to_upper()]
 	text += "[color=#777f9e]%s[/color]\n" % str(tile.description)
 	var occupants := _forces_at(_selected)
 	if occupants.is_empty():
@@ -439,7 +436,7 @@ func _render_inspector() -> void:
 	else:
 		text += "\n[color=#4fe4c1]FORCES[/color]"
 		for force in occupants:
-			text += "\n[img=24x24]%s[/img]  [b]%s[/b] · %s · STR %d" % [_force_sprite_path(str(force.kind)), force.name, force.intent, int(force.strength)]
+			text += "\n[color=#%s][b]%s  %s[/b][/color] · %s · STR %d" % [_force_color(str(force.kind)).to_html(false), str(force.glyph), force.name, force.intent, int(force.strength)]
 	_inspector.text = text
 
 
@@ -470,38 +467,35 @@ func _forces_at(point: Vector2i) -> Array:
 	return result
 
 
-func _cell_tooltip(tile, force) -> String:
-	var result := str(tile.description)
-	if force != null:
-		result += "\n%s · %s · strength %d" % [force.name, force.intent, int(force.strength)]
+func _cell_tooltip(tile, occupants: Array) -> String:
+	var result := "%s  %s\n%s" % [str(tile.glyph), _words(str(tile.terrain)), str(tile.description)]
+	for force in occupants:
+		result += "\n%s  %s · %s · strength %d" % [str(force.glyph), force.name, force.intent, int(force.strength)]
 	return result
 
 
-func _add_sprite_layer(button: Button, path: String) -> void:
-	var sprite := TextureRect.new()
-	sprite.texture = load(path)
-	sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	sprite.offset_left = 2
-	sprite.offset_top = 2
-	sprite.offset_right = -2
-	sprite.offset_bottom = -2
-	button.add_child(sprite)
+func _add_corner_label(button: Button, text: String, color: Color, top_right: bool) -> void:
+	var label := Label.new()
+	label.text = text
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", color)
+	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	label.offset_left = 3
+	label.offset_right = -3
+	label.offset_top = 1
+	label.offset_bottom = -1
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if top_right else HORIZONTAL_ALIGNMENT_LEFT
+	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP if top_right else VERTICAL_ALIGNMENT_BOTTOM
+	button.add_child(label)
 
 
-func _sprite_path(sprite_id: String) -> String:
-	return "res://assets/sprites/generated/%s.png" % sprite_id
+func _terrain_color(terrain: String) -> Color:
+	return TERRAIN_SYMBOLS.get(terrain, ["?", "", MUTED])[2]
 
 
-func _terrain_sprite_path(terrain: String) -> String:
-	return _sprite_path(TERRAIN_SPRITE_IDS.get(terrain, "shattered_plain"))
-
-
-func _force_sprite_path(kind: String) -> String:
-	return _sprite_path(FORCE_SPRITE_IDS.get(kind, "soldier"))
+func _force_color(kind: String) -> Color:
+	return FORCE_SYMBOLS.get(kind, ["?", "", INK])[2]
 
 
 func _force_priority(force) -> int:
