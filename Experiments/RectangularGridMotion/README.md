@@ -17,17 +17,19 @@ Double-click `Run.cmd` to import, verify, export, and launch `Build/RectangularG
 
 ## Approaches
 
-1. **Destination snap:** rotate around a fixed physical corner of the unit (initially its top-left corner). Only the destination is checked; intervening geometry is intentionally ignored. Clockwise and counterclockwise turns give different positions and facings. Four quarter-turns restore the original pose.
+1. **Destination snap:** rotate around a fixed rear pivot centered across the unit's width. Only the destination is checked; intervening geometry is intentionally ignored. Clockwise and counterclockwise turns give different positions and facings. Four quarter-turns restore the original pose.
 2. **Center sweep:** translate linearly, or rotate around the center while applying any required grid correction linearly. Check the whole attempted motion. Same-parity dimensions (3 x 1 or 4 x 2) preserve the center. Mixed-parity dimensions (3 x 2) cannot rotate 90 degrees about a fixed center and still occupy whole grid cells. The target top-left coordinate is rounded to the nearest integer, with positive half ties upward. This introduces a half-cell shift along each axis and can accumulate drift on repeated turns.
-3. **Corner pivot:** translate linearly, or rotate around the same fixed physical corner used by destination snap, checking the entire sweep. The gold dot marks this corner. It moves with translations but stays fixed during successive turns. Integer corners ensure the resulting footprint stays aligned to the grid.
+3. **Rear pivot sweep:** translate linearly, or rotate around the same rear centerline pivot used by destination snap, checking the entire sweep. It moves with translations but stays fixed during successive turns.
+
+All pivots are centered in at least one local dimension. The center approach uses the geometric center; the rear approaches are centered across the width. The gold dot shows the pivot for every approach. For odd widths, the rear pivot is half a cell inward from the rear edge (the rear cell center for 3 x 1). For even widths, it is one cell inward and halfway across the width, between cells. This parity choice preserves whole-cell alignment through quarter-turns, including 3 x 2. Pivots offset from both centerlines are excluded.
 
 The unit tracks four persistent facings: right (3 o'clock), down (6), left (9), and up (12). The arrow marks its front; the footprint dimensions describe its world-space bounding rectangle. Translation preserves facing; rejected turns preserve both position and facing. Accepted commands immediately update the unit. Rejected commands leave it in place and show a static red outline of the rejected destination.
 
 ## Things to try
 
-On the initial 3 x 1 layout, press E. The destination snap and corner turn succeed; the center turn clips the obstacle at cell (5, 2), even though its destination is clear. Select each approach and reset before pressing E to compare from identical starting poses.
+On the initial 3 x 1 layout, press E. The destination snap and rear-pivot turn succeed; the center turn clips the obstacle at cell (5, 2), even though its destination is clear. Select each approach and reset before pressing E to compare from identical starting poses.
 
-Clear obstacles and select 3 x 2 (then clear obstacles again). Turn repeatedly and compare the center coordinates. Center correction drifts, while the two corner-based rules retain the same pivot across turns.
+Clear obstacles and select 3 x 2 (then clear obstacles again). Turn repeatedly and compare the center coordinates. Center correction drifts, while the two rear-pivot rules retain the same pivot across turns.
 
 Build a corridor by clicking cells, then try translation and rotation near its walls. A footprint fitting at the destination does not imply it has enough turning clearance.
 
@@ -38,5 +40,6 @@ Build a corridor by clicking cells, then try translation and rotation near its w
 `Verify.gd` checks translations, obstacle and boundary rejection, edge contact, footprint dimension swaps, mixed-parity alignment, the starting sweep distinction, and complete clockwise and counterclockwise rotations with persistent facing and pivot. Run it with Godot's `--headless --path <experiment folder> --script Verify.gd` arguments. `Run.cmd` runs these checks before export.
 
 All generated imports, executables, and local capture artifacts are ignored by the experiment's `.gitignore`.
+
 
 

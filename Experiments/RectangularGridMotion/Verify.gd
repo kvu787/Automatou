@@ -31,7 +31,7 @@ func _initialize() -> void:
 		if not Motion.clear_pose(pose.center, dimensions, pose.angle, [Vector2i(5, 2)]):
 			actual_intersection = true
 	check(actual_intersection, "Swept example intersects without conservative padding")
-	check(Motion.proposal(center, dimensions, Vector2.ZERO, 1, 2, [Vector2i(5, 2)]).accepted, "Corner pivot clears example obstacle")
+	check(Motion.proposal(center, dimensions, Vector2.ZERO, 1, 2, [Vector2i(5, 2)]).accepted, "Rear pivot clears example obstacle")
 	var mixed := Motion.proposal(Vector2(5.5, 5), Vector2(3, 2), Vector2.ZERO, 1, 1, [])
 	check((mixed.center - mixed.dimensions * 0.5).is_equal_approx((mixed.center - mixed.dimensions * 0.5).round()), "Mixed parity rotation lands on cell edges")
 	for approach in range(3):
@@ -39,7 +39,7 @@ func _initialize() -> void:
 			var position := center
 			var footprint := dimensions
 			var heading := 0
-			var pivot := center - dimensions * 0.5
+			var pivot := Vector2(4.5, 4.5)
 			for quarter in range(4):
 				var turn := Motion.proposal(position, footprint, Vector2.ZERO, direction, approach, [], heading)
 				check(turn.accepted, "Open full rotation is accepted")
@@ -50,8 +50,31 @@ func _initialize() -> void:
 				footprint = turn.dimensions
 				heading = turn.heading
 			check(position.is_equal_approx(center) and footprint == dimensions and heading == 0, "Four turns restore complete pose")
+	for size in [Vector2(3, 1), Vector2(4, 2), Vector2(3, 2)]:
+		for approach in [0, 2]:
+			for direction in [-1, 1]:
+				var start: Vector2 = Vector2(4, 4) + size * 0.5
+				var position := start
+				var footprint: Vector2 = size
+				var heading := 0
+				var original_pivot := Motion.pivot_for(position, footprint, heading, approach)
+				for quarter in range(4):
+					var pivot := Motion.pivot_for(position, footprint, heading, approach)
+					var offset := (pivot - position).rotated(-heading * PI * 0.5)
+					check(is_zero_approx(offset.y), "Pivot remains centered across local width")
+					check(pivot.is_equal_approx(original_pivot), "Rear pivot stays fixed")
+					var turn := Motion.proposal(position, footprint, Vector2.ZERO, direction, approach, [], heading)
+					check(turn.accepted, "Rear pivot full turn is clear")
+					var top_left: Vector2 = turn.center - turn.dimensions * 0.5
+					check(top_left.is_equal_approx(top_left.round()), "Rear pivot preserves whole-cell alignment")
+					position = turn.center
+					footprint = turn.dimensions
+					heading = turn.heading
+				check(position.is_equal_approx(start) and heading == 0, "Rear pivot restores pose for every footprint")
 	print("Motion verification: %d failures" % failures)
 	quit(1 if failures else 0)
+
+
 
 
 

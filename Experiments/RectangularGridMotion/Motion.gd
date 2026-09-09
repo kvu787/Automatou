@@ -30,11 +30,20 @@ static func clear_pose(center: Vector2, dimensions: Vector2, angle: float, obsta
 			return false
 	return true
 
+# Centered across the width. Choose the rear-most interior point with matching
+# coordinate parity so every quarter-turn still lands on whole grid cells.
+static func pivot_for(center: Vector2, dimensions: Vector2, heading: int, approach: int) -> Vector2:
+	if approach == 1:
+		return center
+	var local_dimensions := dimensions if heading % 2 == 0 else Vector2(dimensions.y, dimensions.x)
+	var rear_inset := 0.5 if int(local_dimensions.y) % 2 == 1 else 1.0
+	var offset := Vector2(rear_inset - local_dimensions.x * 0.5, 0)
+	return center + offset.rotated(heading * PI * 0.5)
+
 static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, turn: int, approach: int, obstacles: Array, heading := 0) -> Dictionary:
 	var next_dimensions := dimensions if turn == 0 else Vector2(dimensions.y, dimensions.x)
 	var angle := turn * PI * 0.5
-	var local_dimensions := dimensions if heading % 2 == 0 else Vector2(dimensions.y, dimensions.x)
-	var pivot := center - (local_dimensions * 0.5).rotated(heading * PI * 0.5)
+	var pivot := pivot_for(center, dimensions, heading, approach)
 	var target := center + direction
 	if turn != 0:
 		if approach == 0:
@@ -63,4 +72,5 @@ static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, t
 	if not clear_pose(target, next_dimensions, 0.0, obstacles):
 		accepted = false
 	return {"center": target, "dimensions": next_dimensions, "path": path, "accepted": accepted, "pivot": pivot, "heading": posmod(heading + turn, 4)}
+
 

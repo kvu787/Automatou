@@ -3,8 +3,8 @@ extends Node2D
 const Motion = preload("res://Motion.gd")
 const Cell := 40.0
 const Origin := Vector2(40, 230)
-const Titles := ["Destination snap", "Center sweep", "Corner pivot"]
-const Descriptions := ["Turn about a fixed unit corner; check only the destination.", "Turn about the center, with grid correction; check swept space.", "Turn about the same fixed unit corner; check swept space."]
+const Titles := ["Destination snap", "Center sweep", "Rear pivot sweep"]
+const Descriptions := ["Turn about the rear centerline pivot; check only the destination.", "Turn about the center, with grid correction; check swept space.", "Turn about the rear centerline pivot; check swept space."]
 const UnitColor := Color("67e0b1")
 var approach := 0
 var heading := 0
@@ -131,16 +131,14 @@ func _draw() -> void:
 	draw_line(middle, tip, UnitColor, 3, true)
 	draw_line(tip, tip - forward.rotated(0.55) * 10, UnitColor, 3, true)
 	draw_line(tip, tip - forward.rotated(-0.55) * 10, UnitColor, 3, true)
-	if approach != 1:
-		var local_dimensions := dimensions if heading % 2 == 0 else Vector2(dimensions.y, dimensions.x)
-		var pivot := center - (local_dimensions * 0.5).rotated(heading * PI * 0.5)
-		draw_circle(Origin + pivot * Cell, 5, Color("f2bd69"))
+	draw_circle(Origin + Motion.pivot_for(center, dimensions, heading, approach) * Cell, 5, Color("f2bd69"))
 	label_at(Vector2(560, 280), "Facing: " + ["Right / 3", "Down / 6", "Left / 9", "Up / 12"][heading] + " o'clock", 18)
 	label_at(Vector2(560, 255), "Center (%.1f, %.1f)   |   %d x %d" % [center.x, center.y, dimensions.x, dimensions.y], 20)
 	label_at(Vector2(560, 550), "Moves and turns apply immediately.", 17)
-	label_at(Vector2(560, 580), "Arrow: front. Gold dot: fixed pivot.", 17)
+	label_at(Vector2(560, 580), "Arrow: front. Gold dot: pivot.", 17)
 	label_at(Vector2(560, 630), "Reset before comparing approaches", 17)
 	label_at(Vector2(560, 655), "from the same starting pose.", 17)
 	label_at(Vector2(40, 750), status, 20, Color.WHITE)
 	label_at(Vector2(40, 783), "Sweep checks are conservative and can reject very tight clearances.", 17)
+
 
