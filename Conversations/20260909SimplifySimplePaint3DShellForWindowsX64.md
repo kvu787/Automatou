@@ -56,3 +56,30 @@ I preserved the existing renderer during the Windows x64 rewrite. **Windows x64 
 - `renderer/rendering_method="gl_compatibility"` selects that renderer.
 
 Godot’s Compatibility renderer suits the current 2D prototype. For the planned modern 3D presentation, **Forward+** offers more rendering features and can use **Vulkan or Direct3D 12** on Windows. That would be a separate renderer change. [Godot renderer documentation](https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html).
+
+## User
+
+change all godot projects in this repo to use dx12 and forward+
+
+## Assistant
+
+I’ll find every Godot project, switch each to Forward+ with Direct3D 12, and verify that they start with the requested renderer.
+
+## Assistant
+
+I found two projects: SimplePaint3DShell and RectangularGridMotion. I’ll configure both for Forward+ and Direct3D 12, disable Vulkan/OpenGL fallback, and update their documentation. I’ll also run the visual checks with the renderer active.
+
+## Assistant
+
+Both exported executables report `D3D12 12_0 - Forward+`. All 275 shell integration/rendering checks, 12 Kernel tests, and the experiment’s movement and keyboard checks passed. I’m committing the settings and documentation changes, then the conversation log separately.
+
+## Assistant
+
+Changed both Godot projects to **Forward+ with Direct3D 12**:
+
+- [SimplePaint3DShell](C:/Users/k/Repository/CSharp/Automapolis/Shells/SimplePaint3DShell/project.godot)
+- [RectangularGridMotion](C:/Users/k/Repository/CSharp/Automapolis/Experiments/RectangularGridMotion/project.godot)
+
+Vulkan/OpenGL fallbacks are disabled. Both exported executables confirmed `D3D12 12_0 - Forward+`; all build, integration, rendering, and movement checks passed.
+
+Changes and conversation committed separately. Working tree clean.
