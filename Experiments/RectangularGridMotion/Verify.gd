@@ -1,90 +1,39 @@
 extends SceneTree
 const Motion = preload("res://Motion.gd")
 var failures := 0
-
 func check(condition: bool, description: String) -> void:
 	if not condition:
 		push_error(description)
 		failures += 1
-
 func _initialize() -> void:
-	var center := Vector2(5.5, 4.5)
-	var dimensions := Vector2(3, 1)
-	check(Motion.clear_pose(center, dimensions, 0, []), "Open pose is clear")
-	check(not Motion.clear_pose(center, dimensions, 0, [Vector2i(4, 4)]), "Occupied cell collides")
-	check(Motion.clear_pose(center, dimensions, 0, [Vector2i(3, 4)]), "Edge contact is allowed")
-	for approach in range(3):
-		var move := Motion.proposal(center, dimensions, Vector2.RIGHT, 0, approach, [])
-		check(move.accepted and move.center.is_equal_approx(center + Vector2.RIGHT), "One-cell translation")
-		var blocked := Motion.proposal(center, dimensions, Vector2.RIGHT, 0, approach, [Vector2i(7, 4)])
-		check(not blocked.accepted, "Translation cannot enter an obstacle")
-		var turn := Motion.proposal(center, dimensions, Vector2.ZERO, 1, approach, [])
-		check(turn.accepted and turn.dimensions == Vector2(1, 3), "Open rotation swaps dimensions")
-		var outside := Motion.proposal(Vector2(1.5, 0.5), dimensions, Vector2.LEFT, 0, approach, [])
-		check(not outside.accepted, "Board boundary enforced")
-	var snap := Motion.proposal(center, dimensions, Vector2.ZERO, 1, 0, [Vector2i(5, 2)])
-	var swept := Motion.proposal(center, dimensions, Vector2.ZERO, 1, 1, [Vector2i(5, 2)])
-	check(snap.accepted and not swept.accepted, "Destination and swept collision differ")
-	check(Motion.clear_pose(swept.center, swept.dimensions, 0, [Vector2i(5, 2)]), "Swept example has a clear destination")
-	var actual_intersection := false
-	for pose in swept.path:
-		if not Motion.clear_pose(pose.center, dimensions, pose.angle, [Vector2i(5, 2)]):
-			actual_intersection = true
-	check(actual_intersection, "Swept example intersects without conservative padding")
-	check(Motion.proposal(center, dimensions, Vector2.ZERO, 1, 2, [Vector2i(5, 2)]).accepted, "Rear pivot clears example obstacle")
-	var mixed := Motion.proposal(Vector2(5.5, 5), Vector2(3, 2), Vector2.ZERO, 1, 1, [])
-	check((mixed.center - mixed.dimensions * 0.5).is_equal_approx((mixed.center - mixed.dimensions * 0.5).round()), "Mixed parity rotation lands on cell edges")
-	for approach in range(3):
+	var center := Vector2i(11, 9)
+	var dimensions := Vector2i(3, 1)
+	check(Motion.clear_pose(center, dimensions, []), "Open footprint")
+	check(not Motion.clear_pose(center, dimensions, [Vector2i(4, 4)]), "Occupied cell blocked")
+	check(Motion.clear_pose(center, dimensions, [Vector2i(3, 4)]), "Edge contact allowed")
+	check(Motion.proposal(center, dimensions, Vector2i.RIGHT, 0, []).center == center + Vector2i(2, 0), "One-cell translation")
+	check(not Motion.proposal(center, dimensions, Vector2i.RIGHT, 0, [Vector2i(7, 4)]).accepted, "Occupied destination blocked")
+	check(not Motion.proposal(Vector2i(3, 1), dimensions, Vector2i.LEFT, 0, []).accepted, "Outside board blocked")
+	check(Motion.proposal(Vector2i(3, 1), dimensions, Vector2i.RIGHT, 0, []).accepted, "Movement along board edge")
+	# This turn fits at its destination even though a physical arc would leave the board.
+	check(Motion.proposal(Vector2i(5, 13), Vector2i(1, 3), Vector2i.ZERO, 1, [], 1).accepted, "No intermediate-angle collision checks")
+	for size in [Vector2i(3, 1), Vector2i(4, 2), Vector2i(3, 2)]:
 		for direction in [-1, 1]:
-			var position := center
-			var footprint := dimensions
+			var start: Vector2i = Vector2i(8, 8) + size
+			var position := start
+			var footprint: Vector2i = size
 			var heading := 0
-			var pivot := Vector2(4.5, 4.5)
+			var pivot := Motion.pivot_for(start, size, heading)
 			for quarter in range(4):
-				var turn := Motion.proposal(position, footprint, Vector2.ZERO, direction, approach, [], heading)
-				check(turn.accepted, "Open full rotation is accepted")
-				check(turn.heading == posmod(direction * (quarter + 1), 4), "Facing advances through all four directions")
-				if approach != 1:
-					check(turn.pivot.is_equal_approx(pivot), "Physical pivot stays fixed across turns")
+				check(Motion.pivot_for(position, footprint, heading) == pivot, "Pivot stays fixed")
+				check(Motion.rotate_quarters(pivot - position, -heading).y == 0, "Pivot centered across width")
+				var turn := Motion.proposal(position, footprint, Vector2i.ZERO, direction, [], heading)
+				check(turn.accepted, "Open turn accepted")
+				check(turn.heading == posmod(direction * (quarter + 1), 4), "Full facing cycle")
 				position = turn.center
 				footprint = turn.dimensions
 				heading = turn.heading
-			check(position.is_equal_approx(center) and footprint == dimensions and heading == 0, "Four turns restore complete pose")
-	for size in [Vector2(3, 1), Vector2(4, 2), Vector2(3, 2)]:
-		for approach in [0, 2]:
-			for direction in [-1, 1]:
-				var start: Vector2 = Vector2(4, 4) + size * 0.5
-				var position := start
-				var footprint: Vector2 = size
-				var heading := 0
-				var original_pivot := Motion.pivot_for(position, footprint, heading, approach)
-				for quarter in range(4):
-					var pivot := Motion.pivot_for(position, footprint, heading, approach)
-					var offset := (pivot - position).rotated(-heading * PI * 0.5)
-					check(is_zero_approx(offset.y), "Pivot remains centered across local width")
-					check(pivot.is_equal_approx(original_pivot), "Rear pivot stays fixed")
-					var turn := Motion.proposal(position, footprint, Vector2.ZERO, direction, approach, [], heading)
-					check(turn.accepted, "Rear pivot full turn is clear")
-					var top_left: Vector2 = turn.center - turn.dimensions * 0.5
-					check(top_left.is_equal_approx(top_left.round()), "Rear pivot preserves whole-cell alignment")
-					position = turn.center
-					footprint = turn.dimensions
-					heading = turn.heading
-				check(position.is_equal_approx(start) and heading == 0, "Rear pivot restores pose for every footprint")
-	for approach in [1, 2]:
-		check(Motion.proposal(center, dimensions, Vector2.ZERO, 1, approach, [Vector2i(7, 3)]).accepted, "Can rotate away from corner contact")
-		check(Motion.proposal(Vector2(1.5, 0.5), Vector2(3, 1), Vector2.RIGHT, 0, approach, []).accepted, "Can slide along board edge")
-		check(Motion.proposal(Vector2(1.5, 0.5), Vector2(3, 1), Vector2.DOWN, 0, approach, []).accepted, "Can move away from board edge")
-		check(Motion.proposal(center, dimensions, Vector2.RIGHT, 0, approach, [Vector2i(5, 3)]).accepted, "Can slide beside obstacle")
-		check(Motion.proposal(center, dimensions, Vector2.DOWN, 0, approach, [Vector2i(5, 3)]).accepted, "Can move away from touching obstacle")
-		check(not Motion.proposal(center, dimensions, Vector2.UP, 0, approach, [Vector2i(5, 3)]).accepted, "Cannot move into touching obstacle")
+				check((position - footprint).x % 2 == 0 and (position - footprint).y % 2 == 0, "Whole-cell alignment")
+			check(position == start and footprint == size and heading == 0, "Four turns restore exact pose")
 	print("Motion verification: %d failures" % failures)
 	quit(1 if failures else 0)
-
-
-
-
-
-
-
-

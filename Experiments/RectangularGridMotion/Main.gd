@@ -1,53 +1,37 @@
 extends Node2D
 
 const Motion = preload("res://Motion.gd")
-const Cell := 40.0
-const Origin := Vector2(40, 230)
-const Titles := ["Destination snap", "Center sweep", "Rear pivot sweep"]
-const Descriptions := ["Turn about the rear centerline pivot; check only the destination.", "Turn about the center, with grid correction; check swept space.", "Turn about the rear centerline pivot; check swept space."]
+const Cell := 40
+const Origin := Vector2i(40, 230)
 const UnitColor := Color("67e0b1")
-var approach := 0
 var heading := 0
-var initial_dimensions := Vector2(3, 1)
-var dimensions := Vector2(3, 1)
-var center := Vector2.ZERO
+var initial_dimensions := Vector2i(3, 1)
+var dimensions := Vector2i(3, 1)
+var center := Vector2i.ZERO
 var obstacles: Array = []
 var result: Dictionary = {}
 var status := "Ready"
 var font: Font = ThemeDB.fallback_font
 
 func _ready() -> void:
-	var selector := OptionButton.new()
-	selector.position = Vector2(40, 95)
-	selector.size = Vector2(260, 40)
-	selector.focus_mode = Control.FOCUS_NONE
-	for title in Titles:
-		selector.add_item(title)
-	selector.item_selected.connect(func(index): approach = index; result = {}; status = "Approach changed; current pose retained."; queue_redraw())
-	add_child(selector)
-	var footprint_selector := OptionButton.new()
-	footprint_selector.position = Vector2(320, 95)
-	footprint_selector.size = Vector2(180, 40)
-	footprint_selector.focus_mode = Control.FOCUS_NONE
-	for item in ["Footprint: 3 x 1", "Footprint: 4 x 2", "Footprint: 3 x 2"]:
-		footprint_selector.add_item(item)
-	footprint_selector.item_selected.connect(func(index): initial_dimensions = [Vector2(3, 1), Vector2(4, 2), Vector2(3, 2)][index]; reset())
-	add_child(footprint_selector)
-	make_button("Reset [R]", Vector2(520, 95), reset)
-	make_button("Clear obstacles", Vector2(680, 95), func(): obstacles.clear(); reset_unit())
-	make_button("Turn left [Q]", Vector2(560, 290), func(): command(Vector2.ZERO, -1))
-	make_button("Turn right [E]", Vector2(720, 290), func(): command(Vector2.ZERO, 1))
-	make_button("Up", Vector2(640, 355), func(): command(Vector2.UP, 0))
-	make_button("Left", Vector2(560, 405), func(): command(Vector2.LEFT, 0))
-	make_button("Right", Vector2(720, 405), func(): command(Vector2.RIGHT, 0))
-	make_button("Down", Vector2(640, 455), func(): command(Vector2.DOWN, 0))
+	make_button("3 x 1", Vector2i(40, 95), func(): initial_dimensions = Vector2i(3, 1); reset())
+	make_button("4 x 2", Vector2i(200, 95), func(): initial_dimensions = Vector2i(4, 2); reset())
+	make_button("3 x 2", Vector2i(360, 95), func(): initial_dimensions = Vector2i(3, 2); reset())
+	make_button("Reset [R]", Vector2i(520, 95), reset)
+	make_button("Clear obstacles", Vector2i(680, 95), func(): obstacles.clear(); reset_unit())
+	make_button("Turn left [Q]", Vector2i(560, 290), func(): command(Vector2i.ZERO, -1))
+	make_button("Turn right [E]", Vector2i(720, 290), func(): command(Vector2i.ZERO, 1))
+	make_button("Up", Vector2i(640, 355), func(): command(Vector2i.UP, 0))
+	make_button("Left", Vector2i(560, 405), func(): command(Vector2i.LEFT, 0))
+	make_button("Right", Vector2i(720, 405), func(): command(Vector2i.RIGHT, 0))
+	make_button("Down", Vector2i(640, 455), func(): command(Vector2i.DOWN, 0))
 	reset()
 
 func make_button(caption: String, position_value: Vector2, action: Callable) -> void:
 	var button := Button.new()
 	button.text = caption
 	button.position = position_value
-	button.size = Vector2(145, 40)
+	button.size = Vector2i(145, 40)
 	button.pressed.connect(action)
 	button.focus_mode = Control.FOCUS_NONE
 	add_child(button)
@@ -59,13 +43,13 @@ func reset() -> void:
 func reset_unit() -> void:
 	heading = 0
 	dimensions = initial_dimensions
-	center = Vector2(4, 4) + dimensions * 0.5
+	center = Vector2i(8, 8) + dimensions
 	result = {}
 	status = "Ready"
 	queue_redraw()
 
-func command(direction: Vector2, turn: int) -> void:
-	result = Motion.proposal(center, dimensions, direction, turn, approach, obstacles, heading)
+func command(direction: Vector2i, turn: int) -> void:
+	result = Motion.proposal(center, dimensions, direction, turn, obstacles, heading)
 	status = "Accepted" if result.accepted else "Blocked; unit stays in place."
 	if result.accepted:
 		heading = result.heading
@@ -76,21 +60,24 @@ func command(direction: Vector2, turn: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_W, KEY_UP: command(Vector2.UP, 0)
-			KEY_S, KEY_DOWN: command(Vector2.DOWN, 0)
-			KEY_A, KEY_LEFT: command(Vector2.LEFT, 0)
-			KEY_D, KEY_RIGHT: command(Vector2.RIGHT, 0)
-			KEY_Q: command(Vector2.ZERO, -1)
-			KEY_E: command(Vector2.ZERO, 1)
+			KEY_W, KEY_UP: command(Vector2i.UP, 0)
+			KEY_S, KEY_DOWN: command(Vector2i.DOWN, 0)
+			KEY_A, KEY_LEFT: command(Vector2i.LEFT, 0)
+			KEY_D, KEY_RIGHT: command(Vector2i.RIGHT, 0)
+			KEY_Q: command(Vector2i.ZERO, -1)
+			KEY_E: command(Vector2i.ZERO, 1)
 			KEY_R: reset()
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var local := (get_global_mouse_position() - Origin) / Cell
+		var mouse := Vector2i(get_global_mouse_position()) - Origin
+		if mouse.x < 0 or mouse.y < 0:
+			return
+		var local := mouse / Cell
 		if local.x < 0 or local.y < 0 or local.x >= Motion.BoardSize or local.y >= Motion.BoardSize:
 			return
-		var cell := Vector2i(local.floor())
+		var cell := local
 		if obstacles.has(cell):
 			obstacles.erase(cell)
-		elif Motion.overlaps(center, dimensions, 0, Vector2(cell)):
+		elif Motion.overlaps(center, dimensions, cell):
 			status = "That cell is occupied."
 			queue_redraw()
 			return
@@ -103,43 +90,46 @@ func _unhandled_input(event: InputEvent) -> void:
 func label_at(position_value: Vector2, value: String, size_value := 18, color := Color("c2cddd")) -> void:
 	draw_string(font, position_value, value, HORIZONTAL_ALIGNMENT_LEFT, -1, size_value, color)
 
-func draw_unit(unit_center: Vector2, footprint: Vector2, color: Color, filled: bool) -> void:
-	var rectangle := Rect2(Origin + (unit_center - footprint * 0.5) * Cell, footprint * Cell)
+func draw_unit(unit_center: Vector2i, footprint: Vector2i, color: Color, filled: bool) -> void:
+	var rectangle := Rect2i(Origin + (unit_center - footprint) * (Cell / 2), footprint * Cell)
 	if filled:
 		draw_rect(rectangle, Color(color, 0.24))
 	draw_rect(rectangle, color, false, 2)
-	draw_circle(Origin + unit_center * Cell, 3, color)
+	draw_circle(Origin + unit_center * (Cell / 2), 3, color)
 
 func _draw() -> void:
-	label_at(Vector2(40, 50), "Rectangular grid motion", 30, Color.WHITE)
-	label_at(Vector2(40, 77), "WASD / arrows: move    Q / E: turn    Click a cell: toggle obstacle", 18)
-	label_at(Vector2(40, 177), Titles[approach], 24, UnitColor)
-	label_at(Vector2(40, 207), Descriptions[approach], 18)
-	draw_rect(Rect2(Origin, Vector2.ONE * Cell * Motion.BoardSize), Color("101c2c"))
+	label_at(Vector2i(40, 50), "Rectangular grid motion", 30, Color.WHITE)
+	label_at(Vector2i(40, 77), "WASD / arrows: move    Q / E: turn    Click a cell: toggle obstacle", 18)
+	label_at(Vector2i(40, 177), "Destination snap", 24, UnitColor)
+	label_at(Vector2i(40, 207), "Turn about the rear centerline pivot; check only the destination.", 18)
+	draw_rect(Rect2(Origin, Vector2i.ONE * Cell * Motion.BoardSize), Color("101c2c"))
 	for line in range(Motion.BoardSize + 1):
-		draw_line(Origin + Vector2(line * Cell, 0), Origin + Vector2(line * Cell, Motion.BoardSize * Cell), Color("263548"))
-		draw_line(Origin + Vector2(0, line * Cell), Origin + Vector2(Motion.BoardSize * Cell, line * Cell), Color("263548"))
+		draw_line(Origin + Vector2i(line * Cell, 0), Origin + Vector2i(line * Cell, Motion.BoardSize * Cell), Color("263548"))
+		draw_line(Origin + Vector2i(0, line * Cell), Origin + Vector2i(Motion.BoardSize * Cell, line * Cell), Color("263548"))
 	for cell in obstacles:
-		draw_rect(Rect2(Origin + Vector2(cell) * Cell + Vector2.ONE * 2, Vector2.ONE * (Cell - 4)), Color("637084"))
+		draw_rect(Rect2(Origin + Vector2i(cell) * Cell + Vector2i.ONE * 2, Vector2i.ONE * (Cell - 4)), Color("637084"))
 	if not result.is_empty() and not result.accepted:
 		draw_unit(result.center, result.dimensions, Color("ff7188"), false)
 	draw_unit(center, dimensions, UnitColor, true)
-	var forward := Vector2.RIGHT.rotated(heading * PI * 0.5)
-	var middle := Origin + center * Cell
-	var reach := (dimensions.x if heading % 2 == 0 else dimensions.y) * Cell * 0.4
+	var forward := Motion.rotate_quarters(Vector2i.RIGHT, heading)
+	var sideways := Motion.rotate_quarters(forward, 1)
+	var middle := Origin + center * (Cell / 2)
+	var reach := (dimensions.x if heading % 2 == 0 else dimensions.y) * Cell * 2 / 5
 	var tip := middle + forward * reach
 	draw_line(middle, tip, UnitColor, 3, true)
-	draw_line(tip, tip - forward.rotated(0.55) * 10, UnitColor, 3, true)
-	draw_line(tip, tip - forward.rotated(-0.55) * 10, UnitColor, 3, true)
-	draw_circle(Origin + Motion.pivot_for(center, dimensions, heading, approach) * Cell, 5, Color("f2bd69"))
-	label_at(Vector2(560, 280), "Facing: " + ["Right / 3", "Down / 6", "Left / 9", "Up / 12"][heading] + " o'clock", 18)
-	label_at(Vector2(560, 255), "Center (%.1f, %.1f)   |   %d x %d" % [center.x, center.y, dimensions.x, dimensions.y], 20)
-	label_at(Vector2(560, 550), "Moves and turns apply immediately.", 17)
-	label_at(Vector2(560, 580), "Arrow: front. Gold dot: pivot.", 17)
-	label_at(Vector2(560, 630), "Reset before comparing approaches", 17)
-	label_at(Vector2(560, 655), "from the same starting pose.", 17)
-	label_at(Vector2(40, 750), status, 20, Color.WHITE)
-	label_at(Vector2(40, 783), "Swept turns need clearance along the turn. Touching edges are allowed.", 17)
+	draw_line(tip, tip - forward * 8 + sideways * 5, UnitColor, 3, true)
+	draw_line(tip, tip - forward * 8 - sideways * 5, UnitColor, 3, true)
+	draw_circle(Origin + Motion.pivot_for(center, dimensions, heading) * (Cell / 2), 5, Color("f2bd69"))
+	label_at(Vector2i(560, 280), "Facing: " + ["Right / 3", "Down / 6", "Left / 9", "Up / 12"][heading] + " o'clock", 18)
+	label_at(Vector2i(560, 255), "Center (%d.%d, %d.%d) | %d x %d" % [center.x / 2, (center.x % 2) * 5, center.y / 2, (center.y % 2) * 5, dimensions.x, dimensions.y], 20)
+	label_at(Vector2i(560, 550), "Moves and turns apply immediately.", 17)
+	label_at(Vector2i(560, 580), "Arrow: front. Gold dot: pivot.", 17)
+	label_at(Vector2i(560, 630), "Only destination cells must be clear.", 17)
+	label_at(Vector2i(560, 655), "Red outline: rejected destination.", 17)
+	label_at(Vector2i(40, 750), status, 20, Color.WHITE)
+	label_at(Vector2i(40, 783), "Integer grid rules. Moves and quarter-turns check only the destination.", 17)
+
+
 
 
 
