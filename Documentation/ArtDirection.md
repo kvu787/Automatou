@@ -78,7 +78,9 @@ to the Kernel. See [Mechanics](Mechanics.md).
 ## Model proportions and hex footprints
 
 The game now uses a hex grid. The previous square `N×N` unit footprint rule is
-superseded; multi-hex footprint shapes and physical scale remain to be designed.
+superseded. Units must have regular hexagonal footprints at different sizes,
+with no oblong footprints. Buildings may have any footprint. Exact base-cell
+masks, size increments, and physical scale remain to be designed.
 Larger entities must still be able to occupy more ground and visual space.
 The current 2d shell shows the prototype's single-hex forces on pointy-top hexes,
 with odd rows shifted right. This does not implement the main 3D Shell.

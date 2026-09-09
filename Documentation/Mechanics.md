@@ -27,8 +27,9 @@ apart. This replaces the previous orthogonal square grid.
 - Variable entity sizes remain a design requirement. The current prototype
   still represents each force or building at a single hex and permits sharing.
 - The previous `N×N` square footprint rule and `H = 2` human scale are superseded.
-  Multi-hex footprint shapes and the human/animal scale need a hex-specific
-  design before variable footprints are implemented.
+  Units must have regular hexagonal footprints at different sizes; buildings
+  may have arbitrary footprints. Exact occupied-cell masks and the human/animal
+  scale remain to be decided before variable footprints are implemented.
 
 The six axes are considered an acceptable directional resolution. Paid turns
 can still favor long straight segments over alternating hex steps; that
@@ -51,9 +52,15 @@ action. Exact costs, exceptions, and attack interactions remain undecided.
 The current autonomous prototype instead advances a mobile force up to one
 neighboring hex per explicit turn, without an action-point or facing system.
 
-Footprint size remains independent of combat strength. Multi-hex unit shapes,
-anchors, and rotation clearance are unresolved. Earlier rectangular-footprint
-experiments remain separate from the implemented game.
+Units must have regular hexagonal footprints, small or large; oblong unit
+footprints are not allowed. Neither units nor buildings are limited to one hex.
+Footprint size remains independent of combat strength.
+
+The precise discrete representation is still open: a regular hexagonal extent
+must be mapped to occupied base cells. A center cell plus complete surrounding
+rings is one candidate, not an adopted rule. Allowed sizes, anchors, and
+rotation clearance remain unresolved. Earlier rectangular-footprint experiments
+remain separate from the implemented game.
 
 ### Buildings
 
@@ -96,7 +103,8 @@ alone does not determine turning rules or orientation-aware footprint masks.
 
 The following rules must be decided before variable footprints are implemented:
 
-- shapes and anchors for multi-hex unit footprints, including rotation;
+- discrete masks, allowed sizes, and anchors for regular hexagonal unit footprints;
+- whether turns require clearance beyond the start/end occupied cells;
 - whether allied or opposing entities may overlap or stack;
 - how movement cost and passability combine across every covered cell;
 - how paths account for the complete moving footprint and narrow clearances;
@@ -124,3 +132,18 @@ The following rules must be decided before variable footprints are implemented:
 - How turns are animated and how visual clearance is handled during a turn.
 - How a building's fixed orientation is chosen at placement; buildings remain
   stationary after placement.
+
+## Decisions to review after the hex conversion
+
+- Human/animal reference scale and the spacing between allowed unit sizes.
+- Placement and boundaries of arbitrary building footprints, including holes,
+  interiors, and the visual fit of rectangular architecture to hex cells.
+- Corridor, road, doorway, and bridge widths for different unit sizes.
+- Whether translation distance is measured per base hex independently of size.
+- Facing sectors and boundary cases if directional combat or vision is added.
+- Footprint overlays and occlusion handling in the required main Shell camera.
+
+The six-facing design, paid translation/rotation direction, variable-size
+requirement, stationary buildings, and orthographic 3/4 miniature-world aesthetic
+remain in effect. The prototype still uses single-cell forces; these footprint
+requirements are design decisions rather than implemented features.
