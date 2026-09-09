@@ -75,15 +75,12 @@ rotation. Camera angle, turn animation, and harmless visual overhang belong to
 presentation; authoritative facing, movement, occupation, and collision belong
 to the Kernel. See [Mechanics](Mechanics.md).
 
-## Open visual question: oblong models
+## Oblong models and footprint experiments
 
-Square-ish models fit square cell footprints naturally. For oblong models, the
-square-footprint requirement is under reconsideration: a square footprint can
-leave substantial empty ground around the model, while a non-square footprint
-can fit its proportions more closely but introduces additional mechanical
-complexity. No replacement footprint rule has been selected.
+For now, all units use square `NxN` footprints, including units with oblong
+models. This accepts the possibility of empty ground within their footprints.
+Stationary buildings may have any footprint shape aligned to base-cell
+boundaries; they are not restricted to squares or rectangles.
 
-Resolve the desired visual fit first. Compare empty space, model proportions,
-and composition in the required orthographic 3/4 view across all four facings;
-defer discussion of the resulting mechanics until the visual questions have
-been addressed.
+Rectangular unit footprints and other options will be evaluated in separate
+experiments. No experimental alternative replaces the current square-unit rule.

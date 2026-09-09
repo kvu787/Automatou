@@ -38,7 +38,7 @@ with the square of `H`.
 
 ### Units
 
-A **unit** is an entity that can move.
+A **unit** is an object that may translate and rotate.
 
 - Every unit occupies a square `N×N` footprint, where `N` is a positive integer.
 - A unit's footprint moves as one indivisible shape.
@@ -57,14 +57,17 @@ introducing facing does not change the square-footprint requirement. Turning
 costs, how facing changes during movement and attacks, and any directional
 combat effects remain undecided.
 
+Rectangular unit footprints and alternative movement/turning rules are deferred
+to separate experiments. For now, all units retain square footprints, including
+units with oblong models.
+
 ### Buildings
 
-A **building** is an entity that cannot move.
+A **building** is a stationary object: it does not translate or rotate.
 
-- A building may have any positive integer width and height in base cells.
-- A building is not required to be square.
-- Whether buildings are enterable, and whether a building may use a footprint
-  more complex than a rectangle, remain undecided.
+- A building may have any footprint shape, aligned to base-cell boundaries.
+- Building footprints are not restricted to squares or rectangles.
+- Whether buildings are enterable remains undecided.
 
 ### Terrain
 
@@ -82,7 +85,7 @@ of the spatial rules:
   cells occupied by a square unit footprint;
 - an entity's appearance may extend beyond its occupied area without changing
   collision or movement;
-- logical occupation remains defined by the square unit and rectangular building
+- logical occupation remains defined by the square unit and arbitrary building
   footprints above.
 
 Camera and model composition choices are part of [Art direction](ArtDirection.md).
@@ -123,5 +126,5 @@ The following rules must be decided before variable footprints are implemented:
 - How movement direction, final facing, and attacks interact.
 - Whether facing affects attack arcs, defense, vision, or other mechanics.
 - How turns are animated and how visual clearance is handled during a turn.
-- Whether buildings also have orientation; the four-facing decision applies to
-  units.
+- How a building's fixed orientation is chosen at placement; buildings remain
+  stationary after placement.
