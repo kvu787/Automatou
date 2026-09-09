@@ -17,7 +17,7 @@ for the authoritative appearance and parameter definitions.
 
 The referenced code is C++/HLSL. Blender integration, asset export, and the eventual
 Godot presentation of those models remain separate work. No shader port or model
-import is included in the current Shell.
+import is included in the current 2d shell.
 
 ## Standard camera and occlusion
 
@@ -38,9 +38,9 @@ must be addressed within the required aesthetic. The specific solutions remain
 undecided; the requirement does not prescribe an exact camera angle or an
 occlusion treatment.
 
-## Current Godot presentation
+## Current 2d shell presentation
 
-The Godot Shell uses the Kernel's text symbols for terrain and forces. Color
+The 2d shell uses the Kernel's text symbols for terrain and forces. Color
 helps distinguish terrain and factions, while symbols and labels identify them
 without depending on color alone.
 
@@ -51,7 +51,7 @@ without depending on color alone.
 - Selection and hover remain separate interface treatments.
 
 The symbol presentation allows gameplay work and playtesting to continue while
-production models are created. See the [Godot Shell](../Shells/Godot/README.md)
+production models are created. See the [2d shell](../Shells/Godot/README.md)
 for the symbol key.
 
 ## Physical footprint and appearance

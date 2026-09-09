@@ -69,7 +69,7 @@ undecided.
 ## Spatial presentation
 
 Production art will use Blender models with SimplePaint materials. The current
-Godot Shell represents entities with symbols. Both presentations are independent
+2d shell represents entities with symbols. Both presentations are independent
 of the spatial rules:
 
 - visual orientation does not rotate the logical footprint;

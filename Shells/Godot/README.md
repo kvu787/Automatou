@@ -1,8 +1,8 @@
-# Godot Shell
+# 2d shell (Godot)
 
-This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical symbol grid with sector inspection, front dispatches, and Command controls, but contains no simulation rules.
+This is the currently implemented symbolic 2d shell, distinct from the planned main 3D Shell. This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical symbol grid with sector inspection, front dispatches, and Command controls, but contains no simulation rules.
 
-The Shell starts the adjacent `KernelHost` process and exchanges one JSON object per line. It can therefore be replaced without changing the game.
+The 2d shell starts the adjacent `KernelHost` process and exchanges one JSON object per line. It can therefore be replaced without changing the game.
 
 ## Controls
 
@@ -34,7 +34,7 @@ inspect all occupants.
 | N      | Brood node        |
 | E      | Enclave           |
 
-Production art is being created in Blender with SimplePaint. The current Shell
+Production art is being created in Blender with SimplePaint. The 2d shell
 uses font glyphs and code-authored controls, with no generated image dependency.
 
 ## Platform exports

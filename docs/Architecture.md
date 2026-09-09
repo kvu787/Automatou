@@ -20,6 +20,21 @@ keyboard / mouse / file / bot / network
         +------------------------+
 ```
 
+## Shell terminology
+
+- **Shell**, unqualified, means the main Shell: the 3D Godot presentation using
+  SimplePaint and the required orthographic 3/4 overhead camera.
+- **Text shell** means a terminal-only input/output Shell.
+- **2d shell** means the currently implemented Godot presentation with symbolic
+  visuals, located in `Shells/Godot`. It is distinct from the main Shell.
+- Future Shells may include a pixel-art 2D Shell, a non-pixel-art 2D Shell, and
+  3D Shells with other visual styles. These are possibilities, not implemented
+  presentations or selected production directions.
+
+The main Shell is the intended primary presentation; its 3D production model
+pipeline is not yet implemented. Generic references to the Shell architecture or
+multiple Shells still describe the shared presentation/input role below.
+
 ## Boundary rules
 
 - `Automapolis.Kernel` references only the .NET base class library. It cannot know Godot exists.
