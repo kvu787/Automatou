@@ -1,8 +1,43 @@
 # SimplePaint3DShell
 
-This is the currently implemented symbolic 2d shell, distinct from the planned main 3D Shell. This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical hex grid with terrain colors, force symbols, sector inspection, front dispatches, and Command controls, but contains no simulation rules.
+SimplePaint3DShell is an optional presentation layer written in C# for Godot 4.7.2 .NET. Its current presentation is the symbolic 2d hex-grid prototype; the planned SimplePaint 3D models and camera are not implemented yet. It renders the Bastion Front as a responsive tactical hex grid with terrain colors, force symbols, sector inspection, front dispatches, and Command controls, but contains no simulation rules.
 
-The 2d shell starts the adjacent `KernelHost` process and exchanges one JSON object per line. It can therefore be replaced without changing the game.
+The shell starts the adjacent `KernelHost` process and exchanges one UTF-8 JSON object per line. C# presentation DTOs describe this protocol; the shell has no reference to the Kernel assembly and contains no simulation rules. Process output is queued and applied on the Godot main thread. Closing the shell terminates its host process.
+
+## Build and run
+
+Install the .NET 10 SDK selected by the repository's `global.json`, Godot 4.7.2
+**.NET**, and its matching .NET export templates. The standard GDScript-only
+Godot executable cannot load this project.
+
+Double-click this folder's `Run.cmd` or the repository-root `Run.cmd`. Both build
+the C# solution, run the Kernel and shell integration tests, publish the Kernel
+host for editor play, export `Build/SimplePaint3DShell.exe`, publish its adjacent
+`Build/KernelHost`, and launch the standalone game. Use `Run.cmd --build-only`
+to perform the same build and checks without launching a window.
+
+The launcher defaults to
+`%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`.
+Set `GODOT_EXE` to the full path of another Godot 4.7.2 .NET console executable
+if needed. Close a running standalone game before exporting over its files.
+
+The project uses `Godot.NET.Sdk/4.7.2`, targets `net10.0`, and participates in
+`Automapolis.slnx`. `SimplePaint3DShell.sln` supports the Godot editor's Debug,
+ExportDebug, and ExportRelease configurations. The root solution maps Release
+to the shell's ExportRelease configuration.
+
+If NuGet cannot resolve the Godot SDK, register the packages bundled with the
+.NET editor (adjust the path for a custom installation):
+
+```powershell
+dotnet nuget add source "$env:USERPROFILE\Program\Godot_v4.7.2-stable_mono_win64\GodotSharp\Tools\nupkgs" --name Godot472Local
+```
+
+For editor play, build the Debug configuration, publish the host to `KernelHost`,
+and open `project.godot` in the .NET editor. See the integration commands below
+for the build and publish steps. The interface and hex drawing live in
+`Scripts/Main.cs` and `Scripts/HexCell.cs`; `KernelConnection.cs` handles the
+separate process and `KernelProtocol.cs` defines the received presentation data.
 
 ## Controls
 
@@ -33,7 +68,7 @@ uses font glyphs and code-authored controls, with no generated image dependency.
 
 ## Platform exports
 
-Windows, Linux, and macOS export presets are included. Publish `Automapolis.Kernel.Host` for the target .NET runtime into a `KernelHost` folder beside the Godot executable. The Windows `Run.cmd` automates the local build and launch.
+Windows, Linux, and macOS .NET export presets are included. Keep the exported `data_SimplePaint3DShell_*` runtime directory beside the executable. Publish `Automapolis.Kernel.Host` for the target platform into a `KernelHost` folder beside that executable (inside `Contents/MacOS` for a macOS app bundle). The Kernel host requires the .NET 10 runtime unless published with `--self-contained true` and the matching runtime identifier. The Windows `Run.cmd` automates the local build and launch; Linux and macOS exports have not been verified on this Windows machine.
 
 ## Hex layout
 
@@ -57,11 +92,21 @@ planned six-direction facing, rotation costs, or variable footprints.
 
 ## Integration check
 
-Publish the Kernel host into `Shells/SimplePaint3DShell/KernelHost`, then run Godot with
-`--headless --path Shells/SimplePaint3DShell --script Tests/HexGridSmoke.gd` from the repository
-root. This checks the live protocol, hex selection (including overlapping cell
-bounding boxes), turn advancement, resized maps, and player interventions. The test
-scripts are excluded from standalone exports.
+From the repository root, build the C# tests and publish the Kernel host:
+
+```powershell
+dotnet build Automapolis.slnx --configuration Debug
+dotnet publish Source/Automapolis.Kernel.Host --configuration Debug --no-build --output Shells/SimplePaint3DShell/KernelHost
+$godotExecutable = "$env:USERPROFILE\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe"
+& $godotExecutable --headless --path Shells/SimplePaint3DShell --editor --import
+& $godotExecutable --headless --path Shells/SimplePaint3DShell res://Tests/HexGridSmoke.tscn
+```
+
+The C# test runs through `Tests/HexGridSmoke.tscn`. It checks the live protocol,
+hex selection (including overlapping cell bounding boxes), turn advancement,
+keyboard controls, resized maps, outline settings, glyphs, player interventions,
+rejected commands, Unicode names, and full 64-bit seeds. Test source is compiled
+only in Debug and test resources are excluded from standalone exports.
 
 For rendered seam regression checks, run Godot without `--headless` and add
 `-- --render-check` to the integration command. This scans the board interior
@@ -79,3 +124,5 @@ Compatibility renderer; no graphics-mode change is required.
 The rendered checks also compare adjacent selected and hovered cells against an
 unhighlighted image at three delineation widths. Pixels outside both terrain
 interiors must remain identical. An adjacent-highlight preview is saved in `Build`.
+
+Godot references: [C# basics](https://docs.godotengine.org/en/stable/tutorials/scripting/c_sharp/c_sharp_basics.html) and [command-line exports](https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html).
