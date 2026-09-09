@@ -30,14 +30,15 @@ static func clear_pose(center: Vector2, dimensions: Vector2, angle: float, obsta
 			return false
 	return true
 
-static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, turn: int, approach: int, obstacles: Array) -> Dictionary:
+static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, turn: int, approach: int, obstacles: Array, heading := 0) -> Dictionary:
 	var next_dimensions := dimensions if turn == 0 else Vector2(dimensions.y, dimensions.x)
 	var angle := turn * PI * 0.5
-	var pivot := center - dimensions * 0.5
+	var local_dimensions := dimensions if heading % 2 == 0 else Vector2(dimensions.y, dimensions.x)
+	var pivot := center - (local_dimensions * 0.5).rotated(heading * PI * 0.5)
 	var target := center + direction
 	if turn != 0:
 		if approach == 0:
-			target = pivot + next_dimensions * 0.5
+			target = pivot + (center - pivot).rotated(angle)
 		elif approach == 1:
 			# Mixed parity dimensions require a half-cell correction to land on the grid.
 			target = (center - next_dimensions * 0.5).round() + next_dimensions * 0.5
@@ -61,4 +62,5 @@ static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, t
 			accepted = false
 	if not clear_pose(target, next_dimensions, 0.0, obstacles):
 		accepted = false
-	return {"center": target, "dimensions": next_dimensions, "path": path, "accepted": accepted, "pivot": pivot}
+	return {"center": target, "dimensions": next_dimensions, "path": path, "accepted": accepted, "pivot": pivot, "heading": posmod(heading + turn, 4)}
+

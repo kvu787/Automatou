@@ -4,9 +4,10 @@ const Motion = preload("res://Motion.gd")
 const Cell := 40.0
 const Origin := Vector2(40, 230)
 const Titles := ["Destination snap", "Center sweep", "Corner pivot"]
-const Descriptions := ["Keep the top-left cell; check the final footprint.", "Turn about the center, with grid correction; check swept space.", "Turn about the current top-left corner; check swept space."]
+const Descriptions := ["Turn about a fixed unit corner; check only the destination.", "Turn about the center, with grid correction; check swept space.", "Turn about the same fixed unit corner; check swept space."]
 const UnitColor := Color("67e0b1")
 var approach := 0
+var heading := 0
 var initial_dimensions := Vector2(3, 1)
 var dimensions := Vector2(3, 1)
 var center := Vector2.ZERO
@@ -56,6 +57,7 @@ func reset() -> void:
 	reset_unit()
 
 func reset_unit() -> void:
+	heading = 0
 	dimensions = initial_dimensions
 	center = Vector2(4, 4) + dimensions * 0.5
 	result = {}
@@ -63,9 +65,10 @@ func reset_unit() -> void:
 	queue_redraw()
 
 func command(direction: Vector2, turn: int) -> void:
-	result = Motion.proposal(center, dimensions, direction, turn, approach, obstacles)
+	result = Motion.proposal(center, dimensions, direction, turn, approach, obstacles, heading)
 	status = "Accepted" if result.accepted else "Blocked; unit stays in place."
 	if result.accepted:
+		heading = result.heading
 		center = result.center
 		dimensions = result.dimensions
 	queue_redraw()
@@ -121,10 +124,23 @@ func _draw() -> void:
 	if not result.is_empty() and not result.accepted:
 		draw_unit(result.center, result.dimensions, Color("ff7188"), false)
 	draw_unit(center, dimensions, UnitColor, true)
+	var forward := Vector2.RIGHT.rotated(heading * PI * 0.5)
+	var middle := Origin + center * Cell
+	var reach := (dimensions.x if heading % 2 == 0 else dimensions.y) * Cell * 0.4
+	var tip := middle + forward * reach
+	draw_line(middle, tip, UnitColor, 3, true)
+	draw_line(tip, tip - forward.rotated(0.55) * 10, UnitColor, 3, true)
+	draw_line(tip, tip - forward.rotated(-0.55) * 10, UnitColor, 3, true)
+	if approach != 1:
+		var local_dimensions := dimensions if heading % 2 == 0 else Vector2(dimensions.y, dimensions.x)
+		var pivot := center - (local_dimensions * 0.5).rotated(heading * PI * 0.5)
+		draw_circle(Origin + pivot * Cell, 5, Color("f2bd69"))
+	label_at(Vector2(560, 280), "Facing: " + ["Right / 3", "Down / 6", "Left / 9", "Up / 12"][heading] + " o'clock", 18)
 	label_at(Vector2(560, 255), "Center (%.1f, %.1f)   |   %d x %d" % [center.x, center.y, dimensions.x, dimensions.y], 20)
 	label_at(Vector2(560, 550), "Moves and turns apply immediately.", 17)
-	label_at(Vector2(560, 580), "Red outline: rejected destination.", 17)
+	label_at(Vector2(560, 580), "Arrow: front. Gold dot: fixed pivot.", 17)
 	label_at(Vector2(560, 630), "Reset before comparing approaches", 17)
 	label_at(Vector2(560, 655), "from the same starting pose.", 17)
 	label_at(Vector2(40, 750), status, 20, Color.WHITE)
 	label_at(Vector2(40, 783), "Sweep checks are conservative and can reject very tight clearances.", 17)
+
