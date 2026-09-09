@@ -1,5 +1,10 @@
 # Base template
 
+## Folder and file naming
+
+Use CamelCase.
+Use complete proper words. Don't use typical shortenings. Good: Source, Documentation. Bad: src, docs.
+
 ## External tools
 
 You may use the tools in `%UserProfile%\Program`.
