@@ -207,3 +207,43 @@ Recorded and committed:
 - **Rectangular units:** deferred to separate experiments.
 
 Updated the mechanics and art-direction docs, and committed the conversation separately.
+
+## User
+
+okay, now we have the simple constraint that all units have n*n footprints. now we can discuss how orientation and rotation can work.
+
+at a high level, unit translation and rotation should work somewhat like they do in the real world, but simplified to the spatial model of a square grid. generally, this means that most units should only be able to translate in the forward direction. to move in other directions, they must rotate. both translation and rotation costs some amount of action.
+
+provide thoughts and analysis
+
+## Assistant
+
+I’ll analyze how forward movement and paid turns work with square footprints, and record the general direction while leaving specific costs and exceptions open.
+
+## Assistant
+
+**This gives orientation a clear purpose even before directional combat exists: facing determines how readily a unit can reach somewhere.** Square footprints keep its occupied area stable while it turns, so you can get meaningful maneuvering without rectangular-footprint complications.
+
+I’d start with three primitive actions: **advance one base cell, turn left 90°, and turn right 90°**. Translation moves the entire footprint one cell, regardless of its size. A 180° turn would initially cost two quarter-turns. Those are proposed details; your broader rule is now recorded.
+
+**The ratio between movement and turning costs will define the feel.** Suppose advancing costs 1 action point and turning 90° costs 1:
+
+- Moving three cells forward costs **3**.
+- Moving three cells to the right costs **4**, ending facing right.
+- Reaching that same position and restoring the original facing costs **5**.
+- Moving three cells behind costs **5**, ending facing backward—or **7** to restore the original facing.
+
+That makes facing especially consequential for small adjustments. A unit could be excellent at crossing open ground but awkward at repositioning in a crowded fight. Separate translation and rotation costs also let you distinguish speed from agility: a fast vehicle need not turn cheaply, and an agile creature need not travel far.
+
+**The biggest grid artifact is the cost of zigzagging.** Traveling northeast requires alternating north and east steps or taking longer straight segments. Charging for every turn strongly favors the straight segments, even when both routes cover the same number of cells. An obstacle course with frequent bends becomes much more expensive than an equally long straight corridor. That could be desirable, but map design and action budgets need to account for it.
+
+Forward-only motion is also a deliberate simplification of real movement. People sidestep, animals back away, and vehicles reverse. Your “most units” wording leaves room for those abilities later. I would keep such exceptions explicit and limited, so players can predict which units can make a small adjustment without turning around.
+
+**Paid rotation should persist as a commitment.** Facing should carry across turns, and automatic behaviors need consistent accounting. If attacking freely spins a unit toward its target, players may gain a free maneuver that otherwise costs action. We do not need to decide attack rules yet, but they will need to respect this movement model.
+
+For controls, I’d let the player choose a destination and optionally a final facing, then preview the route, turns, and total cost. They should not have to issue every quarter-turn manually. Route planning would consider both position and facing: arriving at the same place facing north or south produces different onward options.
+
+One remaining distinction: **a square footprint fits after a quarter-turn, but the rotating model might not fit throughout the animation.** For the simple baseline, I’d allow logical rotation within the existing footprint and handle visual clearance through model proportions and animation. Requiring swept clearance would be an additional rule, even for squares.
+
+My starting proposal is a shared action budget, positive costs for both actions, persistent facing, and in-place quarter-turns. I’d evaluate the turning-to-translation cost ratio first: it will tell us whether units feel satisfyingly deliberate or frustratingly cumbersome.
+
