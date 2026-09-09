@@ -221,3 +221,31 @@ I’ll record integer-only math as a requirement for every approach in the exper
 Recorded in the experiment’s [AGENTS.md](C:/Users/k/Repository/CSharp/Automapolis/Experiments/RectangularGridMotion/AGENTS.md) and linked from its README: **every approach must use integer math only**.
 
 Committed. The existing code is explicitly marked as not yet compliant.
+
+## User
+
+if we only use integer math, what are possible approaches to "sweep" collision checking logic
+
+## Assistant
+
+Integer math still allows swept collision checks. The key choice is which grid cells a turn reserves between its starting and ending footprints.
+
+## Assistant
+
+With integer math, a “sweep” can be a **set of cells that must be empty for a turn**, rather than a rectangle evaluated at intermediate angles.
+
+Possible approaches:
+
+1. **Starting and ending footprints combined.** Check their union. Very permissive, but it ignores cells between them, so it is not a complete sweep.
+
+2. **Bounding rectangle.** Check every cell in the smallest grid rectangle containing both footprints. Simple and predictable, but can block turns unnecessarily. It also does not necessarily contain a physically rotating rectangle’s entire path—the corner overshoot from your screenshot is an example.
+
+3. **Discrete intermediate footprints.** Define a turn as several grid configurations, then check every cell occupied by any configuration. These are logical steps, not animations. This provides explicit control over how a unit turns through tight spaces.
+
+4. **Turn masks.** Define a set of reserved cells for each footprint, pivot, and turn direction. Rotate or reflect those masks using integer coordinate operations. This is flexible: a mask can represent a narrow turning corridor or a generous clearance zone.
+
+5. **Conservative pivot envelope.** Reserve a square or other integer-defined region around the pivot large enough to contain the whole turn. Easy to check, but usually the most restrictive.
+
+For this experiment, I’d compare **bounding rectangles, discrete intermediate footprints, and turn masks**, with destination-only checking as the baseline. They offer distinct, understandable grid rules without requiring continuous geometry.
+
+Pivot positions between cells can use doubled integer coordinates: one cell equals two coordinate units. No floating-point arithmetic is needed.
