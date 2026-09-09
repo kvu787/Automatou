@@ -6,13 +6,13 @@ Double-click `Run.cmd` to import, verify, export, and launch `Build/RectangularG
 
 ## Controls and preview
 
-- WASD or arrows: move one cell in world coordinates. Translation always checks only its destination.
-- Q / E or Turn left / right: attempt a quarter-turn using the selected rejection rule.
+- ESDF (E up, S left, D down, F right) or arrows: move one cell in world coordinates. Translation always checks only its destination.
+- W / R or Turn left / right: attempt a quarter-turn using the selected rejection rule.
 - Sweep check dropdown: change the rule without moving or resetting the unit.
 - Inspect left / right: show the next turn's required cells without executing it.
 - Footprint buttons: select 3 x 1, 4 x 2, or 3 x 2 and reset.
 - Click a cell: toggle an obstacle. Cells occupied by the actual unit cannot become obstacles.
-- R / Reset: restore the unit and default obstacles while retaining the selected sweep rule.
+- Home / Reset: restore the unit and default obstacles while retaining the selected sweep rule.
 - Clear obstacles: reset the unit on an empty map, retaining the selected sweep rule.
 
 Amber cells must be clear for the previewed turn. Red cells contain blocking obstacles. Inset outlines show the destination. A red board border and the outside-board count indicate required cells beyond the board. The preview always describes the **next** turn from the current pose; after an accepted turn it updates to another turn. Inspecting or switching a rule does not execute the preview.
@@ -52,6 +52,7 @@ All movement, pivot, rotation, reservation, and collision calculations use integ
 
 ## Verification
 
-`Verify.gd` checks destination-only behavior, pivot centering, exact full rotations, whole-cell alignment, expected masks, sweep-only obstacle rejection, board boundaries, and unchanged translation for all rules. Coverage includes all footprint sizes, all four facings, and both turn directions. `VerifyKeyboard.gd` checks default Off selection, switching without movement, WASD/Q/E under every rule, preview/action agreement, and unchanged pose after rejection. `Run.cmd` runs both before export.
+`Verify.gd` checks destination-only behavior, pivot centering, exact full rotations, whole-cell alignment, expected masks, sweep-only obstacle rejection, board boundaries, and unchanged translation for all rules. Coverage includes all footprint sizes, all four facings, and both turn directions. `VerifyKeyboard.gd` checks default Off selection, switching without movement, ESDF/W/R under every rule, preview/action agreement, and unchanged pose after rejection. `Run.cmd` runs both before export.
 
 Generated imports, executables, and local capture artifacts are ignored by `.gitignore`.
+

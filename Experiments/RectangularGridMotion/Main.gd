@@ -31,10 +31,10 @@ func _ready() -> void:
 	make_button("3 x 1", Vector2i(40, 95), func(): initial_dimensions = Vector2i(3, 1); reset())
 	make_button("4 x 2", Vector2i(200, 95), func(): initial_dimensions = Vector2i(4, 2); reset())
 	make_button("3 x 2", Vector2i(360, 95), func(): initial_dimensions = Vector2i(3, 2); reset())
-	make_button("Reset [R]", Vector2i(520, 95), reset)
+	make_button("Reset [Home]", Vector2i(520, 95), reset)
 	make_button("Clear obstacles", Vector2i(680, 95), func(): obstacles.clear(); reset_unit())
-	make_button("Turn left [Q]", Vector2i(560, 290), func(): command(Vector2i.ZERO, -1))
-	make_button("Turn right [E]", Vector2i(720, 290), func(): command(Vector2i.ZERO, 1))
+	make_button("Turn left [W]", Vector2i(560, 290), func(): command(Vector2i.ZERO, -1))
+	make_button("Turn right [R]", Vector2i(720, 290), func(): command(Vector2i.ZERO, 1))
 	make_button("Up", Vector2i(640, 355), func(): command(Vector2i.UP, 0))
 	make_button("Left", Vector2i(560, 405), func(): command(Vector2i.LEFT, 0))
 	make_button("Right", Vector2i(720, 405), func(): command(Vector2i.RIGHT, 0))
@@ -80,13 +80,13 @@ func command(direction: Vector2i, turn: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_W, KEY_UP: command(Vector2i.UP, 0)
-			KEY_S, KEY_DOWN: command(Vector2i.DOWN, 0)
-			KEY_A, KEY_LEFT: command(Vector2i.LEFT, 0)
-			KEY_D, KEY_RIGHT: command(Vector2i.RIGHT, 0)
-			KEY_Q: command(Vector2i.ZERO, -1)
-			KEY_E: command(Vector2i.ZERO, 1)
-			KEY_R: reset()
+			KEY_E, KEY_UP: command(Vector2i.UP, 0)
+			KEY_D, KEY_DOWN: command(Vector2i.DOWN, 0)
+			KEY_S, KEY_LEFT: command(Vector2i.LEFT, 0)
+			KEY_F, KEY_RIGHT: command(Vector2i.RIGHT, 0)
+			KEY_W: command(Vector2i.ZERO, -1)
+			KEY_R: command(Vector2i.ZERO, 1)
+			KEY_HOME: reset()
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		var mouse := Vector2i(get_global_mouse_position()) - Origin
 		if mouse.x < 0 or mouse.y < 0:
@@ -119,7 +119,7 @@ func draw_unit(unit_center: Vector2i, footprint: Vector2i, color: Color, filled:
 
 func _draw() -> void:
 	label_at(Vector2i(40, 50), "Rectangular grid motion", 30, Color.WHITE)
-	label_at(Vector2i(40, 77), "WASD / arrows: move    Q / E: turn    Click a cell: toggle obstacle", 18)
+	label_at(Vector2i(40, 77), "ESDF / arrows: move    W / R: turn    Click a cell: toggle obstacle", 18)
 	label_at(Vector2i(40, 207), Motion.SweepDescriptions[sweep_check], 18)
 	draw_rect(Rect2(Origin, Vector2i.ONE * Cell * Motion.BoardSize), Color("101c2c"))
 	for line in range(Motion.BoardSize + 1):
@@ -158,6 +158,7 @@ func _draw() -> void:
 	label_at(Vector2i(560, 690), "Amber: required. Red: collision.", 17)
 	label_at(Vector2i(40, 750), status, 20, Color.WHITE)
 	label_at(Vector2i(40, 783), "Preview shows the NEXT turn. Integer rules only. Translation still checks the destination.", 17)
+
 
 
 

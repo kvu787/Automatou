@@ -20,7 +20,7 @@ func verify() -> void:
 		scene.obstacles.clear()
 		scene.reset_unit()
 		var original: Vector2i = scene.center
-		for key in [KEY_W, KEY_S, KEY_A, KEY_D, KEY_Q, KEY_E]:
+		for key in [KEY_E, KEY_D, KEY_S, KEY_F, KEY_W, KEY_R]:
 			var event := InputEventKey.new()
 			event.keycode = key
 			event.pressed = true
@@ -44,3 +44,4 @@ func verify() -> void:
 			check(scene.center == original and scene.heading == original_heading, "Rejected sweep preserves full unit pose")
 	print("Keyboard verification: %d failures" % failures)
 	quit(1 if failures else 0)
+
