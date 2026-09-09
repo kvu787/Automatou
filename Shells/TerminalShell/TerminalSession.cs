@@ -1,0 +1,225 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Automapolis.Kernel;
+
+namespace Automapolis.TerminalShell;
+
+/// <summary>Translates terminal input to Kernel commands and renders snapshots.</summary>
+public sealed class TerminalSession(TextWriter output)
+{
+    private WorldKernel _kernel = new(new WorldConfig());
+    private static readonly JsonSerializerOptions SnapshotOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
+
+    public const string Help = """
+        AUTOMAPOLIS / TerminalShell
+
+        INSPECT THE FRONT
+          map                         Hex map, coordinates, and latest dispatch.
+          status                      World configuration and all metrics.
+          inspect X Y                 Terrain, resources, and all forces in a sector.
+          forces [kind]               List forces, optionally filtered by kind.
+          force ID                    Inspect one force by its numeric ID.
+          legend                      Explain glyphs present in this world.
+          chronicle [count]           Recent dispatches, newest first.
+          snapshot                    Complete current state as readable JSON.
+
+        EDIT THE WORLD (does not advance time)
+          channel X Y [amount]        Channel resonance (default 25).
+          fortify X Y terrain         Change terrain.
+          deploy X Y [kind]           Deploy Soldier (default) or Bastion.
+          establish X Y name          Establish a named human enclave.
+          purge X Y [radius]          Burn a hex radius (default 1); hits both sides.
+
+        ADVANCE THE SIMULATION
+          advance [count]             Resolve 1 turn by default, or 1..1000 turns.
+          step [count]                Same as advance.
+
+        SESSION
+          new                         Replace the world with the default theater.
+          new width height [seed [name]]
+                                      Replace the world with a generated theater.
+          help / ?                    Show this command reference.
+          quit / exit                 End this session.
+
+        Terrain: ShatteredPlain, AshWaste, LeyChannel, Xenoforest,
+                 FortifiedReach, BroodMire.
+        Force kinds: Bastion, Soldier, Ravener, BroodNode, Enclave.
+        The Kernel enforces deployment restrictions and intervention limits.
+        Coordinates: zero-based column X, row Y; odd hex rows shift right.
+        Names can contain spaces, with optional matching single or double quotes.
+        Commands and kind names ignore case. Blank lines do nothing.
+        Only advance/step moves time. New/quit discards the current world.
+
+        TRY IT
+          inspect 2 3
+          channel 2 3 25
+          fortify 2 3 FortifiedReach
+          deploy 2 3 Soldier
+          establish 2 3 "Vigil Annex"
+          advance
+          chronicle
+        """;
+
+    public WorldSnapshot Snapshot => _kernel.Snapshot();
+
+    public void Run(TextReader input, bool interactive)
+    {
+        output.WriteLine("AUTOMAPOLIS / TerminalShell");
+        output.WriteLine("Hold the human enclaves against the bioswarm. Time waits for your command.");
+        output.WriteLine("Type help for commands. Try: inspect 2 3, channel 2 3, then advance.");
+        output.WriteLine();
+        TerminalRenderer.Map(output, Snapshot);
+
+        while (true)
+        {
+            if (interactive)
+            {
+                output.Write($"\r\nTurn {_kernel.Turn}> ");
+                output.Flush();
+            }
+            var line = input.ReadLine();
+            if (line is null || !ExecuteLine(line))
+                break;
+        }
+        output.WriteLine("Session ended.");
+    }
+
+    /// <returns>False when the user requests a clean exit.</returns>
+    public bool ExecuteLine(string line)
+    {
+        try
+        {
+            var command = new CommandInput(line);
+            switch (command.Name)
+            {
+                case "":
+                    break;
+                case "help":
+                case "?":
+                    command.RequireCount(0, 0, "help");
+                    output.WriteLine(Help);
+                    break;
+                case "quit":
+                case "exit":
+                    command.RequireCount(0, 0, "quit");
+                    return false;
+                case "map":
+                    command.RequireCount(0, 0, "map");
+                    TerminalRenderer.Map(output, Snapshot);
+                    break;
+                case "status":
+                    command.RequireCount(0, 0, "status");
+                    TerminalRenderer.Status(output, Snapshot);
+                    break;
+                case "inspect":
+                    command.RequireCount(2, 2, "inspect X Y");
+                    TerminalRenderer.Inspect(output, Snapshot, Point(command));
+                    break;
+                case "forces":
+                    command.RequireCount(0, 1, "forces [kind]");
+                    var forces = Snapshot.Forces.AsEnumerable();
+                    if (command.Count == 1)
+                    {
+                        var kind = command.EnumName<ForceKind>(0);
+                        forces = forces.Where(force => force.Kind == kind);
+                    }
+                    TerminalRenderer.Forces(output, forces);
+                    break;
+                case "force":
+                    command.RequireCount(1, 1, "force ID");
+                    var identifier = command.Integer(0, "ID");
+                    var found = Snapshot.Forces.FirstOrDefault(force => force.Id == identifier)
+                        ?? throw new ArgumentException($"No force has ID {identifier}. Use forces to list current IDs.");
+                    TerminalRenderer.Forces(output, [found]);
+                    break;
+                case "legend":
+                    command.RequireCount(0, 0, "legend");
+                    TerminalRenderer.Legend(output, Snapshot);
+                    break;
+                case "chronicle":
+                    command.RequireCount(0, 1, "chronicle [count]");
+                    var count = command.Count == 0 ? Snapshot.Chronicle.Count : command.Integer(0, "count");
+                    if (count < 1)
+                        throw new ArgumentException("Chronicle count must be positive.");
+                    foreach (var entry in Snapshot.Chronicle.Take(count))
+                        output.WriteLine(entry);
+                    break;
+                case "snapshot":
+                    command.RequireCount(0, 0, "snapshot");
+                    output.WriteLine(JsonSerializer.Serialize(Snapshot, SnapshotOptions));
+                    break;
+                case "advance":
+                case "step":
+                    command.RequireCount(0, 1, "advance [count]");
+                    var turns = command.Count == 0 ? 1 : command.Integer(0, "count");
+                    if (turns is < 1 or > 1000)
+                        throw new ArgumentException("Advance count must be between 1 and 1000.");
+                    for (var turn = 0; turn < turns; turn++)
+                        output.WriteLine(_kernel.Execute(new AdvanceTurn()).Message);
+                    TerminalRenderer.Map(output, Snapshot);
+                    break;
+                case "channel":
+                    command.RequireCount(2, 3, "channel X Y [amount]");
+                    Intervene(new ChannelResonance(Point(command), command.Count == 3 ? command.Integer(2, "amount") : 25), Point(command));
+                    break;
+                case "fortify":
+                    command.RequireCount(3, 3, "fortify X Y terrain");
+                    Intervene(new FortifyTerrain(Point(command), command.EnumName<TerrainKind>(2)), Point(command));
+                    break;
+                case "deploy":
+                    command.RequireCount(2, 3, "deploy X Y [kind]");
+                    Intervene(new DeployForce(Point(command), command.Count == 3 ? command.EnumName<ForceKind>(2) : ForceKind.Soldier), Point(command));
+                    break;
+                case "establish":
+                    command.RequireCount(3, int.MaxValue, "establish X Y name");
+                    Intervene(new EstablishEnclave(Point(command), command.RemainingText(2)), Point(command));
+                    break;
+                case "purge":
+                    command.RequireCount(2, 3, "purge X Y [radius]");
+                    Intervene(new InvokePurge(Point(command), command.Count == 3 ? command.Integer(2, "radius") : 1), Point(command));
+                    break;
+                case "new":
+                    NewWorld(command);
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown command '{command.Name}'. Type help for commands.");
+            }
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            output.WriteLine($"Error: {exception.Message}");
+        }
+        return true;
+    }
+
+    private void NewWorld(CommandInput command)
+    {
+        if (command.Count == 1)
+            throw new ArgumentException("Usage: new [width height [seed [name]]]");
+        var defaults = new WorldConfig();
+        var config = command.Count == 0 ? defaults : new WorldConfig(
+            command.Integer(0, "width"),
+            command.Integer(1, "height"),
+            command.Count >= 3 ? command.LongInteger(2, "seed") : defaults.Seed,
+            command.Count >= 4 ? command.RemainingText(3) : defaults.Name);
+        // Construct first so invalid configuration leaves the current session intact.
+        _kernel = new WorldKernel(config);
+        output.WriteLine($"Opened {config.Name}.");
+        TerminalRenderer.Map(output, Snapshot);
+    }
+
+    private static GridPoint Point(CommandInput command) => new(command.Integer(0, "X"), command.Integer(1, "Y"));
+
+    private void Intervene(WorldCommand command, GridPoint position)
+    {
+        var result = _kernel.Execute(command);
+        output.WriteLine(result.Message);
+        TerminalRenderer.Inspect(output, result.Snapshot, position);
+        output.WriteLine($"Turn {result.Snapshot.Turn} (unchanged). Use advance to resolve the simulation.");
+    }
+}
