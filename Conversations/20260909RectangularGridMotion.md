@@ -298,3 +298,35 @@ Both sweep implementations are removed. I also replaced the remaining rotation m
 Removed both swept approaches and their collision logic. Only **destination snap** remains, using integer math.
 
 No select boxes remain; footprint sizes use buttons. Movement and keyboard checks pass, the executable is rebuilt, and changes are committed.
+
+## User
+
+okay, we are much closer to an acceptable rotation mechanic.
+
+next, build on what we have currently and implement a way to switch between and experiment with a variety of different sweep rejection mechanics. (currently, there is no sweep rejection. preserve this behavior as a "sweep check = off" option.)
+
+## Assistant
+
+I’ll keep “Sweep check = Off” as the default and add several integer-only rejection rules. I’ll also highlight the cells each rule requires to be clear, so you can see why a turn is accepted or blocked.
+
+## Assistant
+
+I’ll add four rules alongside Off: the rectangle covering both footprints, row-first cell paths, column-first cell paths, and a conservative square around the pivot. They’ll all use the existing pivot and final rotation. A static left/right preview will let you compare their rejection cells without moving the unit.
+
+## Assistant
+
+All five options are working, and the movement and keyboard checks pass. Switching rules preserves the unit’s pose and updates the preview immediately. The display marks required cells, blocking obstacles, and any required cells outside the board. Off retains destination-only checking.
+
+## Assistant
+
+Implemented five selectable rules:
+
+- **Off** — existing behavior, selected by default.
+- **Endpoint rectangle**
+- **Row-first paths**
+- **Column-first paths**
+- **Pivot envelope**
+
+All use integer math and the existing rotation mechanic. Static left/right previews highlight required cells and explain rejections without moving the unit.
+
+Checks passed, executable rebuilt, and changes committed. Launch with `Run.cmd`.
