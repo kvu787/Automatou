@@ -77,3 +77,71 @@ A high likelihood of obedience could be a literal probability, but it could also
 This also gives the earlier aggressive/defensive distinction more reach. An aggressive faction with defensive individuals could behave very differently from a defensive faction with aggressive individuals. A resource-seeking entity without a body might alter rainfall to encourage growth, if rainfall is among its capabilities.
 
 The central mechanics question becomes: **when several ATs want different things from the same unit or part of the world, how are their competing intentions resolved?** That is where hierarchy, allegiance, obedience, and systemic intervention start producing interactions.
+
+## User
+
+given the conversation so far, provide examples of mechanics in other games that may be relevant or good inspiration to draw from or spark new ideas
+
+## Assistant
+
+I’ll look for examples of unit autonomy, authority, faction behavior, and systemic powers, with an emphasis on mechanics that could translate into simple AT rules.
+
+## Assistant
+
+Majesty is a close match for autonomous units responding to incentives, while Total War shows how a simple morale threshold can interrupt orders. RimWorld adds another useful model: an AT that controls events and pacing without belonging to a faction.
+
+## Assistant
+
+**Majesty, Rain World, and RimWorld are especially close to different parts of your idea.** There are also useful mechanics in more conventional strategy games that could be borrowed individually.
+
+Below, the game descriptions are sourced; the Automapolis possibilities are my extrapolations.
+
+1. **Majesty 2 — motivate autonomous subjects with rewards**
+
+   Heroes make their own decisions, and the monarch uses reward flags to encourage particular tasks. Different heroes respond differently: rangers favor exploration, while warriors favor fighting. Increasing the reward can attract interest that the task alone would not. [Game manual](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/73020/manuals/M2%20Manual%20English.pdf)
+
+   **For Automapolis:** authority could include offering incentives. A faction AT might post a bounty and leave individuals to decide whether to pursue it. This creates an interesting extension of your resource hunter: it could hunt resources directly, or earn them by performing someone else’s requested action. Two commanders could compete for the same units’ attention.
+
+2. **Total War: Rome II — obedience can fail at a threshold**
+
+   Units rout when morale becomes too low. Casualties, fatigue, and overwhelming opposition can cause this; a nearby general supports morale and can attempt to rally fleeing units. [Official morale guide](https://r2enc.totalwar.com/en/manual/single-player/0087_enc_page_battle_play_phase_conflict_morale/)
+
+   **For Automapolis:** a unit could follow orders until fear exceeds courage, then flee. This gives you conditional autonomy with very little decision logic. A commander’s physical position matters, and killing or separating that commander can change many units’ behavior without changing their faction allegiance.
+
+3. **Crusader Kings III — a political organization contains competing people**
+
+   Characters have traits and personal schemes; rulers manage vassals, influence others, inspire fear, and face rivals who can seek their position. Membership in the same realm does not eliminate personal ambition. [Official game overview](https://www.paradoxinteractive.com/games/crusader-kings-iii/about)
+
+   **For Automapolis:** separate allegiance to a faction from loyalty to its current leader. A unit might defend its faction while opposing its commander. Leadership succession could then change the behavior of an entire group even though its membership and resources remain identical.
+
+4. **Dominions 6 — give instructions, then watch their execution**
+
+   Players assign battle orders before combat instead of directly controlling units during it. Squads can receive different orders under the same commander, including attacking, guarding a commander, or holding before attacking. [Game manual](https://illwinter.com/dom6/dom6manual.pdf)
+
+   **For Automapolis:** orders could set a temporary policy: “guard this unit,” “attack anyone entering this area,” or “gather until carrying ten resources.” Individual ATs handle the details. This gives a middle ground between a faction choosing every action and units acting entirely independently. An order can also become inappropriate as circumstances change.
+
+5. **Rain World — creatures have lives and relationships beyond the player**
+
+   Creatures independently seek food and shelter, hunt one another, and compete over territory. Interactions can affect subsequent encounters: helping a scavenger can build trust, while threatening creatures can produce hostility or fear. [Developer explanation](https://blog.playstation.com/2017/01/16/rain-world-surviving-in-a-living-ecosystem/), [behavior and memory](https://blog.playstation.com/2017/03/28/theres-always-something-bigger-and-hungrier-in-rain-world/)
+
+   **For Automapolis:** “enemy” could be a relationship that changes through experience. An otherwise aggressive unit might spare one individual that helped it. A resource hunter might repeatedly cross a territorial unit’s boundary, generating conflict without either AT having a conquest objective.
+
+6. **Factorio — economic activity produces the conditions for conflict**
+
+   Factory pollution spreads through the environment. Pollution reaching enemy spawners is used to organize attacks; production therefore affects the threats the factory encounters. [Pollution mechanics](https://wiki.factorio.com/Pollution)
+
+   **For Automapolis:** resource gathering could leave traces that other ATs respond to: noise, waste, scent, depleted land, or visible stockpiles. Your defensive AT could provoke conflict simply by accumulating resources. Aggressive ATs could locate activity through those traces, giving them limited information instead of automatic knowledge of every enemy.
+
+7. **Black & White — behavior can be shaped through experience**
+
+   The player’s creature learns through feedback, including rewards and punishment, rather than receiving only explicit instructions for every action. [Gameplay description](https://en.wikipedia.org/wiki/Black_%26_White_%28video_game%29)
+
+   **For Automapolis:** AT preferences could change during a simulation. Rewarding a unit after it gathers might make gathering more attractive; repeated injury near a location might make that location less attractive. A simple initial personality could acquire a history. This also suggests experiments where identically initialized units develop differently because of their experiences.
+
+8. **RimWorld — individual autonomy and an AT controlling world events**
+
+   Colonists have needs, relationships, and backgrounds that affect their behavior and willingness to work; excessive stress can cause breakdowns. Separately, the storyteller controls events such as raids, storms, and traders, with different storytellers producing different pacing. [Official game description](https://rimworldgame.com/)
+
+   **For Automapolis:** this supplies two distinct ideas. First, personal needs can interrupt faction objectives. Second, an AT without a body can pursue an objective through systemic events. A “nature” AT might encourage vegetation when plant coverage falls below a threshold; a “discord” AT might create resource shortages near otherwise peaceful factions. Those objectives can operate alongside unit objectives.
+
+For the first small experiments, I’d take **reward-driven task choice from Majesty, morale-based refusal from Total War, and remembered relationships from Rain World**. Each adds one understandable reason for agents to behave differently, and their interactions could already produce hiring, desertion, grudges, and unexpected cooperation.
