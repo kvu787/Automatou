@@ -96,3 +96,33 @@ My starting proposal would be **automatic facing during ordinary movement, with 
 The Shell can animate smoothly between the four legal orientations. One visual wrinkle is that a long model may sweep outside its footprint midway through a turn, even though its start and end positions fit; we’ll need to accommodate that in model proportions or animation.
 
 Do you want facing to affect combat from the outset—for example, front/side/rear protection or firing arcs—or initially just determine how units move and present themselves?
+
+## User
+
+let's not discuss mechanics yet. we still have visual questions to answer.
+
+for models that naturally fill in a square-ish area, it's straightforward to to determine their n*n cell footprint. orientation and rotation is also straightforward.
+
+for models that are oblong, we have the same decision to make as before: should they have a n*n cell footprint which results in large visual empty space, or should they have a non n*n footprint which results in more complex mechanics?
+
+## Assistant
+
+I’ll keep this focused on visual fit and record the footprint shape as an open question for oblong models.
+
+## Assistant
+
+Yes—**four-direction facing brings the oblong-footprint question back into focus.** I moved into mechanics too early.
+
+Visually, the choice is between giving each model a square area of breathing room and letting its footprint follow its proportions more closely.
+
+- **Square footprint:** A long, narrow model sits inside a comparatively wide reservation of ground. That can work for slightly oblong vehicles, especially with broad tracks, legs, or a wide stance. For something very slender, it can make groups look artificially spread out and make the selection outline feel disconnected from the object.
+- **Rectangular footprint:** The occupied area fits the model more convincingly. Long vehicles look long without also claiming equal width, and groups can form a denser, more natural-looking composition. At the four cardinal facings, a rectangle still fits the grid cleanly; the visual complication comes during the animated turn between them.
+
+For example, a model whose ground dimensions are roughly **2 cells wide and 6 cells long** fills only one-third of a 6×6 square. That is a substantial amount of visible empty ground. A 3×4 model inside a 4×4 square is a much milder mismatch.
+
+There is also an art-direction compromise: **make oblong models shorter and broader**. That could suit the LEGO-like aesthetic, but it would constrain which silhouettes you can use. I wouldn’t assume you want that constraint.
+
+My visual preference would be **square footprints for roughly square models and rectangular footprints for distinctly oblong ones**. The miniature-world aesthetic gives us a reason to preserve recognizable proportions. We can establish that visual preference before deciding whether its mechanical cost is acceptable.
+
+I’ve recorded this as an open design question; no replacement footprint rule has been chosen.
+
