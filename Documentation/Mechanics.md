@@ -53,11 +53,15 @@ system. It replaces the earlier assumption that unit orientation is purely
 visual. The main Shell will rotate unit models to represent their facing.
 
 Square footprints keep occupied cells unchanged across the four facings;
-introducing facing does not change the square-footprint requirement. Turning
-costs, how facing changes during movement and attacks, and any directional
-combat effects remain undecided.
+introducing facing does not change the square-footprint requirement.
 
-Rectangular unit footprints and alternative movement/turning rules are deferred
+Translation and rotation should broadly resemble real-world motion, simplified
+to the square grid. Most units may translate only forward; to travel in another
+direction, they must rotate first. Both translation and rotation cost some
+amount of action. Exact costs, action-budget structure, exceptions to forward-only
+translation, and interactions with attacks remain undecided.
+
+Rectangular unit footprints and their alternative movement/turning rules are deferred
 to separate experiments. For now, all units retain square footprints, including
 units with oblong models.
 
@@ -122,8 +126,10 @@ The following rules must be decided before variable footprints are implemented:
 ## Unresolved facing rules
 
 - Whether turning is automatic, explicitly commanded, or both.
-- Whether turning costs movement or actions, and whether costs vary by unit.
-- How movement direction, final facing, and attacks interact.
+- The action costs of translation and rotation, their shared or separate budgets,
+  and whether costs vary by unit.
+- Which units may reverse or move sideways as exceptions to forward-only travel.
+- How final facing and attacks interact with paid rotation.
 - Whether facing affects attack arcs, defense, vision, or other mechanics.
 - How turns are animated and how visual clearance is handled during a turn.
 - How a building's fixed orientation is chosen at placement; buildings remain
