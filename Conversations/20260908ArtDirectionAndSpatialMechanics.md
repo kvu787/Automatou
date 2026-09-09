@@ -356,3 +356,40 @@ Passive play means using only **Advance Turn**; player commands remain available
 Verified: 12 tests pass, Godot integration passes, and the standalone game builds and starts successfully.
 
 Launch with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Run.cmd). Paid rotation and multi-hex footprints remain future work.
+
+## User
+
+now that we changed to a hex grid, we need to review other decisions
+- building/unit sizes still must not be limited to one cell
+- buildings can have any footprint
+- units must now have an equilateral footprint, meaning they can be small or large hexagons, but they all be hexagonal (no oblong)
+
+what other decisions need to be reviewed or made
+
+## Assistant
+
+I’ll record regular hexagonal unit footprints at multiple sizes, preserve arbitrary building footprints, and review which other decisions the grid change affects.
+
+## Assistant
+
+Recorded: **units have regular hexagonal footprints at multiple sizes; buildings can have arbitrary footprints; neither is limited to one cell.** These are design requirements—the prototype still uses single-cell entities.
+
+The main decisions to review are:
+
+1. **How a large hexagonal footprint maps onto base hexes.** The simplest candidate is a center cell plus complete surrounding rings, giving **1, 7, 19, 37… occupied cells**. These clusters have sixfold symmetry, but their outside boundaries follow the small hexes, rather than forming six perfectly straight sides. We need to decide whether that is the intended logical footprint, with a cleaner hexagonal outline used visually.
+
+2. **The human reference size and size increments.** The old human = 2×2 cells rule no longer translates directly. With complete-ring footprints, making an animal one cell and a human the next size up means a human occupies seven cells. That is a much larger first jump than on squares. This decision sets the resolution for everything from infantry spacing to building interiors.
+
+3. **What happens during rotation.** A symmetric footprint centered on a cell can turn 60° and finish occupying exactly the same cells. That restores the useful property of the old square rule. But the model can still sweep outside those cells during animation. We must choose whether turning requires extra clearance or whether the occupied footprint reserves enough practical room to turn.
+
+4. **Movement distance, action costs, and exceptions.** Does every forward step move the whole unit one base hex, regardless of its size? I would start there, with unit-specific movement and turning costs. We still need action budgets, the cost of each 60° turn, rules for 120°/180° turns, and any units permitted to reverse or sidestep.
+
+5. **Building geometry and usable passages.** “Any footprint” allows buildings that follow the terrain, surround courtyards, or have wings. We still need to distinguish occupied structure from traversable interior space. Rectangular rooms and straight walls will not align neatly with hex boundaries, so visual wall placement and logical blockage need a consistent relationship. Roads, doors, and bridges should be designed against actual unit footprints.
+
+6. **Collision and terrain across a footprint.** Can allies overlap or pass through one another? Must every occupied hex be traversable? When a unit spans road, mud, and a hazard, which effects and movement costs apply? These questions existed before, but must now operate on hex-shaped groups of cells.
+
+7. **Combat measurements and facing sectors.** Range and adjacency could be measured from footprint edges or centers; the difference becomes substantial for large entities. Area effects need a once-per-entity versus per-cell rule. If facing affects combat, six directions also require a definition of front, flanks, rear, and targets lying on sector boundaries.
+
+8. **Making occupation readable in the main Shell.** We need exact footprint and destination previews, visible facing, and a way to inspect or select things behind tall models. The required orthographic 3/4 camera aesthetic stays; the overlays and occlusion treatment must work within it.
+
+**I’d settle the footprint construction and human scale first.** They determine the space available for model proportions, turning, streets, interiors, and encounters. The movement and combat numbers will be much easier to judge once that physical scale is concrete.
