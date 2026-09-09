@@ -30,6 +30,13 @@ const FORCE_SYMBOLS := {
 	"enclave": ["E", "ENCLAVE", MINT],
 }
 
+## Total width of an interior hex outline in board pixels; zero hides outlines.
+@export_range(0.0, 12.0, 0.25) var hex_outline_width := 2.0:
+	set(value):
+		hex_outline_width = clampf(value, 0.0, 12.0)
+		for button in _cell_buttons:
+			button.outline_width = hex_outline_width
+
 var _pipe: FileAccess
 var _stderr: FileAccess
 var _kernel_pid := -1
@@ -395,8 +402,8 @@ func _render_snapshot() -> void:
 		button.tooltip_text = _cell_tooltip(tile, occupants)
 		button.size = Vector2(HexCell.HEX_WIDTH, 2.0 * HexCell.RADIUS)
 		button.position = HexCell.cell_position(x, y)
-		button.clip_contents = true
 		button.background = background
+		button.outline_width = hex_outline_width
 		button.symbol_color = symbol_color
 		button.selected = x == _selected.x and y == _selected.y
 		if occupants.size() > 1:

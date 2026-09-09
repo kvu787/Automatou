@@ -8,6 +8,10 @@ var text := ""
 var background := Color("#181c39")
 var symbol_color := Color.WHITE
 var selected := false
+var outline_width := 2.0:
+    set(value):
+        outline_width = clampf(value, 0.0, HEX_WIDTH)
+        queue_redraw()
 
 func _ready() -> void:
     mouse_entered.connect(queue_redraw)
@@ -20,12 +24,20 @@ func _ready() -> void:
 static func cell_position(column: int, row: int) -> Vector2:
     return Vector2((column + 0.5 * (row & 1)) * HEX_WIDTH, row * ROW_STEP)
 
-func polygon() -> PackedVector2Array:
-    var points := PackedVector2Array()
+func polygon(inset: float = 0.0) -> PackedVector2Array:
+    # Exact shared vertices keep both parity rows flush, including hit testing.
+    var points := PackedVector2Array([
+        Vector2(HEX_WIDTH / 2.0, 0.0),
+        Vector2(HEX_WIDTH, RADIUS / 2.0),
+        Vector2(HEX_WIDTH, RADIUS * 1.5),
+        Vector2(HEX_WIDTH / 2.0, RADIUS * 2.0),
+        Vector2(0.0, RADIUS * 1.5),
+        Vector2(0.0, RADIUS / 2.0),
+    ])
     var center := Vector2(HEX_WIDTH / 2.0, RADIUS)
+    var factor := maxf(0.0, 1.0 - inset / (HEX_WIDTH / 2.0))
     for corner in range(6):
-        var angle := deg_to_rad(-90.0 + corner * 60.0)
-        points.append(center + Vector2(cos(angle), sin(angle)) * (RADIUS - 1.0))
+        points[corner] = center + (points[corner] - center) * factor
     return points
 
 func _has_point(point: Vector2) -> bool:
@@ -38,12 +50,17 @@ func _draw() -> void:
         fill = fill.lightened(0.15)
     if is_pressed():
         fill = fill.darkened(0.12)
-    draw_colored_polygon(points, fill)
-    points.append(points[0])
-    var border := Color("#f2c66d") if selected else background.lightened(0.25)
+    var border := Color("#f2c66d") if selected else Color("#73768c")
     if is_hovered() and not selected:
         border = Color("#55d6c2")
-    draw_polyline(points, border, 2.0 if selected or is_hovered() else 1.0, true)
+    if outline_width > 0.0:
+        # Each neighbor contributes half the shared outline, entirely inside
+        # its own hex. No overlapping strokes or draw-order-dependent widths.
+        draw_colored_polygon(points, border)
+        if outline_width < HEX_WIDTH:
+            draw_colored_polygon(polygon(outline_width / 2.0), fill)
+    else:
+        draw_colored_polygon(points, fill)
     if has_focus():
         draw_circle(Vector2(HEX_WIDTH / 2.0, 8.0), 2.0, Color.WHITE)
     var font := get_theme_font("font", "Button")

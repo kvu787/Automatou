@@ -31,6 +31,28 @@ func run() -> void:
     var first = shell._cell_buttons[0]
     var odd = shell._cell_buttons[16]
     check(is_equal_approx(odd.position.x - first.position.x, first.HEX_WIDTH / 2.0), "Odd row not staggered")
+    # Both row parities must share two exact vertices with all six neighbors.
+    for center_index in [33, 49]:
+        var center_cell = shell._cell_buttons[center_index]
+        var neighbors := 0
+        for candidate in shell._cell_buttons:
+            if candidate == center_cell:
+                continue
+            var shared_vertices := 0
+            for vertex in center_cell.polygon():
+                for other_vertex in candidate.polygon():
+                    if (center_cell.position + vertex).is_equal_approx(candidate.position + other_vertex):
+                        shared_vertices += 1
+            if shared_vertices == 2:
+                neighbors += 1
+        check(neighbors == 6, "Hex does not meet all six neighbors edge to edge")
+    var original_polygon: PackedVector2Array = first.polygon()
+    for outline_width in [0.0, 4.0, 12.0]:
+        shell.hex_outline_width = outline_width
+        for cell in shell._cell_buttons:
+            check(is_equal_approx(cell.outline_width, outline_width), "Outline setting did not reach cell")
+        check(first.polygon() == original_polygon, "Outline width changed cell geometry")
+    shell.hex_outline_width = 2.0
     check(first._has_point(Vector2(first.HEX_WIDTH / 2.0, first.RADIUS)), "Hex center not clickable")
     check(not first._has_point(Vector2.ZERO), "Empty corner incorrectly clickable")
     # The lower-right hex occupies a corner of the first cell's bounding box.
