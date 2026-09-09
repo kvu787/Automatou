@@ -27,7 +27,7 @@ keyboard / mouse / file / bot / network
 - Time cannot advance in the background. Exactly one `AdvanceTurn` command resolves exactly one autonomous war turn.
 - Witness mode accepts only `AdvanceTurn`. Command mode additionally exposes field interventions.
 - The JSON Lines host is replaceable transport, not a second engine.
-- Every authoritative visual token is text: terrains and forces have glyphs, descriptions, names, metrics, intents, and dispatches. A Shell may add layout, color, borders, sprites, and animation without hiding rules in assets.
+- Every authoritative visual token is text: terrains and forces have glyphs, descriptions, names, metrics, intents, and dispatches. A Shell may add layout, color, borders, models, and animation without hiding rules in assets.
 
 ## Simulation model
 

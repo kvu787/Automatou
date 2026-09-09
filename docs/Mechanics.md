@@ -14,7 +14,7 @@ the smallest addressable unit of ground area.
 - All footprints align to base-cell boundaries.
 - Footprint measures physical occupation and maneuvering room, not combat power.
 - A small, powerful entity can occupy less space than a large, weak entity.
-- A logical footprint does not need to trace every visible pixel of an entity.
+- A logical footprint does not need to trace an entity's visible silhouette.
 
 The scale reference is `H`, the side length of an ordinary human's square
 footprint measured in base cells. The current design sets:
@@ -68,20 +68,18 @@ undecided.
 
 ## Spatial presentation
 
-Unit art uses the established three-quarter top-down view with the subject facing
-down-right. Spatial mechanics and art composition are intentionally decoupled:
+Production art will use Blender models with SimplePaint materials. The current
+Godot Shell represents entities with symbols. Both presentations are independent
+of the spatial rules:
 
-- the canonical visual facing does not rotate the logical footprint;
-- long creatures may coil, curl, crouch, or pose diagonally within a square
-  composition;
-- long vehicles may use diagonal composition and foreshortening;
-- transparent pixels and harmless visual overhang do not expand the logical
-  footprint.
+- visual orientation does not rotate the logical footprint;
+- an entity's appearance may extend beyond its occupied area without changing
+  collision or movement;
+- logical occupation remains defined by the square unit and rectangular building
+  footprints above.
 
-This preserves a consistent visual direction without requiring directional
-sprite sets, turning rules, orientation-aware collision, or special pathfinding
-for long movable entities. See [Art direction](ArtDirection.md) for the broader
-visual language.
+Camera and model composition choices are part of [Art direction](ArtDirection.md).
+They do not introduce turning rules or orientation-aware footprint masks.
 
 ## Unresolved spatial rules
 

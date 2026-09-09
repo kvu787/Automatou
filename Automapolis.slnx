@@ -5,10 +5,5 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Automapolis.Kernel.Tests/Automapolis.Kernel.Tests.csproj" />
-    <Project Path="tests/Automapolis.PixelPerfect.Tests/Automapolis.PixelPerfect.Tests.csproj" />
-  </Folder>
-  <Folder Name="/tools/">
-    <Project Path="tools/Automapolis.Assets/Automapolis.Assets.csproj" />
-    <Project Path="tools/Automapolis.PixelPerfect/Automapolis.PixelPerfect.csproj" />
   </Folder>
 </Solution>

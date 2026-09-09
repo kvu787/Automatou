@@ -6,7 +6,7 @@ Each generated theater begins in crisis with one Bastion, one human enclave, sup
 
 The game is split strictly into a mandatory [.NET Kernel](src/Automapolis.Kernel) and optional [Shells](Shells). The included Shell is built with Godot 4.7.2. See [the architecture](docs/Architecture.md), [world foundation](docs/World.md), and [art direction](docs/ArtDirection.md).
 
-Every terrain and force has a deterministic 16x16 tactical pixel-art sprite. The palette-indexed source, compiler, generated PNGs, and browser-viewable catalog live in [`Shells/Godot/assets/sprites`](Shells/Godot/assets/sprites).
+The Godot Shell represents terrain and forces with colored symbols supplied by the Kernel. Production art will be modeled by Kevin in Blender using his SimplePaint shader; see [art direction](docs/ArtDirection.md).
 
 ## Play
 

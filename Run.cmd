@@ -11,13 +11,11 @@ if not exist "%AUTOMAPOLIS_GODOT%" (
   exit /b 1
 )
 
-echo [1/5] Building the Kernel, Shell tools, and tests...
+echo [1/5] Building the Kernel and tests...
 dotnet build "%AUTOMAPOLIS_ROOT%Automapolis.slnx" --configuration Release
 if errorlevel 1 goto :failed
 
-echo [2/5] Generating and validating 16x16 sprite assets...
-dotnet run --project "%AUTOMAPOLIS_ROOT%tools\Automapolis.Assets" --configuration Release --no-build
-if errorlevel 1 goto :failed
+echo [2/5] Running Kernel tests...
 dotnet run --project "%AUTOMAPOLIS_ROOT%tests\Automapolis.Kernel.Tests" --configuration Release --no-build
 if errorlevel 1 goto :failed
 
