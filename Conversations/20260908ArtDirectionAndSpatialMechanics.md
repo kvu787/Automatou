@@ -247,3 +247,39 @@ One remaining distinction: **a square footprint fits after a quarter-turn, but t
 
 My starting proposal is a shared action budget, positive costs for both actions, persistent facing, and in-place quarter-turns. I’d evaluate the turning-to-translation cost ratio first: it will tell us whether units feel satisfyingly deliberate or frustratingly cumbersome.
 
+
+## User
+
+this is a major issue i didn't think of: The biggest grid artifact is the cost of zigzagging.
+
+i don't like the notion that moving diagonally will incur way more action cost due to rotation instead of moving straight and then taking a single turn.
+
+this issue alone may be enough to switch from a square to hex grid.
+
+## Assistant
+
+I’ll compare how paid turning affects travel on square and hex grids, especially whether hexes solve the zigzagging problem or shift it.
+
+## Assistant
+
+**It’s a serious issue, but switching to hexes would not eliminate it.** I should qualify my earlier framing: the problem comes from charging for every change in grid-step direction while requiring forward-only movement. It occurs on both grids.
+
+Hexes give you six straight travel directions, spaced 60° apart. That improves directional coverage compared with four-way squares. [Hex direction reference](https://www.redblobgames.com/grids/hexagons/directions.html)
+
+But consider a destination halfway between two of those hex directions. To follow an approximately straight course toward it, the unit must alternate between them:
+
+- **Follow the direct-looking course:** alternate directions repeatedly, paying for each turn.
+- **Minimize turning:** travel several steps in one direction, turn once, then travel the remaining steps in the other.
+
+Those routes can have the same number of movement steps, yet very different rotation costs—exactly the behavior you dislike on squares. Hexes make the alternating turns 60° instead of 90°. If each turn costs the same action amount, that smaller angle alone provides no cost relief. If cost scales with angle, it reduces the penalty but does not remove it.
+
+**The underlying decision is whether each grid step represents the unit’s actual heading.** There are several ways forward:
+
+- **Keep strict forward-only movement and paid turns.** Either grid will favor long straight segments. Hexes give more available headings, but you would need to accept the remaining directional bias.
+- **Add diagonal movement and eight facings on squares.** This solves the specific northeast staircase, but intermediate slopes still need mixed directions. It also reopens how a square model relates to its footprint at 45°.
+- **Treat a grid path as an approximation of a travel course.** Small alternating steps along that course would not each count as a deliberate body turn. Rotation costs would apply to changes in the intended course. This addresses the source of the problem, but needs careful rules for obstacles, final facing, and splitting movement across orders so players cannot evade turning costs.
+
+There is also a substantial cost to a hex switch for this particular project: **the current `N×N` footprint rule and four facings would need redesigning.** Multi-cell hex footprints are possible, but they would be a new spatial model.
+
+I would therefore **hold off on switching topology solely for this reason**. First compare the same off-axis journey on squares and hexes with paid turns. If both produce the unwanted behavior, the rule to revisit is the relationship between travel direction and facing.
+
