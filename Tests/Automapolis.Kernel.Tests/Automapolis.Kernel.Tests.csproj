@@ -5,6 +5,6 @@
     <RootNamespace>Automapolis.Kernel.Tests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Automapolis.Kernel/Automapolis.Kernel.csproj" />
+    <ProjectReference Include="../../Source/Automapolis.Kernel/Automapolis.Kernel.csproj" />
   </ItemGroup>
 </Project>

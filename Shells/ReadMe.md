@@ -13,4 +13,4 @@ The main 3D Shell's production model pipeline is not yet implemented.
 Future Shells may include pixel-art 2D, non-pixel-art 2D, and other visual styles
 of 3D presentation. Other valid Shells could be a Discord bot, a screen reader,
 a web client, or an AI experiment harness. See
-[shell terminology](../docs/Architecture.md#shell-terminology).
+[shell terminology](../Documentation/Architecture.md#shell-terminology).
