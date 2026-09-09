@@ -187,3 +187,23 @@ Across these options, a few rules need explicit choices:
 
 **For Automapolis, I’d explore option 2 first:** rectangular occupation with deliberate turning clearance. It would let long models fit naturally into the world and make their size meaningful. Option 3 could then distinguish vehicles from units that can sidestep, without making every unit use elaborate steering.
 
+
+## User
+
+i will need to do separate experiments to evaluate these and other options for rectangular footprints.
+
+for now, let's stick with the simple rule: units (objects that may translate and rotate) must have square n*n foot prints. buildings (stationary objects) may have have any footprint.
+
+## Assistant
+
+I’ll record square footprints for units and unrestricted footprint shapes for stationary buildings, with rectangular-unit options deferred to separate experiments.
+
+## Assistant
+
+Recorded and committed:
+
+- **Units:** may translate and rotate; must have square `N×N` footprints, including oblong models.
+- **Buildings:** stationary; may have any footprint shape, still aligned to base-cell boundaries.
+- **Rectangular units:** deferred to separate experiments.
+
+Updated the mechanics and art-direction docs, and committed the conversation separately.
