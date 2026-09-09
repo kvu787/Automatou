@@ -4,6 +4,10 @@ A self-contained Godot 4.7.2 experiment comparing rectangular footprints on a 12
 
 Double-click `Run.cmd` to import, verify, export, and launch `Build/RectangularGridMotion.exe`. The launcher uses the Godot 4.7.2 installation in `%UserProfile%\Program`, or the executable specified by `GODOT_EXE`. Matching Windows export templates must be installed. You can also open `project.godot` in Godot 4.7.2 and press F6 from `Main.tscn`.
 
+## Integer-only requirement
+
+Every approach must use integer math only. See [AGENTS.md](AGENTS.md) for the experiment requirement. The current implementation still uses floating-point geometry and does not yet comply; the descriptions below document its existing behavior.
+
 ## Controls
 
 - WASD or arrow keys translate one cell in world coordinates.
@@ -39,6 +43,7 @@ Build a corridor by clicking cells, then try translation and rotation near its w
 `Verify.gd` checks translations, obstacle and boundary rejection, edge contact, footprint dimension swaps, mixed-parity alignment, the starting sweep distinction, and complete clockwise and counterclockwise rotations with persistent facing and pivot. Run it with Godot's `--headless --path <experiment folder> --script Verify.gd` arguments. `Run.cmd` runs these checks before export.
 
 All generated imports, executables, and local capture artifacts are ignored by the experiment's `.gitignore`.
+
 
 
 
