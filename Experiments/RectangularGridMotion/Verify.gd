@@ -35,5 +35,37 @@ func _initialize() -> void:
 				heading = turn.heading
 				check((position - footprint).x % 2 == 0 and (position - footprint).y % 2 == 0, "Whole-cell alignment")
 			check(position == start and footprint == size and heading == 0, "Four turns restore exact pose")
+	var off := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [], 0, Motion.SweepCheck.Off)
+	var box := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [], 0, Motion.SweepCheck.EndpointRectangle)
+	var row := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [], 0, Motion.SweepCheck.RowFirst)
+	var column := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [], 0, Motion.SweepCheck.ColumnFirst)
+	var envelope := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [], 0, Motion.SweepCheck.PivotEnvelope)
+	check(off.required.size() == 3, "Off reserves only destination")
+	check(row.required.size() == 5 and not row.required.has(Vector2i(5, 5)), "Row-first inward paths reserve five cells")
+	check(box.required.size() == 9 and column.required.size() == 9, "Box and outward paths reserve a three by three region")
+	check(envelope.required.size() == 49 and envelope.required.has(Vector2i(1, 1)) and envelope.required.has(Vector2i(7, 7)), "Pivot square has expected integer bounds")
+	for mode in range(Motion.SweepNames.size()):
+		var obstacle := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [Vector2i(5, 5)], 0, mode)
+		check(obstacle.destination_clear, "Example obstacle is outside destination")
+		check(obstacle.accepted == (mode == Motion.SweepCheck.Off or mode == Motion.SweepCheck.RowFirst), "Sweep-only obstruction distinguishes modes")
+		var remote := Motion.proposal(center, dimensions, Vector2i.ZERO, 1, [Vector2i(7, 7)], 0, mode)
+		check(remote.accepted == (mode != Motion.SweepCheck.PivotEnvelope), "Envelope reserves extra clearance")
+		var movement := Motion.proposal(center, dimensions, Vector2i.RIGHT, 0, [Vector2i(5, 3)], 0, mode)
+		check(movement.accepted and movement.required.size() == 3, "Sweep selection does not alter translation")
+		var boundary := Motion.proposal(Vector2i(5, 13), Vector2i(1, 3), Vector2i.ZERO, 1, [], 1, mode)
+		check(boundary.accepted == (mode != Motion.SweepCheck.PivotEnvelope), "Only envelope exceeds board in boundary example")
+		check(boundary.outside_cells.is_empty() == boundary.accepted, "Outside-board cells explain rejection")
+		for size in [Vector2i(3, 1), Vector2i(4, 2), Vector2i(3, 2)]:
+			for heading in range(4):
+				var footprint: Vector2i = size if heading % 2 == 0 else Vector2i(size.y, size.x)
+				var position := Vector2i(8, 8) + footprint
+				for direction in [-1, 1]:
+					var proposal := Motion.proposal(position, footprint, Vector2i.ZERO, direction, [], heading, mode)
+					for cell in Motion.footprint_cells(proposal.center, proposal.dimensions):
+						check(proposal.required.has(cell), "Every mask includes destination in every facing")
+					if mode != Motion.SweepCheck.Off:
+						for cell in Motion.footprint_cells(position, footprint):
+							check(proposal.required.has(cell), "Enabled masks include starting footprint")
 	print("Motion verification: %d failures" % failures)
 	quit(1 if failures else 0)
+
