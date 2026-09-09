@@ -22,7 +22,7 @@ Set `GODOT_EXE` to the full path of another Godot 4.7.2 .NET console executable
 if needed. Close a running standalone game before exporting over its files.
 
 The project uses `Godot.NET.Sdk/4.7.2`, targets `net10.0`, and participates in
-`Automapolis.slnx`. `SimplePaint3DShell.sln` supports the Godot editor's Debug,
+`Automapolis.slnx`. `SimplePaint3DShell.slnx` supports the Godot editor's Debug,
 ExportDebug, and ExportRelease configurations. The root solution maps Release
 to the shell's ExportRelease configuration.
 
