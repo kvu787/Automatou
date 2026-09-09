@@ -191,3 +191,19 @@ I’ll check the turn shown in the screenshot. The red destination fits on the b
 Your red destination fits, but a front corner swings about **0.05 cell beyond the board’s left edge** just before completing the turn. That causes the rejection.
 
 The display is misleading: it shows the rejected destination, but not the intermediate position that caused the collision. This rule models a rigid rectangle physically turning; whether that’s desirable for your grid movement is a separate design choice.
+
+## User
+
+Sweep: collision checks cover every intermediate angle of the turn, even though movement displays instantly.
+
+this is unexpected to me. does this mean the logic is using real number math instead of just integers
+
+## Assistant
+
+Yes. I introduced floating-point geometry for the swept collision checks, rather than keeping the experiment entirely on the integer grid.
+
+## Assistant
+
+**Yes—floating-point arithmetic**, including sine and cosine. The unit ends aligned to grid cells, but the swept approaches check intermediate rotated rectangles with fractional coordinates. The check is numerical and approximate, not literally every angle.
+
+That was an assumption I introduced. A grid-based rotation does **not** require this: it can use integer cell coordinates, four orientations, and integer rules for which cells must be empty during a turn. Checking only the destination footprint is the simplest such rule.
