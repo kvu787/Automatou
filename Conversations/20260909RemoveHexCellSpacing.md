@@ -204,3 +204,17 @@ The adjacent-cell preview now shows both colored outlines fully inside the gray 
 Selection and hover now use uniform **2-pixel outlines extending inward**, leaving the gray cell boundaries untouched. Antialiasing stays inside too.
 
 Verified visually and with pixel comparisons. All checks passed; committed.
+
+## User
+
+it seems a white dot appears whenever i hold the mouse down over a cell, and it disappears when on mouse up. what is that for?
+
+## Assistant
+
+I’ll check the cell rendering to confirm what triggers that dot.
+
+## Assistant
+
+It’s a **keyboard-focus indicator**, drawn when the cell has input focus. It has no gameplay meaning.
+
+Mouse-down gives the cell focus. Releasing selects the cell and rebuilds the grid, which loses that focus—so the dot disappears. That brief flash is an unintended side effect of the current UI implementation.
