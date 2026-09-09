@@ -393,3 +393,34 @@ The main decisions to review are:
 8. **Making occupation readable in the main Shell.** We need exact footprint and destination previews, visible facing, and a way to inspect or select things behind tall models. The required orthographic 3/4 camera aesthetic stays; the overlays and occlusion treatment must work within it.
 
 **I’d settle the footprint construction and human scale first.** They determine the space available for model proportions, turning, streets, interiors, and encounters. The movement and combat numbers will be much easier to judge once that physical scale is concrete.
+
+## User
+
+How a large hexagonal footprint maps onto base hexes. The simplest candidate is a center cell plus complete surrounding rings, giving 1, 7, 19, 37… occupied cells. These clusters have sixfold symmetry, but their outside boundaries follow the small hexes, rather than forming six perfectly straight sides. We need to decide whether that is the intended logical footprint, with a cleaner hexagonal outline used visually.
+
+> it should be 1, 7, 19, 37… occupied cells
+
+The human reference size and size increments. The old human = 2×2 cells rule no longer translates directly. With complete-ring footprints, making an animal one cell and a human the next size up means a human occupies seven cells. That is a much larger first jump than on squares. This decision sets the resolution for everything from infantry spacing to building interiors.
+
+> pets are size 1 (1 cell) and humans are size 2 (7 cells)
+
+What happens during rotation. A symmetric footprint centered on a cell can turn 60° and finish occupying exactly the same cells. That restores the useful property of the old square rule. But the model can still sweep outside those cells during animation. We must choose whether turning requires extra clearance or whether the occupied footprint reserves enough practical room to turn.
+
+> don't do sweep collision check
+
+these are the important decisions for now. the rest of the questions/decisions are not too important right now and can be deferred TODOs.
+
+## Assistant
+
+I’ll record complete-ring footprints, pets at size 1, humans at size 2, and no swept collision checks during rotation. I’ll mark the remaining questions as deferred TODOs.
+
+## Assistant
+
+Recorded and committed in the design docs:
+
+- **Size 1:** 1 cell — pets.
+- **Size 2:** 7 cells — humans.
+- **Size 3, 4, …:** 19, 37, … cells, adding complete rings.
+- **Rotation:** preserves the occupied cells; no swept collision checks.
+
+The remaining questions are deferred TODOs. These are recorded design decisions; runtime footprint implementation is still pending.
