@@ -47,9 +47,15 @@ A **unit** is an entity that can move.
   importance. A Bastion can therefore remain human-sized despite exceptional
   power.
 
-Square footprints make spatial occupation independent of orientation. The
-mechanics do not currently require unit rotation or orientation-aware footprint
-masks.
+Units have an orientation with four possible facings aligned to the square
+grid's cardinal directions. This is a design decision, not yet an implemented
+system. It replaces the earlier assumption that unit orientation is purely
+visual. The main Shell will rotate unit models to represent their facing.
+
+Square footprints keep occupied cells unchanged across the four facings;
+introducing facing does not change the square-footprint requirement. Turning
+costs, how facing changes during movement and attacks, and any directional
+combat effects remain undecided.
 
 ### Buildings
 
@@ -72,7 +78,8 @@ Production art will use Blender models with SimplePaint materials. The current
 2d shell represents entities with symbols. Both presentations are independent
 of the spatial rules:
 
-- visual orientation does not rotate the logical footprint;
+- unit models show their four-direction facing; facing does not change the
+  cells occupied by a square unit footprint;
 - an entity's appearance may extend beyond its occupied area without changing
   collision or movement;
 - logical occupation remains defined by the square unit and rectangular building
@@ -85,8 +92,8 @@ may hide other cells without occupying them. This camera occlusion does not by
 itself establish gameplay line-of-sight or cover rules. Occlusion handling
 remains an unresolved presentation and interaction decision.
 
-Camera and model composition do not introduce turning rules or
-orientation-aware footprint masks.
+Unit facing is an explicit design decision described above. Camera composition
+alone does not determine turning rules or orientation-aware footprint masks.
 
 ## Unresolved spatial rules
 
@@ -108,3 +115,13 @@ The following rules must be decided before variable footprints are implemented:
   to `H`;
 - whether air, ground, underground, structure, and effect layers can share the
   same cells.
+
+## Unresolved facing rules
+
+- Whether turning is automatic, explicitly commanded, or both.
+- Whether turning costs movement or actions, and whether costs vary by unit.
+- How movement direction, final facing, and attacks interact.
+- Whether facing affects attack arcs, defense, vision, or other mechanics.
+- How turns are animated and how visual clearance is handled during a turn.
+- Whether buildings also have orientation; the four-facing decision applies to
+  units.

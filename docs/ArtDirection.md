@@ -38,6 +38,19 @@ must be addressed within the required aesthetic. The specific solutions remain
 undecided; the requirement does not prescribe an exact camera angle or an
 occlusion treatment.
 
+## Unit orientation and model visibility
+
+The main Shell should allow most angles of unit models to be seen over the
+course of play. The chosen approach is to give units four directional facings
+and rotate their models accordingly. Keeping model rotations static and relying
+on a rotatable camera to expose other sides is not the desired approach.
+The standard orthographic 3/4 overhead camera aesthetic remains required.
+
+Four facings expose different sides of a unit; this does not imply unrestricted
+inspection from every elevation. Building orientation and other model-viewing
+controls remain undecided. See [Mechanics](Mechanics.md) for the facing decision
+and its unresolved gameplay effects.
+
 ## Current 2d shell presentation
 
 The 2d shell uses the Kernel's text symbols for terrain and forces. Color
@@ -56,6 +69,8 @@ for the symbol key.
 
 ## Physical footprint and appearance
 
-Visual composition does not change an entity's logical footprint. Camera angle,
-model orientation, and harmless visual overhang belong to presentation; movement,
-occupation, and collision belong to the Kernel. See [Mechanics](Mechanics.md).
+Visual composition does not change an entity's logical footprint. Unit facing
+is part of the intended game state; the Shell represents it through model
+rotation. Camera angle, turn animation, and harmless visual overhang belong to
+presentation; authoritative facing, movement, occupation, and collision belong
+to the Kernel. See [Mechanics](Mechanics.md).
