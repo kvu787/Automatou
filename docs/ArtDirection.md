@@ -74,3 +74,16 @@ is part of the intended game state; the Shell represents it through model
 rotation. Camera angle, turn animation, and harmless visual overhang belong to
 presentation; authoritative facing, movement, occupation, and collision belong
 to the Kernel. See [Mechanics](Mechanics.md).
+
+## Open visual question: oblong models
+
+Square-ish models fit square cell footprints naturally. For oblong models, the
+square-footprint requirement is under reconsideration: a square footprint can
+leave substantial empty ground around the model, while a non-square footprint
+can fit its proportions more closely but introduces additional mechanical
+complexity. No replacement footprint rule has been selected.
+
+Resolve the desired visual fit first. Compare empty space, model proportions,
+and composition in the required orthographic 3/4 view across all four facings;
+defer discussion of the resulting mechanics until the visual questions have
+been addressed.
