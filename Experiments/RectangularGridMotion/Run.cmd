@@ -6,12 +6,12 @@ if not defined EXPERIMENT_GODOT set "EXPERIMENT_GODOT=%USERPROFILE%\Program\Godo
 if not exist "%EXPERIMENT_GODOT%" goto :missing
 "%EXPERIMENT_GODOT%" --version | findstr /b /c:"4.7.2." >nul
 if errorlevel 1 goto :missing
-"%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%" --editor --import
+"%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%." --editor --import
 if errorlevel 1 goto :failed
-"%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%" --script Verify.gd
+"%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%." --script Verify.gd
 if errorlevel 1 goto :failed
 if not exist "%EXPERIMENT_ROOT%Build" mkdir "%EXPERIMENT_ROOT%Build"
-"%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%" --export-release "Windows Desktop" "%EXPERIMENT_ROOT%Build\RectangularGridMotion.exe"
+"%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%." --export-release "Windows Desktop" "%EXPERIMENT_ROOT%Build\RectangularGridMotion.exe"
 if errorlevel 1 goto :failed
 start "Rectangular Grid Motion" "%EXPERIMENT_ROOT%Build\RectangularGridMotion.exe"
 exit /b 0
