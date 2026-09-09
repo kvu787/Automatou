@@ -131,3 +131,33 @@ The pivots are now centered across the unit’s width, and all three footprint s
 Updated: every pivot is centered in at least one dimension. The 3 × 1 rear pivot now sits at its rear cell’s center; the center-turn approach stays centered in both dimensions.
 
 Full rotation and grid-alignment checks pass for all footprints. Rebuilt and committed; run `Run.cmd` again.
+
+## User
+
+the center sweep and rear pivot sweep don't seem to be working properly
+
+## Assistant
+
+I’ll check both swept approaches against the collision checks and compare their results with the actual space the unit moves through.
+
+## Assistant question
+
+What goes wrong with the swept approaches—do valid moves get blocked, do turns move the unit unexpectedly, or is it something else?
+
+## Assistant
+
+I found a definite bug in both: collision padding blocks units that merely touch a wall, even when moving alongside it or away from it. Eight new checks reproduce that failure. I’m fixing that behavior; your description will help identify whether there’s another issue as well.
+
+## User
+
+the wasd and q/e movement is just not working as expected
+
+## Assistant
+
+That’s consistent with the collision bug: WASD can get stuck beside a wall, and Q/E can reject turns because of the added padding. The fix now passes those movement checks. I’ll also check the keyboard controls after switching approaches to make sure the dropdown isn’t interfering.
+
+## Assistant
+
+Fixed a confirmed bug in both approaches: touching a wall incorrectly blocked movement alongside or away from it. Rotation checks now distinguish contact from overlap too.
+
+Movement regressions and WASD/Q/E checks pass after switching approaches. Rebuilt and committed—please try `Run.cmd` again.
