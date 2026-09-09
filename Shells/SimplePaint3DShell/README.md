@@ -1,4 +1,4 @@
-# 2d shell (Godot)
+# SimplePaint3DShell
 
 This is the currently implemented symbolic 2d shell, distinct from the planned main 3D Shell. This optional presentation layer targets Godot 4.7.2. It renders the Bastion Front as a responsive tactical hex grid with terrain colors, force symbols, sector inspection, front dispatches, and Command controls, but contains no simulation rules.
 
@@ -43,7 +43,7 @@ Use the **Outline Width** slider below the legend to adjust outlines immediately
 (0–12 board pixels in 0.25 steps, default 2; 0 hides outlines). The current value
 appears beside the slider and stays in effect when selecting cells, advancing
 turns, or opening a new front during the session. The initial value is also
-editable as **Hex Outline Width** on the root `Automapolis` node in `Main.tscn`. Each cell
+editable as **Hex Outline Width** on the root `SimplePaint3DShell` node in `Main.tscn`. Each cell
 contributes half of the shared outline inside its polygon, so changing the width
 does not move cells or change click targets. Selection and hover add separate
 2-board-pixel colored outlines extending inward from the terrain edge. The gray
@@ -57,8 +57,8 @@ planned six-direction facing, rotation costs, or variable footprints.
 
 ## Integration check
 
-Publish the Kernel host into `Shells/Godot/KernelHost`, then run Godot with
-`--headless --path Shells/Godot --script Tests/HexGridSmoke.gd` from the repository
+Publish the Kernel host into `Shells/SimplePaint3DShell/KernelHost`, then run Godot with
+`--headless --path Shells/SimplePaint3DShell --script Tests/HexGridSmoke.gd` from the repository
 root. This checks the live protocol, hex selection (including overlapping cell
 bounding boxes), turn advancement, resized maps, and player interventions. The test
 scripts are excluded from standalone exports.

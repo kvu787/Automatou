@@ -2,7 +2,7 @@
 
 [ext_resource path="res://Scripts/Main.gd" type="Script" id="1_main"]
 
-[node name="Automapolis" type="Control"]
+[node name="SimplePaint3DShell" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

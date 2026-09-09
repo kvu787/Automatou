@@ -66,7 +66,7 @@ hover text.
 - Selection and hover remain separate interface treatments.
 
 The symbol presentation allows gameplay work and playtesting to continue while
-production models are created. See the [2d shell](../Shells/Godot/README.md)
+production models are created. See the [2d shell](../Shells/SimplePaint3DShell/README.md)
 for the symbol key.
 
 ## Physical footprint and appearance

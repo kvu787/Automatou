@@ -1,7 +1,7 @@
 bin/
 obj/
 .godot/
-Shells/Godot/Build/
-Shells/Godot/KernelHost/
+Shells/SimplePaint3DShell/Build/
+Shells/SimplePaint3DShell/KernelHost/
 *.user
 *.tmp

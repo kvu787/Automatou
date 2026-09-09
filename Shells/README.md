@@ -7,7 +7,7 @@ controls, but may not contain simulation rules.
 Unqualified **Shell** means the main 3D Godot Shell, using SimplePaint and the
 required orthographic 3/4 overhead camera. **Text shell** means terminal-only
 input/output. **2d shell** means the currently implemented symbolic Godot
-presentation in `Godot`, which consumes the Kernel Host JSON-lines protocol.
+presentation in `SimplePaint3DShell`, which consumes the Kernel Host JSON-lines protocol.
 The main 3D Shell's production model pipeline is not yet implemented.
 
 Future Shells may include pixel-art 2D, non-pixel-art 2D, and other visual styles

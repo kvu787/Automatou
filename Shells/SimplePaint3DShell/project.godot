@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 
-config/name="Automapolis"
+config/name="SimplePaint3DShell"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.7")
 config/icon="res://Icon.svg"

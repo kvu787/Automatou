@@ -26,7 +26,7 @@ keyboard / mouse / file / bot / network
   SimplePaint and the required orthographic 3/4 overhead camera.
 - **Text shell** means a terminal-only input/output Shell.
 - **2d shell** means the currently implemented Godot presentation with symbolic
-  visuals, located in `Shells/Godot`. It is distinct from the main Shell.
+  visuals, located in `Shells/SimplePaint3DShell`. It is distinct from the main Shell.
 - Future Shells may include a pixel-art 2D Shell, a non-pixel-art 2D Shell, and
   3D Shells with other visual styles. These are possibilities, not implemented
   presentations or selected production directions.
