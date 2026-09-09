@@ -1,28 +1,33 @@
 # SimplePaint3DShell
 
-SimplePaint3DShell is an optional presentation layer written in C# for Godot 4.7.2 .NET. Its current presentation is the symbolic 2d hex-grid prototype; the planned SimplePaint 3D models and camera are not implemented yet. It renders the Bastion Front as a responsive tactical hex grid with terrain colors, force symbols, sector inspection, front dispatches, and Command controls, but contains no simulation rules.
+SimplePaint3DShell is an optional Windows x64 presentation layer written in C# for Godot 4.7.2 .NET. Its current presentation is the symbolic 2d hex-grid prototype; the planned SimplePaint 3D models and camera are not implemented yet. It renders the Bastion Front as a responsive tactical hex grid with terrain colors, force symbols, sector inspection, front dispatches, and Command controls, but contains no simulation rules.
 
 The shell starts the adjacent `KernelHost` process and exchanges one UTF-8 JSON object per line. C# presentation DTOs describe this protocol; the shell has no reference to the Kernel assembly and contains no simulation rules. Process output is queued and applied on the Godot main thread. Closing the shell terminates its host process.
 
 ## Build and run
 
-Install the .NET 10 SDK selected by the repository's `global.json`, Godot 4.7.2
-**.NET**, and its matching .NET export templates. The standard GDScript-only
-Godot executable cannot load this project.
+Use Windows x64 with the x64 .NET 10 SDK selected by the repository's
+`global.json`, Godot 4.7.2 **.NET** for Windows x64, and its matching .NET export
+templates. The standard GDScript-only Godot executable cannot load this project.
 
-Double-click this folder's `Run.cmd` or the repository-root `Run.cmd`. Both build
-the C# solution, run the Kernel and shell integration tests, publish the Kernel
-host for editor play, export `Build/SimplePaint3DShell.exe`, publish its adjacent
-`Build/KernelHost`, and launch the standalone game. Use `Run.cmd --build-only`
-to perform the same build and checks without launching a window.
+Double-click this folder's `Run.cmd` or the repository-root `Run.cmd`. The batch
+launcher delegates to this folder's `Run.ps1`, which builds the C# solution,
+runs the Kernel and shell integration tests, publishes a self-contained Windows
+x64 Kernel host for editor play, exports `Build/SimplePaint3DShell.exe`, publishes
+its adjacent `Build/KernelHost`, and launches the standalone game. Use
+`Run.cmd -BuildOnly` to perform the same build and checks without launching a
+window. From PowerShell, run `./Run.ps1` or `./Run.ps1 -BuildOnly` in this folder.
+The script stops on failed commands and returns a nonzero exit code; interactive
+failures wait for Enter so errors remain visible after a double-click.
 
 The launcher defaults to
 `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`.
-Set `GODOT_EXE` to the full path of another Godot 4.7.2 .NET console executable
+Set `GODOT_EXE` to the full path of another Godot 4.7.2 .NET Windows x64 console executable
 if needed. Close a running standalone game before exporting over its files.
 
-The project uses `Godot.NET.Sdk/4.7.2`, targets `net10.0`, and participates in
-`Automapolis.slnx`. `SimplePaint3DShell.slnx` supports the Godot editor's Debug,
+The project uses `Godot.NET.Sdk/4.7.2`, targets `net10.0-windows` with the
+`win-x64` runtime and `x64` platform, and participates in `Automapolis.slnx`.
+`SimplePaint3DShell.slnx` supports the Godot editor's Debug,
 ExportDebug, and ExportRelease configurations. The root solution maps Release
 to the shell's ExportRelease configuration.
 
@@ -66,9 +71,14 @@ select a cell to inspect all occupants.
 Production art is being created in Blender with SimplePaint. The 2d shell
 uses font glyphs and code-authored controls, with no generated image dependency.
 
-## Platform exports
+## Windows x64 export
 
-Windows, Linux, and macOS .NET export presets are included. Keep the exported `data_SimplePaint3DShell_*` runtime directory beside the executable. Publish `Automapolis.Kernel.Host` for the target platform into a `KernelHost` folder beside that executable (inside `Contents/MacOS` for a macOS app bundle). The Kernel host requires the .NET 10 runtime unless published with `--self-contained true` and the matching runtime identifier. The Windows `Run.cmd` automates the local build and launch; Linux and macOS exports have not been verified on this Windows machine.
+The only export preset is **Windows Desktop**, with architecture `x86_64`.
+Distribute the entire `Build` folder, keeping
+`data_SimplePaint3DShell_windows_x86_64` and `KernelHost` beside
+`SimplePaint3DShell.exe`. Both the shell and its Kernel host include their .NET
+runtime, so playing the exported game does not require an installed .NET SDK or
+runtime. The shell starts `KernelHost/Automapolis.Kernel.Host.exe` directly.
 
 ## Hex layout
 
@@ -96,7 +106,7 @@ From the repository root, build the C# tests and publish the Kernel host:
 
 ```powershell
 dotnet build Automapolis.slnx --configuration Debug
-dotnet publish Source/Automapolis.Kernel.Host --configuration Debug --no-build --output Shells/SimplePaint3DShell/KernelHost
+dotnet publish Source/Automapolis.Kernel.Host --configuration Release --runtime win-x64 --self-contained true --output Shells/SimplePaint3DShell/KernelHost
 $godotExecutable = "$env:USERPROFILE\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe"
 & $godotExecutable --headless --path Shells/SimplePaint3DShell --editor --import
 & $godotExecutable --headless --path Shells/SimplePaint3DShell res://Tests/HexGridSmoke.tscn

@@ -10,7 +10,7 @@ The 2d shell represents terrain with colored fills and forces with symbols on a 
 
 ## Play
 
-On Windows, double-click `Run.cmd` at the repository root or inside `Shells/SimplePaint3DShell`. It builds and tests the C# solution, publishes the Kernel host, exports `SimplePaint3DShell.exe`, and launches it. Install the .NET 10 SDK, Godot 4.7.2 **.NET**, and matching .NET export templates. The launcher defaults to `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`; set `GODOT_EXE` to override it. See the [shell setup instructions](Shells/SimplePaint3DShell/README.md#build-and-run).
+On Windows x64, double-click `Run.cmd` at the repository root or inside `Shells/SimplePaint3DShell`. The wrapper runs the shell's `Run.ps1` to build and test the C# solution, publish a self-contained Windows x64 Kernel host, export `SimplePaint3DShell.exe`, and launch it. Use `Run.cmd -BuildOnly` to skip launching. Install the x64 .NET 10 SDK, Godot 4.7.2 **.NET** for Windows x64, and matching .NET export templates. The launcher defaults to `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`; set `GODOT_EXE` to override it. See the [shell setup instructions](Shells/SimplePaint3DShell/README.md#build-and-run).
 
 ## Develop
 

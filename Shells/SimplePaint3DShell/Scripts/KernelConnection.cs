@@ -13,17 +13,15 @@ internal sealed class KernelConnection : IDisposable
 
     internal KernelConnection(string hostDirectory)
     {
-        var application = Path.Combine(hostDirectory,
-            OperatingSystem.IsWindows() ? "Automapolis.Kernel.Host.exe" : "Automapolis.Kernel.Host");
-        var assembly = Path.Combine(hostDirectory, "Automapolis.Kernel.Host.dll");
-        if (!File.Exists(application) && !File.Exists(assembly))
+        var application = Path.Combine(hostDirectory, "Automapolis.Kernel.Host.exe");
+        if (!File.Exists(application))
         {
-            throw new FileNotFoundException("Run Run.cmd to publish the Kernel host.", assembly);
+            throw new FileNotFoundException("Run Run.cmd to publish the Kernel host.", application);
         }
 
         var start = new ProcessStartInfo
         {
-            FileName = File.Exists(application) ? application : "dotnet",
+            FileName = application,
             WorkingDirectory = hostDirectory,
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -34,10 +32,6 @@ internal sealed class KernelConnection : IDisposable
             StandardOutputEncoding = Encoding.UTF8,
             StandardErrorEncoding = Encoding.UTF8
         };
-        if (!File.Exists(application))
-        {
-            start.ArgumentList.Add(assembly);
-        }
 
         _process = new Process { StartInfo = start };
         _process.OutputDataReceived += (_, arguments) =>
