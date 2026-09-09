@@ -66,3 +66,33 @@ Recorded and committed. Going forward:
 - **2d shell**: the currently implemented symbolic Godot visuals.
 
 Also recorded the possible future pixel-art, non-pixel-art 2D, and alternative 3D shells. Updated existing documentation references and committed the conversation separately.
+
+## User
+
+okay, let's get back to discussing the main shell.
+
+since i'm using 3d models now, i would also like most angles of the models to be viewable. a simple way to do this is to keep the local rotations of the models static, but make the camera rotatable. however, i don't like this approach. instead, i would like the more natural but more complex approach of introducing unit orientations, meaning that units can face one of four directions.
+
+## Assistant
+
+I’ll record four-direction unit facing and update the earlier assumption that unit orientation is only visual. I’ll keep the effects of turning on movement and combat open for discussion.
+
+## Assistant
+
+**Four-direction facing fits the miniature-world aesthetic: units turn within the world, revealing different sides as they act.** I’ve recorded it and updated the earlier orientation assumptions in the design docs, with the conversation committed separately.
+
+Your square unit footprints make this easier. A 2×2 unit still occupies the same four cells when facing north, east, south, or west. You can introduce orientation without immediately introducing rectangular footprints or complicated turning geometry.
+
+The key decision is **what commitment facing represents**:
+
+- **Movement:** Does a unit automatically face its direction of travel, or can it strafe and reverse while maintaining its facing?
+- **Attacking:** Does it freely turn toward a target, or must the target already lie within its firing arc?
+- **Ending a turn:** Can the player choose its final facing freely, or does turning consume movement or an action?
+
+These choices determine whether facing mostly makes behavior look natural or becomes a tactical resource. For example, a tank facing east could reverse west while keeping its frontal armor toward an enemy. That only matters mechanically if movement direction and facing can differ, and armor or weapons care about direction.
+
+My starting proposal would be **automatic facing during ordinary movement, with an explicit choice of final facing**. That keeps routine orders simple while leaving room for directional combat. I’d decide turning costs alongside those combat rules: charging for turns needs a useful tactical purpose.
+
+The Shell can animate smoothly between the four legal orientations. One visual wrinkle is that a long model may sweep outside its footprint midway through a turn, even though its start and end positions fit; we’ll need to accommodate that in model proportions or animation.
+
+Do you want facing to affect combat from the outset—for example, front/side/rear protection or firing arcs—or initially just determine how units move and present themselves?
