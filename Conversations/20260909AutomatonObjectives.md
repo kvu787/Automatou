@@ -39,3 +39,41 @@ The main ambiguity is what “defensive” does when attacked. Never seeking ene
 
 Which of those do you intend for the initial defensive AT?
 
+
+## User
+
+another interesting AT domain is individual units rather than overall factions. in typical multiplayer strategy games, each player commands units like pieces on a chessboard. it is rare to have mechanics in which units "disobey" orders or other similar mechanics.
+
+automapolis is very different in that we can simulate autonomy at any level. we can have any combination of the following:
+- a whole faction controlled by a single AT, which mirrors typical multiplayer strategy games
+- individual units have their own ATs but also have faction allegiances
+- certain units have a greater degree of power/authority, so a commander or president can issue orders to other units that have a high likelihood of obeying them
+- ATs that don't have a unit representation such as god-like entities, mother nature, etc that have powerful systemic abilities 
+
+## Assistant
+
+I’ll record this extension to the conversation. It introduces a useful distinction between what an AT wants and what it has the authority to control.
+
+## Assistant
+
+Yes—this makes **the location of decision-making a simulation variable**. A faction can act as one mind, as many minds with shared allegiances, or as a hierarchy whose members retain some autonomy. Those arrangements can coexist in the same world.
+
+I’d distinguish a few independent properties of an AT:
+
+- **Objectives:** what it pursues, such as enemies or resources.
+- **Information:** what it can perceive or know.
+- **Capabilities:** what it can directly change in the world.
+- **Authority:** whose behavior it can influence by issuing orders.
+- **Embodiment:** whether it inhabits a unit, building, or other physical entity, or has no physical representation.
+
+Faction allegiance is then a relationship, rather than a requirement that everyone share one decision-maker. Likewise, an AT without a body need not be omniscient or omnipotent; its information and capabilities can have their own limits.
+
+The consequential distinction is **direct control versus issuing an order**. With direct control, a faction AT chooses a unit’s actions. With orders, a commander supplies an instruction that the receiving unit’s AT evaluates. “Disobedience” becomes one possible outcome of that evaluation.
+
+For example, an aggressive commander could order a defensive unit to attack. Depending on the unit’s rules, it might obey unconditionally, obey only while the commander is nearby, refuse when carrying valuable resources, or abandon the attack when threatened. Even very simple rules could make authority visible through behavior.
+
+A high likelihood of obedience could be a literal probability, but it could also emerge from conditions: units usually obey because the conditions for refusal are uncommon. The latter gives players something they can discover and manipulate. Randomness could still contribute.
+
+This also gives the earlier aggressive/defensive distinction more reach. An aggressive faction with defensive individuals could behave very differently from a defensive faction with aggressive individuals. A resource-seeking entity without a body might alter rainfall to encourage growth, if rainfall is among its capabilities.
+
+The central mechanics question becomes: **when several ATs want different things from the same unit or part of the world, how are their competing intentions resolved?** That is where hierarchy, allegiance, obedience, and systemic intervention start producing interactions.
