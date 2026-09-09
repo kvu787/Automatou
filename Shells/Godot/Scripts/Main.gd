@@ -34,6 +34,10 @@ const FORCE_SYMBOLS := {
 @export_range(0.0, 12.0, 0.25) var hex_outline_width := 2.0:
 	set(value):
 		hex_outline_width = clampf(value, 0.0, 12.0)
+		if is_instance_valid(_outline_width_slider):
+			_outline_width_slider.set_value_no_signal(hex_outline_width)
+		if is_instance_valid(_outline_width_value):
+			_outline_width_value.text = "%0.2f px" % hex_outline_width
 		for button in _cell_buttons:
 			button.outline_width = hex_outline_width
 
@@ -48,6 +52,8 @@ var _cell_buttons: Array[BaseButton] = []
 var _title_label: Label
 var _turn_label: Label
 var _seed_edit: LineEdit
+var _outline_width_slider: HSlider
+var _outline_width_value: Label
 var _grid: Control
 var _inspector: RichTextLabel
 var _chronicle: RichTextLabel
@@ -159,6 +165,7 @@ func _build_world_panel() -> Control:
 	panel.add_child(column)
 
 	column.add_child(_build_symbol_legend())
+	column.add_child(_build_outline_control())
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -174,6 +181,35 @@ func _build_world_panel() -> Control:
 	_grid = Control.new()
 	centering.add_child(_grid)
 	return panel
+
+
+func _build_outline_control() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var label := Label.new()
+	label.text = "OUTLINE WIDTH"
+	label.add_theme_color_override("font_color", MUTED)
+	row.add_child(label)
+
+	_outline_width_slider = HSlider.new()
+	_outline_width_slider.min_value = 0.0
+	_outline_width_slider.max_value = 12.0
+	_outline_width_slider.step = 0.25
+	_outline_width_slider.value = hex_outline_width
+	_outline_width_slider.custom_minimum_size.x = 160
+	_outline_width_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_outline_width_slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_outline_width_slider.tooltip_text = "Hex outline width. Set to zero to hide outlines."
+	_outline_width_slider.value_changed.connect(func(value: float): hex_outline_width = value)
+	row.add_child(_outline_width_slider)
+
+	_outline_width_value = Label.new()
+	_outline_width_value.custom_minimum_size.x = 72
+	_outline_width_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_outline_width_value.add_theme_color_override("font_color", INK)
+	_outline_width_value.text = "%0.2f px" % hex_outline_width
+	row.add_child(_outline_width_value)
+	return row
 
 
 func _build_side_panel() -> Control:

@@ -39,8 +39,11 @@ Windows, Linux, and macOS export presets are included. Publish `Automapolis.Kern
 
 The board uses pointy-top hexagons in odd-row offset coordinates. Odd rows are
 shifted half a hex to the right. Cells meet edge to edge with no spacing.
-Select the root `Automapolis` node in `Main.tscn` and adjust **Hex Outline Width**
-in the Inspector (0–12 board pixels, default 2; 0 hides outlines). Each cell
+Use the **Outline Width** slider below the legend to adjust outlines immediately
+(0–12 board pixels in 0.25 steps, default 2; 0 hides outlines). The current value
+appears beside the slider and stays in effect when selecting cells, advancing
+turns, or opening a new front during the session. The initial value is also
+editable as **Hex Outline Width** on the root `Automapolis` node in `Main.tscn`. Each cell
 contributes half of the shared outline inside its polygon, so changing the width
 does not move cells or change click targets. Selection and hover change the
 outline color while preserving its width. Selection and hover follow the actual hex

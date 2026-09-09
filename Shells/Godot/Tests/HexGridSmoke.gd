@@ -48,11 +48,14 @@ func run() -> void:
         check(neighbors == 6, "Hex does not meet all six neighbors edge to edge")
     var original_polygon: PackedVector2Array = first.polygon()
     for outline_width in [0.0, 4.0, 12.0]:
-        shell.hex_outline_width = outline_width
+        shell._outline_width_slider.value = outline_width
+        check(is_equal_approx(shell.hex_outline_width, outline_width), "Slider did not update outline width")
+        check(shell._outline_width_value.text == "%0.2f px" % outline_width, "Outline readout mismatch")
         for cell in shell._cell_buttons:
             check(is_equal_approx(cell.outline_width, outline_width), "Outline setting did not reach cell")
         check(first.polygon() == original_polygon, "Outline width changed cell geometry")
-    shell.hex_outline_width = 2.0
+    shell.hex_outline_width = 4.0
+    check(is_equal_approx(shell._outline_width_slider.value, 4.0), "Slider did not follow programmatic width")
     check(first._has_point(Vector2(first.HEX_WIDTH / 2.0, first.RADIUS)), "Hex center not clickable")
     check(not first._has_point(Vector2.ZERO), "Empty corner incorrectly clickable")
     # The lower-right hex occupies a corner of the first cell's bounding box.
@@ -82,6 +85,9 @@ func run() -> void:
     shell._send({"command": "new", "width": 6, "height": 8})
     await wait_for(shell, 0, 6)
     check(shell._cell_buttons.size() == 48, "Grid resize failed")
+    for cell in shell._cell_buttons:
+        check(is_equal_approx(cell.outline_width, 4.0), "Outline width lost after grid rebuild")
+    shell.hex_outline_width = 2.0
     check(shell._command_panel.visible, "Player commands must remain available")
     shell._send({"command": "new", "width": 16, "height": 12})
     await wait_for(shell, 0, 16)
