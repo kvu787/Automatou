@@ -283,3 +283,54 @@ There is also a substantial cost to a hex switch for this particular project: **
 
 I would therefore **hold off on switching topology solely for this reason**. First compare the same off-axis journey on squares and hexes with paid turns. If both produce the unwanted behavior, the rule to revisit is the relationship between travel direction and facing.
 
+
+## User
+
+But consider a destination halfway between two of those hex directions. To follow an approximately straight course toward it, the unit must alternate between them:
+- Follow the direct-looking course: alternate directions repeatedly, paying for each turn.
+- Minimize turning: travel several steps in one direction, turn once, then travel the remaining steps in the other.
+Those routes can have the same number of movement steps, yet very different rotation costs—exactly the behavior you dislike on squares. Hexes make the alternating turns 60° instead of 90°. If each turn costs the same action amount, that smaller angle alone provides no cost relief. If cost scales with angle, it reduces the penalty but does not remove it.
+
+i understand this remaining limitation. however, the 60 deg axes seem "acceptable enough" whereas the 90 deg axes just feel too limited.
+
+i don't like any of these options:
+Keep strict forward-only movement and paid turns. Either grid will favor long straight segments. Hexes give more available headings, but you would need to accept the remaining directional bias.
+Add diagonal movement and eight facings on squares. This solves the specific northeast staircase, but intermediate slopes still need mixed directions. It also reopens how a square model relates to its footprint at 45°.
+Treat a grid path as an approximation of a travel course. Small alternating steps along that course would not each count as a deliberate body turn. Rotation costs would apply to changes in the intended course. This addresses the source of the problem, but needs careful rules for obstacles, final facing, and splitting movement across orders so players cannot evade turning costs.
+
+rewrite the game to use a hex grid
+
+## Assistant
+
+I’ll convert the game to a hex grid, including the Kernel, movement and adjacency rules, the 2d shell, and the design docs. I’ll first inspect the current implementation so the conversion preserves the existing playable behavior where it still applies.
+
+## Assistant
+
+The current game uses single-cell forces; variable footprints and paid turning are still design notes. I’ll convert the implemented game to six-neighbor hex movement and hex distances, and update the planned facing system to six directions. I’ll use staggered rows so maps keep straightforward column/row coordinates.
+
+## Assistant
+
+The Kernel now uses hex adjacency and distance for movement, threat checks, terrain spread, spawning, and purge areas. The 2d shell now draws staggered hex cells with hex-shaped click targets. I’m checking row-parity behavior, boundaries, and area effects before validating the Godot build.
+
+## Assistant
+
+All 12 Kernel tests pass, and the Godot integration test passes with a live Kernel host. That includes hex-corner hit testing, selection, turn advancement, map resizing, and Witness mode. I’m now checking the rendered board and standalone export; the docs distinguish this conversion from the still-unimplemented facing and multi-cell footprint systems.
+
+## Assistant
+
+The rendered board looks correct, and the real mouse-input test now passes too. I’m doing the final standalone check and splitting the changes into Kernel, shell, and documentation commits. The separate rectangular-motion experiment has concurrent edits, which I’m leaving untouched.
+
+## Assistant
+
+Implemented and committed the hex-grid conversion.
+
+- Six-neighbor movement, hex-distance targeting, terrain spread, spawning, and purge areas.
+- Hex-shaped rendering and selection in the 2d shell; staggered text output.
+- Updated design docs for six facings and future multi-hex footprints.
+
+**Verified:** 12 Kernel tests, live Godot integration tests, visual inspection, and Windows export/startup.
+
+Paid rotation, variable footprints, and the main 3D Shell remain unimplemented.
+
+Launch with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Run.cmd).
+
