@@ -1,5 +1,7 @@
 extends Control
 
+const HexCell = preload("res://Scripts/HexCell.gd")
+
 const INK := Color("#d8dbef")
 const MUTED := Color("#777f9e")
 const VOID := Color("#090b1d")
@@ -34,13 +36,13 @@ var _kernel_pid := -1
 var _read_buffer := ""
 var _snapshot := {}
 var _selected := Vector2i(0, 0)
-var _cell_buttons: Array[Button] = []
+var _cell_buttons: Array[BaseButton] = []
 
 var _title_label: Label
 var _turn_label: Label
 var _mode_picker: OptionButton
 var _seed_edit: LineEdit
-var _grid: GridContainer
+var _grid: Control
 var _inspector: RichTextLabel
 var _chronicle: RichTextLabel
 var _status: Label
@@ -171,9 +173,7 @@ func _build_world_panel() -> Control:
 	centering.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	centering.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.add_child(centering)
-	_grid = GridContainer.new()
-	_grid.add_theme_constant_override("h_separation", 3)
-	_grid.add_theme_constant_override("v_separation", 3)
+	_grid = Control.new()
 	centering.add_child(_grid)
 	return panel
 
@@ -362,11 +362,12 @@ func _render_snapshot() -> void:
 	_turn_label.text = "TURN %03d" % int(_snapshot.get("turn", 0))
 	var width := int(_snapshot.get("width", 16))
 	var height := int(_snapshot.get("height", 12))
-	_grid.columns = width
+	_grid.custom_minimum_size = Vector2((width + 0.5) * HexCell.HEX_WIDTH, (height - 1) * HexCell.ROW_STEP + 2.0 * HexCell.RADIUS)
 
 	if _selected.x >= width or _selected.y >= height:
 		_selected = Vector2i.ZERO
 	for child in _grid.get_children():
+		_grid.remove_child(child)
 		child.queue_free()
 	_cell_buttons.clear()
 
@@ -380,10 +381,10 @@ func _render_snapshot() -> void:
 	var tiles: Array = _snapshot.get("tiles", [])
 	for index in range(mini(tiles.size(), width * height)):
 		var tile = tiles[index]
-		var x := index % width
-		var y := index / width
+		var x := int(tile.position.x)
+		var y := int(tile.position.y)
 		var key := "%d,%d" % [x, y]
-		var button := Button.new()
+		var button := HexCell.new()
 		var occupants: Array = forces_by_cell.get(key, [])
 		var force = null
 		for occupant in occupants:
@@ -394,16 +395,12 @@ func _render_snapshot() -> void:
 		var symbol_color := terrain_color if force == null else _force_color(str(force.kind))
 		button.text = str(tile.glyph) if force == null else str(force.glyph)
 		button.tooltip_text = _cell_tooltip(tile, occupants)
-		button.custom_minimum_size = Vector2(38, 38)
+		button.size = Vector2(HexCell.HEX_WIDTH, 2.0 * HexCell.RADIUS)
+		button.position = HexCell.cell_position(x, y)
 		button.clip_contents = true
-		button.add_theme_font_size_override("font_size", 22)
-		button.add_theme_color_override("font_color", symbol_color)
-		button.add_theme_color_override("font_hover_color", symbol_color.lightened(0.2))
-		button.add_theme_color_override("font_pressed_color", symbol_color)
-		button.add_theme_color_override("font_focus_color", symbol_color)
-		button.add_theme_stylebox_override("normal", _cell_style(background, x == _selected.x and y == _selected.y))
-		button.add_theme_stylebox_override("hover", _cell_style(background.lightened(0.12), true))
-		button.add_theme_stylebox_override("pressed", _cell_style(background.darkened(0.12), true))
+		button.background = background
+		button.symbol_color = symbol_color
+		button.selected = x == _selected.x and y == _selected.y
 		if force != null:
 			_add_corner_label(button, str(tile.glyph), terrain_color, false)
 		if occupants.size() > 1:
@@ -427,7 +424,7 @@ func _render_inspector() -> void:
 	var tile = _tile_at(_selected)
 	if tile == null:
 		return
-	var text := "[color=#7e6bff][font_size=12]SELECTED // %02d,%02d[/font_size][/color]\n" % [_selected.x, _selected.y]
+	var text := "[color=#7e6bff][font_size=12]HEX // COLUMN %02d, ROW %02d[/font_size][/color]\n" % [_selected.x, _selected.y]
 	text += "[color=#%s][font_size=22]%s  %s[/font_size][/color]\n" % [_terrain_color(str(tile.terrain)).to_html(false), str(tile.glyph), _words(str(tile.terrain)).to_upper()]
 	text += "[color=#777f9e]%s[/color]\n" % str(tile.description)
 	var occupants := _forces_at(_selected)
@@ -474,17 +471,17 @@ func _cell_tooltip(tile, occupants: Array) -> String:
 	return result
 
 
-func _add_corner_label(button: Button, text: String, color: Color, top_right: bool) -> void:
+func _add_corner_label(button: BaseButton, text: String, color: Color, top_right: bool) -> void:
 	var label := Label.new()
 	label.text = text
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.add_theme_font_size_override("font_size", 11)
 	label.add_theme_color_override("font_color", color)
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	label.offset_left = 3
-	label.offset_right = -3
-	label.offset_top = 1
-	label.offset_bottom = -1
+	label.offset_left = 7
+	label.offset_right = -7
+	label.offset_top = 8
+	label.offset_bottom = -8
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if top_right else HORIZONTAL_ALIGNMENT_LEFT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_TOP if top_right else VERTICAL_ALIGNMENT_BOTTOM
 	button.add_child(label)
@@ -529,13 +526,4 @@ func _panel_style(background: Color, border: Color, width: int, radius: int) -> 
 	style.content_margin_right = 10
 	style.content_margin_top = 7
 	style.content_margin_bottom = 7
-	return style
-
-
-func _cell_style(background: Color, selected: bool) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = GOLD if selected else background.lightened(0.16)
-	style.set_border_width_all(2 if selected else 1)
-	style.set_corner_radius_all(5)
 	return style
