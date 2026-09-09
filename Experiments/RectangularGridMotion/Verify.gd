@@ -71,8 +71,17 @@ func _initialize() -> void:
 					footprint = turn.dimensions
 					heading = turn.heading
 				check(position.is_equal_approx(start) and heading == 0, "Rear pivot restores pose for every footprint")
+	for approach in [1, 2]:
+		check(Motion.proposal(center, dimensions, Vector2.ZERO, 1, approach, [Vector2i(7, 3)]).accepted, "Can rotate away from corner contact")
+		check(Motion.proposal(Vector2(1.5, 0.5), Vector2(3, 1), Vector2.RIGHT, 0, approach, []).accepted, "Can slide along board edge")
+		check(Motion.proposal(Vector2(1.5, 0.5), Vector2(3, 1), Vector2.DOWN, 0, approach, []).accepted, "Can move away from board edge")
+		check(Motion.proposal(center, dimensions, Vector2.RIGHT, 0, approach, [Vector2i(5, 3)]).accepted, "Can slide beside obstacle")
+		check(Motion.proposal(center, dimensions, Vector2.DOWN, 0, approach, [Vector2i(5, 3)]).accepted, "Can move away from touching obstacle")
+		check(not Motion.proposal(center, dimensions, Vector2.UP, 0, approach, [Vector2i(5, 3)]).accepted, "Cannot move into touching obstacle")
 	print("Motion verification: %d failures" % failures)
 	quit(1 if failures else 0)
+
+
 
 
 

@@ -40,6 +40,20 @@ static func pivot_for(center: Vector2, dimensions: Vector2, heading: int, approa
 	var offset := Vector2(rear_inset - local_dimensions.x * 0.5, 0)
 	return center + offset.rotated(heading * PI * 0.5)
 
+# Refine only intervals whose padded bound might hit something. Actual contact
+# without overlap is allowed. At the depth limit, the unresolved travel bound
+# is below 0.001 cell for the supported footprints and quarter-turns.
+static func clear_turn(start: Vector2, target: Vector2, dimensions: Vector2, pivot: Vector2, angle: float, rear: bool, obstacles: Array, travel: float, lower := 0.0, upper := 1.0, depth := 0) -> bool:
+	var middle := (lower + upper) * 0.5
+	var center := pivot + (start - pivot).rotated(angle * middle) if rear else start.lerp(target, middle)
+	if not clear_pose(center, dimensions, angle * middle, obstacles):
+		return false
+	if clear_pose(center, dimensions, angle * middle, obstacles, travel * (upper - lower) * 0.5):
+		return true
+	if depth == 14:
+		return true
+	return clear_turn(start, target, dimensions, pivot, angle, rear, obstacles, travel, lower, middle, depth + 1) and clear_turn(start, target, dimensions, pivot, angle, rear, obstacles, travel, middle, upper, depth + 1)
+
 static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, turn: int, approach: int, obstacles: Array, heading := 0) -> Dictionary:
 	var next_dimensions := dimensions if turn == 0 else Vector2(dimensions.y, dimensions.x)
 	var angle := turn * PI * 0.5
@@ -54,12 +68,17 @@ static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, t
 		else:
 			target = pivot + (center - pivot).rotated(angle)
 	var path: Array = []
-	var accepted := true
-	# Padding bounds the maximum point displacement between a sample and its nearest neighbor.
+	var accepted := clear_pose(center, dimensions, 0, obstacles) and clear_pose(target, next_dimensions, 0, obstacles)
+	# Bound the speed of every rectangle point for adaptive rotation checks.
 	var travel := center.distance_to(target) + absf(angle) * dimensions.length() * 0.5
 	if approach == 2 and turn != 0:
-		travel = absf(angle) * dimensions.length()
-	var padding := travel / (2.0 * Samples)
+		travel = absf(angle) * (center.distance_to(pivot) + dimensions.length() * 0.5)
+	if accepted and approach != 0:
+		if turn == 0:
+			# Cardinal translation sweeps exactly this axis-aligned rectangle.
+			accepted = clear_pose((center + target) * 0.5, dimensions + direction.abs(), 0, obstacles)
+		else:
+			accepted = clear_turn(center, target, dimensions, pivot, angle, approach == 2, obstacles, travel)
 	for sample in range(Samples + 1):
 		var fraction := float(sample) / Samples
 		var sample_center := center.lerp(target, fraction)
@@ -67,10 +86,9 @@ static func proposal(center: Vector2, dimensions: Vector2, direction: Vector2, t
 			sample_center = pivot + (center - pivot).rotated(angle * fraction)
 		var pose := {"center": sample_center, "angle": angle * fraction}
 		path.append(pose)
-		if approach != 0 and not clear_pose(sample_center, dimensions, pose.angle, obstacles, padding):
-			accepted = false
-	if not clear_pose(target, next_dimensions, 0.0, obstacles):
-		accepted = false
+
+
 	return {"center": target, "dimensions": next_dimensions, "path": path, "accepted": accepted, "pivot": pivot, "heading": posmod(heading + turn, 4)}
+
 
 

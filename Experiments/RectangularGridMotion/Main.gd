@@ -139,6 +139,7 @@ func _draw() -> void:
 	label_at(Vector2(560, 630), "Reset before comparing approaches", 17)
 	label_at(Vector2(560, 655), "from the same starting pose.", 17)
 	label_at(Vector2(40, 750), status, 20, Color.WHITE)
-	label_at(Vector2(40, 783), "Sweep checks are conservative and can reject very tight clearances.", 17)
+	label_at(Vector2(40, 783), "Swept turns need clearance along the turn. Touching edges are allowed.", 17)
+
 
 

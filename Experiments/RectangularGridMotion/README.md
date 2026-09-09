@@ -35,11 +35,11 @@ Build a corridor by clicking cells, then try translation and rotation near its w
 
 ## Collision model and limits
 
-`Motion.gd` uses a separating-axis test between an oriented rectangle and solid unit-square obstacles. Destination edge contact is permitted. Swept approaches evaluate 121 poses over each command, with conservative padding equal to a bound on maximum point travel between a sample and its nearest neighbor. This covers motion between samples rather than allowing narrow intersections to tunnel through. The same padding applies to board boundaries. It can reject grazing or extremely tight but otherwise clear motions, including motion starting flush against a wall. This is a comparison of movement policies, not an exact continuous collision solver or a path planner.
-
+`Motion.gd` uses a separating-axis test between an oriented rectangle and solid unit-square obstacles. Touching edges are permitted. Cardinal translation checks the exact swept rectangle, so units can slide along walls or move away from them. Turns use adaptive interval subdivision: padded bounds prove an interval clear, while unpadded poses detect actual overlaps. Possible contacts receive finer checks instead of automatically rejecting the command. The maximum subdivision depth is 14; unresolved motion below 0.001 cell for the supported footprints is treated as contact. This is a numerical collision check, not a symbolic continuous solver. Rotations still require clearance around the entire turning footprint, even when the destination is clear.
 `Verify.gd` checks translations, obstacle and boundary rejection, edge contact, footprint dimension swaps, mixed-parity alignment, the starting sweep distinction, and complete clockwise and counterclockwise rotations with persistent facing and pivot. Run it with Godot's `--headless --path <experiment folder> --script Verify.gd` arguments. `Run.cmd` runs these checks before export.
 
 All generated imports, executables, and local capture artifacts are ignored by the experiment's `.gitignore`.
+
 
 
 
