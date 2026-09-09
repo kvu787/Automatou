@@ -48,3 +48,21 @@ Recorded and committed in [ArtDirection.md](C:/Users/k/Repository/CSharp/Automap
 - Occlusion and interaction solutions must accommodate the required aesthetic; specific solutions remain undecided.
 
 The conversation was recorded in a separate `[cnv]` commit.
+
+## User
+
+another thing to record: this shell we've been discussing will be the main shell. so, when i say "shell" unqualified, that refers to the 3d godot simplepaint 3/4 camera view shell. text shell refers to terminal-only io shell. the currently implemented symbolic visuals godot shell will be called the "2d shell". other shells in the future may include a pixel art 2d shell, non-pixel art 2d shell, other visual styles of 3d shells, etc.
+
+## Assistant
+
+I’ll record those shell names and update the docs to distinguish the main shell from the currently implemented 2d shell.
+
+## Assistant
+
+Recorded and committed. Going forward:
+
+- **Shell**: the main 3D Godot + SimplePaint shell, with the required orthographic 3/4 overhead view.
+- **Text shell**: terminal-only input/output.
+- **2d shell**: the currently implemented symbolic Godot visuals.
+
+Also recorded the possible future pixel-art, non-pixel-art 2D, and alternative 3D shells. Updated existing documentation references and committed the conversation separately.
