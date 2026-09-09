@@ -27,11 +27,6 @@ public sealed class WorldKernel
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (_config.Mode is PlayerMode.Witness && command is not AdvanceTurn)
-        {
-            return new(false, "Witness mode accepts only AdvanceTurn; field command is sealed.", Snapshot());
-        }
-
         var message = command switch
         {
             AdvanceTurn => SimulateTurn(),
@@ -97,7 +92,6 @@ public sealed class WorldKernel
         return new(
             _config.Name,
             _config.Seed,
-            _config.Mode,
             _config.Width,
             _config.Height,
             Turn,

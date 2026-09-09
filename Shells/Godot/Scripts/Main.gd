@@ -40,7 +40,6 @@ var _cell_buttons: Array[BaseButton] = []
 
 var _title_label: Label
 var _turn_label: Label
-var _mode_picker: OptionButton
 var _seed_edit: LineEdit
 var _grid: Control
 var _inspector: RichTextLabel
@@ -127,14 +126,6 @@ func _build_header() -> Control:
 	_turn_label.add_theme_color_override("font_color", GOLD)
 	row.add_child(_turn_label)
 
-	_mode_picker = OptionButton.new()
-	_mode_picker.add_item("WITNESS · 0 PLAYER")
-	_mode_picker.add_item("COMMAND · 1 PLAYER")
-	_mode_picker.selected = 1
-	_mode_picker.tooltip_text = "Mode takes effect when a new front is opened."
-	_style_button(_mode_picker, VIOLET)
-	row.add_child(_mode_picker)
-
 	_seed_edit = LineEdit.new()
 	_seed_edit.text = "475023"
 	_seed_edit.placeholder_text = "SEED"
@@ -145,7 +136,7 @@ func _build_header() -> Control:
 
 	var forge := Button.new()
 	forge.text = "OPEN FRONT"
-	forge.tooltip_text = "Create a fresh deterministic war front from this mode and seed."
+	forge.tooltip_text = "Create a fresh deterministic war front from this seed."
 	_style_button(forge, MINT)
 	forge.pressed.connect(_new_world)
 	row.add_child(forge)
@@ -350,7 +341,6 @@ func _new_world() -> void:
 		"width": 16,
 		"height": 12,
 		"seed": seed_value,
-		"mode": "witness" if _mode_picker.selected == 0 else "command",
 		"name": "The Bastion Front",
 	})
 
@@ -409,8 +399,6 @@ func _render_snapshot() -> void:
 		_grid.add_child(button)
 		_cell_buttons.append(button)
 
-	var mode := str(_snapshot.get("mode", "command"))
-	_command_panel.visible = mode == "command"
 	_render_inspector()
 	_render_chronicle()
 

@@ -22,15 +22,10 @@ while ((line = Console.ReadLine()) is not null)
 
         if (commandName is "new")
         {
-            var modeText = OptionalString(root, "mode", "command");
-            var mode = modeText.Equals("witness", StringComparison.OrdinalIgnoreCase)
-                ? PlayerMode.Witness
-                : PlayerMode.Command;
             var config = new WorldConfig(
                 OptionalInt(root, "width", 16),
                 OptionalInt(root, "height", 12),
                 OptionalLong(root, "seed", 475_023),
-                mode,
                 OptionalString(root, "name", "The Bastion Front"));
             kernel = new WorldKernel(config);
             WriteResponse(true, "new", $"Opened {config.Name}.", kernel.Snapshot());

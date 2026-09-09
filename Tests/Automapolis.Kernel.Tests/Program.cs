@@ -4,7 +4,7 @@ using Automapolis.Kernel;
 var tests = new (string Name, Action Run)[]
 {
     ("same seed and commands are deterministic", Determinism),
-    ("witness mode rejects field command", WitnessRejectsFieldCommand),
+    ("passive play can accept interventions at any time", PassivePlayAllowsInterventions),
     ("front advances only on explicit input", ExplicitAdvanceOnly),
     ("command interventions change the front", CommandInterventionsWork),
     ("every theater begins with exactly one Bastion", EveryFrontHasOneBastion),
@@ -37,8 +37,8 @@ return failures;
 
 static void Determinism()
 {
-    var first = new WorldKernel(new(10, 8, 1234, PlayerMode.Command, "Mirror Front"));
-    var second = new WorldKernel(new(10, 8, 1234, PlayerMode.Command, "Mirror Front"));
+    var first = new WorldKernel(new(10, 8, 1234, "Mirror Front"));
+    var second = new WorldKernel(new(10, 8, 1234, "Mirror Front"));
     WorldCommand[] commands =
     [
         new AdvanceTurn(),
@@ -57,13 +57,16 @@ static void Determinism()
     Equal(JsonSerializer.Serialize(first.Snapshot()), JsonSerializer.Serialize(second.Snapshot()));
 }
 
-static void WitnessRejectsFieldCommand()
+static void PassivePlayAllowsInterventions()
 {
-    var kernel = new WorldKernel(new(8, 8, 7, PlayerMode.Witness, "Sealed Front"));
-    var before = kernel.Snapshot();
-    var result = kernel.Execute(new InvokePurge(new(2, 2)));
-    False(result.Accepted);
-    Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(result.Snapshot));
+    var kernel = new WorldKernel(new(8, 8, 7, "Passive Front"));
+    for (var turn = 0; turn < 5; turn++) kernel.Execute(new AdvanceTurn());
+    Equal(5, kernel.Turn);
+    var result = kernel.Execute(new EstablishEnclave(new(2, 2), "Player Intervention"));
+    True(result.Accepted);
+    Equal(5, result.Snapshot.Turn);
+    True(result.Snapshot.Forces.Any(force => force.Name == "Player Intervention"));
+    Equal(6, kernel.Execute(new AdvanceTurn()).Snapshot.Turn);
 }
 
 static void ExplicitAdvanceOnly()
@@ -78,7 +81,7 @@ static void ExplicitAdvanceOnly()
 
 static void CommandInterventionsWork()
 {
-    var kernel = new WorldKernel(new(8, 8, 44, PlayerMode.Command, "Command Test"));
+    var kernel = new WorldKernel(new(8, 8, 44, "Command Test"));
     var point = new GridPoint(1, 1);
     var before = kernel.Snapshot().Tiles.Single(tile => tile.Position == point);
     var channeled = kernel.Execute(new ChannelResonance(point, 20));
@@ -97,7 +100,7 @@ static void EveryFrontHasOneBastion()
 {
     for (var seed = 0; seed < 20; seed++)
     {
-        var snapshot = new WorldKernel(new(8, 8, seed, PlayerMode.Witness, "Front")).Snapshot();
+        var snapshot = new WorldKernel(new(8, 8, seed, "Front")).Snapshot();
         Equal(1, snapshot.Forces.Count(force => force.Kind is ForceKind.Bastion));
         Equal(1, snapshot.Metrics.Bastions);
     }
@@ -105,7 +108,7 @@ static void EveryFrontHasOneBastion()
 
 static void BastionIsRare()
 {
-    var kernel = new WorldKernel(new(8, 8, 17, PlayerMode.Command, "Rare Test"));
+    var kernel = new WorldKernel(new(8, 8, 17, "Rare Test"));
     Throws<InvalidOperationException>(() => kernel.Execute(new DeployForce(new(0, 0), ForceKind.Bastion)));
 
     var bastionPosition = kernel.Snapshot().Forces.Single(force => force.Kind is ForceKind.Bastion).Position;
@@ -121,7 +124,7 @@ static void BastionIsRare()
 
 static void BastionFightsAliens()
 {
-    var kernel = new WorldKernel(new(6, 6, 91, PlayerMode.Witness, "War Test"));
+    var kernel = new WorldKernel(new(6, 6, 91, "War Test"));
     var initial = kernel.Snapshot();
     var bastion = initial.Forces.Single(force => force.Kind is ForceKind.Bastion);
     var initialDistance = initial.Forces
@@ -140,7 +143,7 @@ static void BastionFightsAliens()
 
 static void TextRendererWorks()
 {
-    var snapshot = new WorldKernel(new(6, 6, 1, PlayerMode.Witness, "Glyph Test")).Snapshot();
+    var snapshot = new WorldKernel(new(6, 6, 1, "Glyph Test")).Snapshot();
     var text = TextWorldRenderer.Render(snapshot);
     True(text.Contains("Glyph Test", StringComparison.Ordinal));
     True(text.Contains("HUMAN", StringComparison.Ordinal));

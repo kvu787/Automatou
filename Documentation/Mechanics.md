@@ -5,6 +5,12 @@ with the spatial foundation and will grow as additional systems are decided.
 Rules stated as current decisions are authoritative for new design work;
 unresolved details are listed separately rather than decided by implication.
 
+## Player interaction
+
+There is one player configuration, with optional field interventions. Advancing
+turns without submitting other commands provides passive observation. There is
+no separate zero-player mode or mode switch; intervention remains available.
+
 ## Grid and scale
 
 Automapolis uses a **pointy-top hexagonal grid**. A base cell is one hexagon.

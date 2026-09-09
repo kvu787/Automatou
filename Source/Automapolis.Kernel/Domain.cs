@@ -1,11 +1,5 @@
 namespace Automapolis.Kernel;
 
-public enum PlayerMode
-{
-    Witness,
-    Command
-}
-
 public enum TerrainKind
 {
     ShatteredPlain,
@@ -35,7 +29,6 @@ public sealed record WorldConfig(
     int Width = 16,
     int Height = 12,
     long Seed = 475_023,
-    PlayerMode Mode = PlayerMode.Command,
     string Name = "The Bastion Front")
 {
     public WorldConfig Validate()
@@ -92,7 +85,6 @@ public sealed record WorldMetrics(
 public sealed record WorldSnapshot(
     string Name,
     long Seed,
-    PlayerMode Mode,
     int Width,
     int Height,
     int Turn,

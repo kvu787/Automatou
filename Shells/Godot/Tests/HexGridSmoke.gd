@@ -7,9 +7,9 @@ func check(condition: bool, message: String) -> void:
         failures += 1
         push_error(message)
 
-func wait_for(shell: Control, turn: int, width: int, mode: String) -> void:
+func wait_for(shell: Control, turn: int, width: int) -> void:
     for attempt in range(400):
-        if not shell._snapshot.is_empty() and int(shell._snapshot.turn) == turn and int(shell._snapshot.width) == width and str(shell._snapshot.mode) == mode:
+        if not shell._snapshot.is_empty() and int(shell._snapshot.turn) == turn and int(shell._snapshot.width) == width:
             return
         await create_timer(0.01).timeout
     check(false, "Timed out waiting for Kernel response")
@@ -20,7 +20,7 @@ func _initialize() -> void:
 func run() -> void:
     var shell = load("res://Main.tscn").instantiate()
     root.add_child(shell)
-    await wait_for(shell, 0, 16, "command")
+    await wait_for(shell, 0, 16)
     if shell._snapshot.is_empty():
         shell.queue_free()
         await process_frame
@@ -56,13 +56,24 @@ func run() -> void:
     check(shell._inspector.text.contains("COLUMN 03, ROW 03"), "Inspector selection mismatch")
     check(shell._cell_buttons[51].selected, "Selected hex not highlighted")
     shell._send({"command": "advance"})
-    await wait_for(shell, 1, 16, "command")
-    shell._send({"command": "new", "width": 6, "height": 8, "mode": "witness"})
-    await wait_for(shell, 0, 6, "witness")
+    await wait_for(shell, 1, 16)
+    shell._send({"command": "new", "width": 6, "height": 8})
+    await wait_for(shell, 0, 6)
     check(shell._cell_buttons.size() == 48, "Grid resize failed")
-    check(not shell._command_panel.visible, "Witness commands still visible")
-    shell._send({"command": "new", "width": 16, "height": 12, "mode": "command"})
-    await wait_for(shell, 0, 16, "command")
+    check(shell._command_panel.visible, "Player commands must remain available")
+    shell._send({"command": "new", "width": 16, "height": 12})
+    await wait_for(shell, 0, 16)
+    shell._send({"command": "establish", "x": 2, "y": 2, "name": "Smoke Annex"})
+    var established := false
+    for attempt in range(400):
+        for force in shell._snapshot.get("forces", []):
+            if force.name == "Smoke Annex":
+                established = true
+        if established:
+            break
+        await create_timer(0.01).timeout
+    check(established, "Player intervention was not accepted")
+    check(not shell._snapshot.has("mode"), "Obsolete mode field remains")
     await process_frame
     if "--capture" in OS.get_cmdline_user_args():
         await RenderingServer.frame_post_draw

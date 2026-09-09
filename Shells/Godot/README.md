@@ -8,9 +8,9 @@ The 2d shell starts the adjacent `KernelHost` process and exchanges one JSON obj
 
 - Click a sector to inspect its terrain and all forces occupying it.
 - Press Space, Enter, or **Advance the Front** to resolve exactly one autonomous turn.
-- Select Witness or Command, enter an integer seed, and click **Open Front** to start a new deterministic theater.
-- Witness mode hides field authority controls and the Kernel rejects attempted intervention.
-- Command mode can channel resonance, fortify sectors, deploy soldiers, replace a lost Bastion, establish enclaves, and authorize magitech purges.
+- Enter an integer seed and click **Open Front** to start a new deterministic theater.
+- For passive play, use only **Advance the Front**. Player commands remain available at any time.
+- The player can channel resonance, fortify sectors, deploy soldiers, replace a lost Bastion, establish enclaves, and authorize magitech purges.
 
 ## Symbols
 
@@ -57,5 +57,5 @@ planned six-direction facing, rotation costs, or variable footprints.
 Publish the Kernel host into `Shells/Godot/KernelHost`, then run Godot with
 `--headless --path Shells/Godot --script Tests/HexGridSmoke.gd` from the repository
 root. This checks the live protocol, hex selection (including overlapping cell
-bounding boxes), turn advancement, resized maps, and Witness controls. The test
+bounding boxes), turn advancement, resized maps, and player interventions. The test
 scripts are excluded from standalone exports.

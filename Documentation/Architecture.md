@@ -40,7 +40,8 @@ multiple Shells still describe the shared presentation/input role below.
 - `Automapolis.Kernel` references only the .NET base class library. It cannot know Godot exists.
 - A Shell never implements game rules. It sends `WorldCommand` equivalents and renders the returned `WorldSnapshot`.
 - Time cannot advance in the background. Exactly one `AdvanceTurn` command resolves exactly one autonomous war turn.
-- Witness mode accepts only `AdvanceTurn`. Command mode additionally exposes field interventions.
+- There is one player configuration. Field interventions are always available;
+  submitting only `AdvanceTurn` provides passive play without a separate mode.
 - The JSON Lines host is replaceable transport, not a second engine.
 - Every authoritative visual token is text: terrains and forces have glyphs, descriptions, names, metrics, intents, and dispatches. A Shell may add layout, color, borders, models, and animation without hiding rules in assets.
 
@@ -53,7 +54,7 @@ The Kernel generates resonance, biomass, and integrity for each sector; a human 
 Write one JSON object per line to standard input. Read one response object per line from standard output. A response contains `ok`, `type`, `message`, `snapshot`, and the reference `text` rendering.
 
 ```json
-{"command":"new","width":16,"height":12,"seed":475023,"mode":"command","name":"The Bastion Front"}
+{"command":"new","width":16,"height":12,"seed":475023,"name":"The Bastion Front"}
 {"command":"advance"}
 {"command":"channel","x":5,"y":3,"amount":25}
 {"command":"fortify","x":5,"y":3,"terrain":"fortifiedReach"}

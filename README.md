@@ -2,7 +2,7 @@
 
 Automapolis is a deterministic, turn-based science-fantasy war simulation about humanity's fight against an alien bioswarm. Humanity answers overwhelming biological adaptation with advanced magitech, fortified enclaves, ordinary soldiers, and the rare **Bastion**: a single super-soldier capable of changing an entire front.
 
-Each generated theater begins in crisis with one Bastion, one human enclave, supporting soldiers, and a spreading alien ecology. In Witness mode the war resolves autonomously one deliberate turn at a time. In Command mode the player can channel resonance, fortify terrain, deploy human forces, establish enclaves, and authorize destructive purges.
+Each generated theater begins in crisis with one Bastion, one human enclave, supporting soldiers, and a spreading alien ecology. The war resolves autonomously one deliberate turn at a time. The player can channel resonance, fortify terrain, deploy human forces, establish enclaves, and authorize destructive purges. For passive play, submit only **Advance Turn**; no separate mode is needed.
 
 The game is split strictly into a mandatory [.NET Kernel](Source/Automapolis.Kernel) and optional [Shells](Shells). The included 2d shell is built with Godot 4.7.2. See [the architecture](Documentation/Architecture.md), [world foundation](Documentation/World.md), and [art direction](Documentation/ArtDirection.md).
 

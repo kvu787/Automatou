@@ -16,7 +16,7 @@ public static class TextWorldRenderer
         var tilesByPosition = snapshot.Tiles.ToDictionary(static tile => tile.Position);
         var builder = new StringBuilder();
 
-        builder.AppendLine($"{snapshot.Name} // TURN {snapshot.Turn:000} // {snapshot.Mode.ToString().ToUpperInvariant()}");
+        builder.AppendLine($"{snapshot.Name} // TURN {snapshot.Turn:000}");
         builder.AppendLine("HEX GRID // odd rows shifted right // coordinates: column,row");
         for (var y = 0; y < snapshot.Height; y++)
         {
