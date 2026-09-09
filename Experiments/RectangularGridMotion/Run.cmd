@@ -10,6 +10,8 @@ if errorlevel 1 goto :missing
 if errorlevel 1 goto :failed
 "%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%." --script Verify.gd
 if errorlevel 1 goto :failed
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%EXPERIMENT_ROOT%PrepareBuild.ps1" -ExecutablePath "%EXPERIMENT_ROOT%Build\RectangularGridMotion.exe"
+if errorlevel 1 goto :failed
 if not exist "%EXPERIMENT_ROOT%Build" mkdir "%EXPERIMENT_ROOT%Build"
 "%EXPERIMENT_GODOT%" --headless --path "%EXPERIMENT_ROOT%." --export-release "Windows Desktop" "%EXPERIMENT_ROOT%Build\RectangularGridMotion.exe"
 if errorlevel 1 goto :failed
@@ -21,3 +23,4 @@ echo Set GODOT_EXE to a Godot 4.7.2 console executable. Windows export templates
 echo Build failed. Review the output above.
 pause
 exit /b 1
+
