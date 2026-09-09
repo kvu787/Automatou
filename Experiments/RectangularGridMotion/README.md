@@ -8,7 +8,7 @@ rules, separate from Automapolis's current hex-grid design. The game uses
 complete-ring unit footprints and does not perform swept collision checks during
 rotation.
 
-Double-click `Run.cmd` to import, verify, export, and launch `Build/RectangularGridMotion.exe`. The launcher closes an existing instance before export so Windows can replace the executable. This resets the running experiment. If it cannot close the old window, close it manually and try again. Set `GODOT_EXE` to override the default Godot 4.7.2 executable in `%UserProfile%\Program`. Matching Windows export templates are required.
+Double-click `Run.cmd` to import, verify, export, and launch `Build/RectangularGridMotion.exe`. The launcher closes an existing instance before export so Windows can replace the executable. This resets the running experiment. If it cannot close the old window, close it manually and try again. Set `GODOT_EXE` to override the default Godot 4.7.2 executable in `%UserProfile%\Program`. Matching Windows export templates are required. The project uses Forward+ with Direct3D 12 and requires a compatible Windows GPU and driver. Vulkan and OpenGL fallbacks are disabled.
 
 ## Controls and preview
 

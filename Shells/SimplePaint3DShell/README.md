@@ -9,6 +9,8 @@ The shell starts the adjacent `KernelHost` process and exchanges one UTF-8 JSON 
 Use Windows x64 with the x64 .NET 10 SDK selected by the repository's
 `global.json`, Godot 4.7.2 **.NET** for Windows x64, and its matching .NET export
 templates. The standard GDScript-only Godot executable cannot load this project.
+The project uses Forward+ with Direct3D 12 and requires a compatible GPU and
+driver. Vulkan and OpenGL fallbacks are disabled.
 
 Double-click this folder's `Run.cmd` or the repository-root `Run.cmd`. The batch
 launcher delegates to this folder's `Run.ps1`, which builds the C# solution,
@@ -128,8 +130,8 @@ in the rendered transforms as well as the layout geometry.
 Hex exteriors use antialiased edge strokes over opaque polygons to smooth
 diagonals without opening gaps. Interior fills and highlights use inward-only
 alpha fringes so smoothing never spills onto the delineation. The smoothing
-scales to one screen pixel and refreshes when the window is resized. This works with the existing
-Compatibility renderer; no graphics-mode change is required.
+scales to one screen pixel and refreshes when the window is resized. The rendered
+checks run with the configured Forward+ renderer and Direct3D 12 driver.
 
 The rendered checks also compare adjacent selected and hovered cells against an
 unhighlighted image at three delineation widths. Pixels outside both terrain
