@@ -25,3 +25,26 @@ One nuance: the existing design deliberately allows small, exceptionally powerfu
 
 The first question I’d settle is **how closely you want sizes to follow a shared physical scale**. Should a human beside a tank or building look roughly proportionate, or do you want tabletop-style exaggeration—larger infantry and compressed buildings for readability? Both preserve multi-cell footprints, but they lead to different map proportions and model design.
 
+
+## User
+
+another thing to record is that previously, with pixel art, there was no "occlusion". for example, a tall tower would simply have a larger square sprite instead of overlapping other sprites and cells due to is height.
+
+with this switch to 3d models for the main visual shell, this is no longer the case. a tall tower might only occupy one cell, but it will occlude other cells if the camera is in the standard 3/4 orthographic view.
+
+also record this: the standard camera view is orthographic 3/4 overhead. this is purely to achieve my desired visual aesthetic of looking over a large miniature or LEGO-like world. i realize this introduces issues such as occlusion and probably other stuff compared to a top-down view or a pure 2d board, but its visual aesthetic is a hard requirement, so we'll need to find ways to deal with the issues it introduces.
+
+## Assistant
+
+I’ll record the camera aesthetic as a hard requirement, distinguish height-driven occlusion from ground footprint, and commit the design notes separately from the conversation log.
+
+## Assistant
+
+Recorded and committed in [ArtDirection.md](C:/Users/k/Repository/CSharp/Automapolis/docs/ArtDirection.md) and [Mechanics.md](C:/Users/k/Repository/CSharp/Automapolis/docs/Mechanics.md):
+
+- **Orthographic 3/4 overhead is a hard aesthetic requirement**, evoking a large miniature or LEGO-like world.
+- Previous pixel art expressed tower height through a larger square sprite without height-driven overlap across cells.
+- 3D height can obscure cells beyond the actual ground footprint.
+- Occlusion and interaction solutions must accommodate the required aesthetic; specific solutions remain undecided.
+
+The conversation was recorded in a separate `[cnv]` commit.
