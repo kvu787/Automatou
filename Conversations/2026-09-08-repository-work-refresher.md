@@ -107,3 +107,43 @@ We discussed Git worktrees, surveyed orchestration approaches, and settled conce
 This remained a workflow proposal; the history does not show the manager being implemented.
 
 **Where you left off:** art consistency was your stated blocker. On September 3, we reviewed your SpriteGeneration experiments and discussed a bounded PixelLab test, a fixed 3D-to-sprite pipeline, or commissioning a small style foundation. No production approach was recorded as selected. Meanwhile, the prototype existed and the spatial-mechanics document provided a starting point for further gameplay work.
+
+## User
+
+for art direction, i've decided to do my own 3d modeling in blender using my SimplePaint shader (see C:\Users\k\Repository\CPlusPlus\Simple_DirectX12_3D_Game\Source\SimplePaint)
+
+remove all of the pixel art stuff from this repo. for the godot shell, change to using symbols for visual representation instead of pixel art
+
+## Assistant
+
+I’ll inspect the art pipeline and Godot renderer, review your SimplePaint setup, then remove the pixel-art assets and tooling and switch the shell to symbols.
+
+## Assistant
+
+The Kernel already supplies terrain and unit symbols, so the shell can use those throughout the map, legend, inspector, and command buttons. I’m updating the art direction to your Blender/SimplePaint workflow and removing the old sprite pipeline, studies, and conversion tools. Historical conversation text will remain.
+
+## Assistant
+
+The shell now uses symbols, including terrain markers beneath units and counts for cells with multiple occupants. The old art assets and tools are removed. I’ll check the build and export, then verify the symbols and controls in the running shell.
+
+## Assistant
+
+The solution builds cleanly, all eight Kernel tests pass, and Godot exports successfully with no sprite resources. I’m checking the remaining runtime behavior and visual layout, including terrain markers and stacked-unit counts.
+
+## Assistant
+
+The runtime checks and visual review passed. Three old terrain glyphs were missing from Godot’s bundled font, so I replaced them with supported symbols and kept the Kernel and shell consistent. Selection, deployment, turn advancement, mode switching, and stacked-occupant display all work.
+
+## Assistant
+
+Done.
+
+- Removed the pixel-art assets, studies, catalogs, generators, converter, associated tests, and build steps.
+- Changed Godot’s map, legend, inspector, and controls to colored symbols, with counts for stacked occupants.
+- Updated [art direction](C:/Users/k/Repository/CSharp/Automapolis/docs/ArtDirection.md) to your Blender + SimplePaint workflow.
+
+Verified a clean build, all eight Kernel tests, shell interactions, standalone export/startup, and visual layout. Changes are committed. Historical conversation text remains; Lore is untouched.
+
+Launch with [Run.cmd](C:/Users/k/Repository/CSharp/Automapolis/Run.cmd).
+
+![Godot symbol interface](C:/Users/k/Repository/CSharp/Automapolis/Shells/Godot/build/symbols-preview.png)
