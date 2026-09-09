@@ -6,7 +6,9 @@ controls, but may not contain simulation rules.
 
 Unqualified **Shell** means the main 3D Godot Shell, using SimplePaint and the
 required orthographic 3/4 overhead camera. **Text shell** means terminal-only
-input/output. **2d shell** means the currently implemented symbolic presentation
+input/output. The C# [TerminalShell](TerminalShell) implements this interface
+with readable commands and calls the Kernel directly. **2d shell** means the
+currently implemented symbolic presentation
 in `SimplePaint3DShell`, written in C# for Godot 4.7.2 .NET and consuming the
 Kernel Host JSON-lines protocol.
 The main 3D Shell's production model pipeline is not yet implemented.

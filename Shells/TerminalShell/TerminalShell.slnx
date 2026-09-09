@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="TerminalShell.csproj" />
+  <Project Path="../../Source/Automapolis.Kernel/Automapolis.Kernel.csproj" />
+  <Project Path="../../Tests/Automapolis.TerminalShell.Tests/Automapolis.TerminalShell.Tests.csproj" />
+</Solution>

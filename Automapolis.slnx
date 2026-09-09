@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Shells/">
+    <Project Path="Shells/TerminalShell/TerminalShell.csproj" />
     <Project Path="Shells/SimplePaint3DShell/SimplePaint3DShell.csproj">
       <BuildType Solution="Debug|*" Project="Debug" />
       <BuildType Solution="Release|*" Project="ExportRelease" />
@@ -10,6 +11,7 @@
     <Project Path="Source/Automapolis.Kernel.Host/Automapolis.Kernel.Host.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <Project Path="Tests/Automapolis.TerminalShell.Tests/Automapolis.TerminalShell.Tests.csproj" />
     <Project Path="Tests/Automapolis.Kernel.Tests/Automapolis.Kernel.Tests.csproj" />
   </Folder>
 </Solution>

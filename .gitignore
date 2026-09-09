@@ -5,3 +5,4 @@ Shells/SimplePaint3DShell/Build/
 Shells/SimplePaint3DShell/KernelHost/
 *.user
 *.tmp
+Shells/TerminalShell/Build/

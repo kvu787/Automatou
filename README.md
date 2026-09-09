@@ -10,6 +10,11 @@ The 2d shell represents terrain with colored fills and forces with symbols on a 
 
 ## Play
 
+For terminal play, double-click [Shells/TerminalShell/Run.cmd](Shells/TerminalShell/Run.cmd).
+The C# [TerminalShell](Shells/TerminalShell) builds with the x64 .NET 10 SDK and
+opens a command prompt for inspecting sectors and forces, editing the world,
+and advancing turns. Type `help` to begin. Godot is not required for this shell.
+
 On Windows x64, double-click `Run.cmd` at the repository root or inside `Shells/SimplePaint3DShell`. The wrapper runs the shell's `Run.ps1` to build and test the C# solution, publish a self-contained Windows x64 Kernel host, export `SimplePaint3DShell.exe`, and launch it. Use `Run.cmd -BuildOnly` to skip launching. Install the x64 .NET 10 SDK, Godot 4.7.2 **.NET** for Windows x64, and matching .NET export templates. The launcher defaults to `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`; set `GODOT_EXE` to override it. See the [shell setup instructions](Shells/SimplePaint3DShell/README.md#build-and-run).
 
 ## Develop
@@ -17,6 +22,7 @@ On Windows x64, double-click `Run.cmd` at the repository root or inside `Shells/
 ```powershell
 dotnet build Automapolis.slnx
 dotnet run --project Tests/Automapolis.Kernel.Tests
+dotnet run --project Tests/Automapolis.TerminalShell.Tests
 ```
 
 To use the text protocol directly:

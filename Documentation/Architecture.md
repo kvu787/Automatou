@@ -20,11 +20,17 @@ keyboard / mouse / file / bot / network
         +------------------------+
 ```
 
+C# Shells can also call the Kernel directly using `WorldCommand` and
+`WorldSnapshot`. [TerminalShell](../Shells/TerminalShell) uses this in-process
+path; the Godot shell uses the JSON Lines host shown above. Both paths share
+the same authoritative engine and explicit-turn rules.
+
 ## Shell terminology
 
 - **Shell**, unqualified, means the main Shell: the 3D Godot presentation using
   SimplePaint and the required orthographic 3/4 overhead camera.
-- **Text shell** means a terminal-only input/output Shell.
+- **Text shell** means a terminal-only input/output Shell, implemented by the C#
+  `Shells/TerminalShell` with readable inspection, intervention, and turn commands.
 - **2d shell** means the current Godot 4.7.2 .NET / C# presentation with symbolic
   visuals, located in `Shells/SimplePaint3DShell`. It is distinct from the main Shell.
 - Future Shells may include a pixel-art 2D Shell, a non-pixel-art 2D Shell, and
