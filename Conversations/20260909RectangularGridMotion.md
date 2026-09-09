@@ -207,3 +207,17 @@ Yes. I introduced floating-point geometry for the swept collision checks, rather
 **Yes—floating-point arithmetic**, including sine and cosine. The unit ends aligned to grid cells, but the swept approaches check intermediate rotated rectangles with fractional coordinates. The check is numerical and approximate, not literally every angle.
 
 That was an assumption I introduced. A grid-based rotation does **not** require this: it can use integer cell coordinates, four orientations, and integer rules for which cells must be empty during a turn. Checking only the destination footprint is the simplest such rule.
+
+## User
+
+okay, i don't want that. record this somewhere in this experiment folder: in any approach, there should only be integer math.
+
+## Assistant
+
+I’ll record integer-only math as a requirement for every approach in the experiment, and note that the current implementation does not yet meet it.
+
+## Assistant
+
+Recorded in the experiment’s [AGENTS.md](C:/Users/k/Repository/CSharp/Automapolis/Experiments/RectangularGridMotion/AGENTS.md) and linked from its README: **every approach must use integer math only**.
+
+Committed. The existing code is explicitly marked as not yet compliant.
