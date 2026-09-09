@@ -2,6 +2,7 @@
 
 ## Folder and file naming
 
+This only applies to things that we have the freedom to name as wanted.
 Use CamelCase.
 Use complete proper words. Don't use typical shortenings. Good: Source, Documentation. Bad: src, docs.
 
