@@ -15,6 +15,10 @@ When implementing stuff, avoid difficult-to-review "mega-commits".
 Split large work into multiple commits to make it easier to review.
 Separate commits that record conversations from other commits.
 
+## Markdown tables
+
+Tables in Markdown must be padded and aligned in a way to make them easy to read in a plaintext editor, not only in a Markdown viewer.
+
 ## Mathematical notation in Markdown
 
 Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
@@ -23,10 +27,10 @@ Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must di
 
 ## Conversations
 
-Record and commit all conversations in a `Conversations` folder located at the root of this Git repo.
+Record verbatim and commit all conversations in a folder named `Conversations` located at the root of this Git repo.
 Use one file per conversation.
-Prefix these commits with `[record]`.
-If I attach images to prompts, you save and record these in the conversation logs.
+Prefix these commits with `[cnv]`.
+If I attach images to prompts, save and record these in the conversation logs.
 
 ## Compatibility
 
