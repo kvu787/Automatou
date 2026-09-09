@@ -79,7 +79,14 @@ of the spatial rules:
   footprints above.
 
 Camera and model composition choices are part of [Art direction](ArtDirection.md).
-They do not introduce turning rules or orientation-aware footprint masks.
+The standard 3D view is orthographic 3/4 overhead, a hard aesthetic requirement.
+Model height can occlude cells outside the ground footprint: a one-cell tower
+may hide other cells without occupying them. This camera occlusion does not by
+itself establish gameplay line-of-sight or cover rules. Occlusion handling
+remains an unresolved presentation and interaction decision.
+
+Camera and model composition do not introduce turning rules or
+orientation-aware footprint masks.
 
 ## Unresolved spatial rules
 

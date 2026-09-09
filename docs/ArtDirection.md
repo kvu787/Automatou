@@ -19,6 +19,25 @@ The referenced code is C++/HLSL. Blender integration, asset export, and the even
 Godot presentation of those models remain separate work. No shader port or model
 import is included in the current Shell.
 
+## Standard camera and occlusion
+
+The main visual Shell will present 3D models in an **orthographic 3/4 overhead
+view**. This standard camera view is a hard aesthetic requirement: the world
+should feel like a large miniature or LEGO-like world viewed from above.
+Readability and interaction solutions must accommodate this aesthetic.
+
+In the previous pixel-art direction, height did not produce occlusion across
+cells: a tall tower would have a larger square sprite rather than overlap other
+sprites and cells because of its height. With 3D models, height can project over
+other cells in the standard camera view. A tall tower might occupy only one
+base cell on the ground while visually occluding several cells behind it.
+
+Ground footprint, model height, and projected screen coverage are distinct.
+Occlusion and other readability or interaction issues introduced by this view
+must be addressed within the required aesthetic. The specific solutions remain
+undecided; the requirement does not prescribe an exact camera angle or an
+occlusion treatment.
+
 ## Current Godot presentation
 
 The Godot Shell uses the Kernel's text symbols for terrain and forces. Color
