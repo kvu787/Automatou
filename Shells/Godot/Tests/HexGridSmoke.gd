@@ -105,6 +105,7 @@ func run() -> void:
     await process_frame
     if "--render-check" in OS.get_cmdline_user_args():
         await check_rendered_grid(shell)
+        await check_highlight_boundaries(shell)
     if "--capture" in OS.get_cmdline_user_args():
         await RenderingServer.frame_post_draw
         root.get_texture().get_image().save_png("res://Build/HexGridPreview.png")
@@ -139,4 +140,46 @@ func check_rendered_grid(shell: Control) -> void:
             check(gaps == 0, "%d background pixels inside grid at %s, outline %.2f" % [gaps, window_size, outline_width])
             if outline_width == 8.5:
                 rendered.save_png("res://Build/HexGridOutline%s.png" % window_size.x)
+    shell.hex_outline_width = 2.0
+
+func check_highlight_boundaries(shell: Control) -> void:
+    var selected_cell = shell._cell_buttons[51]
+    var hovered_cell = shell._cell_buttons[52]
+    for outline_width in [2.0, 8.5, 12.0]:
+        shell.hex_outline_width = outline_width
+        selected_cell.selected = false
+        selected_cell.queue_redraw()
+        var motion := InputEventMouseMotion.new()
+        motion.position = Vector2.ONE
+        root.push_input(motion, true)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        var baseline := root.get_texture().get_image()
+        selected_cell.selected = true
+        selected_cell.queue_redraw()
+        motion.position = hovered_cell.global_position + Vector2(hovered_cell.HEX_WIDTH / 2.0, hovered_cell.RADIUS)
+        root.push_input(motion, true)
+        await process_frame
+        await RenderingServer.frame_post_draw
+        check(hovered_cell.is_hovered(), "Adjacent cell must be hovered for highlight raster check")
+        var highlighted := root.get_texture().get_image()
+        var selected_transform: Transform2D = root.get_stretch_transform() * selected_cell.get_global_transform_with_canvas()
+        var hovered_transform: Transform2D = root.get_stretch_transform() * hovered_cell.get_global_transform_with_canvas()
+        var start: Vector2 = selected_transform * Vector2(-2, -2)
+        var finish: Vector2 = hovered_transform * Vector2(hovered_cell.HEX_WIDTH + 2, hovered_cell.RADIUS * 2 + 2)
+        var overwritten := 0
+        var changed_inside := 0
+        for y in range(ceili(start.y), floori(finish.y)):
+            for x in range(ceili(start.x), floori(finish.x)):
+                var pixel := Vector2(x + 0.5, y + 0.5)
+                var inside := Geometry2D.is_point_in_polygon(selected_transform.affine_inverse() * pixel, selected_cell.polygon(outline_width / 2.0)) or Geometry2D.is_point_in_polygon(hovered_transform.affine_inverse() * pixel, hovered_cell.polygon(outline_width / 2.0))
+                if baseline.get_pixel(x, y) != highlighted.get_pixel(x, y):
+                    if inside:
+                        changed_inside += 1
+                    else:
+                        overwritten += 1
+        check(overwritten == 0, "Highlights changed %d pixels outside cell interiors at width %.2f" % [overwritten, outline_width])
+        check(changed_inside > 0, "Highlights did not render")
+        if outline_width == 8.5:
+            highlighted.save_png("res://Build/HexGridAdjacentHighlights.png")
     shell.hex_outline_width = 2.0

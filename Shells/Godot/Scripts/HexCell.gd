@@ -3,6 +3,7 @@ extends BaseButton
 const RADIUS := 25.0
 const HEX_WIDTH := 43.3012701892
 const ROW_STEP := 37.5
+const HIGHLIGHT_WIDTH := 2.0
 
 var text := ""
 var background := Color("#181c39")
@@ -51,17 +52,19 @@ func _draw() -> void:
         fill = fill.lightened(0.15)
     if is_pressed():
         fill = fill.darkened(0.12)
-    var border := Color("#f2c66d") if selected else Color("#73768c")
-    if is_hovered() and not selected:
-        border = Color("#55d6c2")
+    # Delineation always keeps its own color, including between highlighted cells.
+    var inset := outline_width / 2.0
     if outline_width > 0.0:
-        # Each neighbor contributes half the shared outline, entirely inside
-        # its own hex. No overlapping strokes or draw-order-dependent widths.
-        _draw_smooth_polygon(points, border)
-        if outline_width < HEX_WIDTH:
-            _draw_smooth_polygon(polygon(outline_width / 2.0), fill)
+        _draw_smooth_polygon(points, Color("#73768c"))
+        _draw_inward_polygon(inset, fill)
     else:
         _draw_smooth_polygon(points, fill)
+    if selected or is_hovered():
+        var highlight := Color("#f2c66d") if selected else Color("#55d6c2")
+        # Both antialiased edges lie inside the terrain area. Equal perpendicular
+        # insets give every side the same thickness, independent of neighbors.
+        _draw_inward_polygon(inset, highlight)
+        _draw_inward_polygon(inset + HIGHLIGHT_WIDTH, fill)
     if has_focus():
         draw_circle(Vector2(HEX_WIDTH / 2.0, 8.0), 2.0, Color.WHITE)
     var font := get_theme_font("font", "Button")
@@ -78,3 +81,20 @@ func _draw_smooth_polygon(points: PackedVector2Array, color: Color) -> void:
     var transform := get_viewport().get_stretch_transform() * get_global_transform_with_canvas()
     var pixel_width := 1.0 / maxf(transform.get_scale().x, 0.001)
     draw_polyline(edge, color, pixel_width, true)
+
+func _draw_inward_polygon(inset: float, color: Color) -> void:
+    if inset >= HEX_WIDTH / 2.0:
+        return
+    var transform := get_viewport().get_stretch_transform() * get_global_transform_with_canvas()
+    var feather := minf(1.0 / maxf(transform.get_scale().x, 0.001), HEX_WIDTH / 2.0 - inset)
+    var outer := polygon(inset)
+    var inner := polygon(inset + feather)
+    var transparent := Color(color, 0.0)
+    # Vertex alpha produces an inward-only antialiasing fringe. A centered
+    # antialiased stroke would spill over the shared cell delineation.
+    for corner in range(6):
+        var next := (corner + 1) % 6
+        draw_polygon(PackedVector2Array([outer[corner], outer[next], inner[next], inner[corner]]),
+            PackedColorArray([transparent, transparent, color, color]))
+    if inset + feather < HEX_WIDTH / 2.0:
+        draw_colored_polygon(inner, color)

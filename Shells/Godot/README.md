@@ -45,8 +45,9 @@ appears beside the slider and stays in effect when selecting cells, advancing
 turns, or opening a new front during the session. The initial value is also
 editable as **Hex Outline Width** on the root `Automapolis` node in `Main.tscn`. Each cell
 contributes half of the shared outline inside its polygon, so changing the width
-does not move cells or change click targets. Selection and hover change the
-outline color while preserving its width. Selection and hover follow the actual hex
+does not move cells or change click targets. Selection and hover add separate
+2-board-pixel colored outlines extending inward from the terrain edge. The gray
+cell delineation stays unchanged, including between adjacent highlighted cells. Selection and hover follow the actual hex
 polygon, including where adjacent button bounding boxes overlap. The inspector
 shows column and row; field commands use those same coordinates. Purge radius
 one covers the selected hex and its six neighbors, clipped at map boundaries.
@@ -69,7 +70,12 @@ and three window sizes, including 2560×1392. Preview images are saved in `Build
 The shell disables GUI pixel snapping so fractional hex positions remain intact
 in the rendered transforms as well as the layout geometry.
 
-Hex fills and outlines use antialiased edge strokes over opaque polygons to
-smooth diagonal edges without opening gaps. The edge stroke scales to one screen
-pixel and refreshes when the window is resized. This works with the existing
+Hex exteriors use antialiased edge strokes over opaque polygons to smooth
+diagonals without opening gaps. Interior fills and highlights use inward-only
+alpha fringes so smoothing never spills onto the delineation. The smoothing
+scales to one screen pixel and refreshes when the window is resized. This works with the existing
 Compatibility renderer; no graphics-mode change is required.
+
+The rendered checks also compare adjacent selected and hovered cells against an
+unhighlighted image at three delineation widths. Pixels outside both terrain
+interiors must remain identical. An adjacent-highlight preview is saved in `Build`.
