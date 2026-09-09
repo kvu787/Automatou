@@ -330,3 +330,21 @@ Implemented five selectable rules:
 All use integer math and the existing rotation mechanic. Static left/right previews highlight required cells and explain rejections without moving the unit.
 
 Checks passed, executable rebuilt, and changes committed. Launch with `Run.cmd`.
+
+## User
+
+change the keybindings to ESDF and W/R
+
+## Assistant
+
+I’ll change movement to ESDF and rotation to W/R, then update the labels and keyboard checks.
+
+## Assistant
+
+Updated bindings:
+
+- **E/S/D/F:** up/left/down/right
+- **W/R:** turn left/right
+- **Home:** reset
+
+Keyboard checks passed. Rebuilt and committed.
