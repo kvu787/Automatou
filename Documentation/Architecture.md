@@ -25,8 +25,6 @@ C# Shells can also call the Kernel directly using `WorldCommand` and
 path; the Godot shell uses the JSON Lines host shown above. Both paths share
 the same authoritative engine and explicit-turn rules.
 
-## Shell terminology
-
 - **Shell**, unqualified, means the main Shell: the 3D Godot presentation using
   SimplePaint and the required orthographic 3/4 overhead camera.
 - **Text shell** means a terminal-only input/output Shell, implemented by the C#
@@ -50,12 +48,31 @@ multiple Shells still describe the shared presentation/input role below.
   submitting only `AdvanceTurn` provides passive play without a separate mode.
 - The JSON Lines host is replaceable transport, not a second engine.
 - Every authoritative visual token is text: terrains and forces have glyphs, descriptions, names, metrics, intents, and dispatches. A Shell may add layout, color, borders, models, and animation without hiding rules in assets.
+- Shells map offset coordinates to pointy-top hex centers for presentation;
+  text output indents odd rows. Renderers do not determine simulation adjacency.
 
 ## Simulation model
 
 The Kernel generates resonance, biomass, and integrity for each sector; a human enclave, soldiers, and exactly one Bastion; and an opposing mix of raveners and brood nodes. On each explicit turn, alien terrain spreads, enclaves grow or suffer, both sides maneuver, co-located forces fight, brood nodes spawn organisms, and a deterministic dispatch records the new state.
 
+`HexGrid` owns six-neighbor adjacency and hex-step distance in the Kernel.
+
+The implementation still uses single-hex forces and autonomous movement, and
+permits forces to share a hex, including with enclaves and brood nodes. This
+prototype co-location does not represent entering a building.
+
+[Mechanics](Mechanics.md) defines the design for future spatial implementation:
+units use complete-ring hex footprints, six facings, and paid translation and
+rotation, with no swept collision checks during rotation. Buildings are
+stationary and non-enterable, with arbitrary footprints composed of base hexes.
+These footprint and facing systems are not yet implemented; their remaining
+open questions are listed in Mechanics.
+
 ## Command protocol
+
+Snapshots declare `topology: "hexagonal"` and `coordinates: "oddRowOffset"`.
+All command and snapshot `x,y` positions mean zero-based column and row, with
+odd rows shifted right by half a hex. Width and height bound the offset array.
 
 Write one JSON object per line to standard input. Read one response object per line from standard output. A response contains `ok`, `type`, `message`, `snapshot`, and the reference `text` rendering.
 
@@ -70,23 +87,3 @@ Write one JSON object per line to standard input. Read one response object per l
 ```
 
 Enum input is case-insensitive. Invalid commands return an error response without ending the host process.
-
-## Hex spatial contract
-
-Snapshots declare `topology: "hexagonal"` and `coordinates: "oddRowOffset"`.
-All command and snapshot `x,y` positions mean zero-based column and row, with
-odd rows shifted right by half a hex. Width and height bound the offset array.
-`HexGrid` owns six-neighbor adjacency and hex-step distance in the Kernel.
-Shells map these coordinates to pointy-top hex centers for presentation;
-text output indents odd rows. Renderers do not determine simulation adjacency.
-
-The implementation still uses single-hex forces and autonomous movement, and
-permits forces to share a hex, including with enclaves and brood nodes. This
-prototype co-location does not represent entering a building.
-
-[Mechanics](Mechanics.md) defines the design for future spatial implementation:
-units use complete-ring hex footprints, six facings, and paid translation and
-rotation, with no swept collision checks during rotation. Buildings are
-stationary and non-enterable, with arbitrary footprints composed of base hexes.
-These footprint and facing systems are not yet implemented; their remaining
-open questions are listed in Mechanics.
