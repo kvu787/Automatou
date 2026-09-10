@@ -1,0 +1,70 @@
+# Fold architecture sections into related topics
+
+## User
+
+# AGENTS.md instructions for C:\Users\k\Repository\CSharp\Automapolis
+
+<INSTRUCTIONS>
+# Base template
+
+## Folder and file naming
+
+This only applies to things that we have the freedom to name as wanted.
+Use CamelCase.
+Use complete proper words. Don't use typical shortenings. Good: Source, Documentation. Bad: src, docs.
+
+## External tools
+
+You may use the tools in `%UserProfile%\Program`.
+You may refer to local copies of source repos in `%UserProfile%\Repository\External`.
+
+## Godot
+
+If you create a Godot project, include a "Run.cmd" file that builds and launches the standalone exe of the Godot project by double-clicking the Run.cmd from File Explorer.
+
+## Git
+
+When implementing stuff, avoid difficult-to-review "mega-commits".
+Split large work into multiple commits to make it easier to review.
+Separate commits that record conversations from other commits.
+
+## Markdown tables
+
+Tables in Markdown must be padded and aligned in a way to make them easy to read in a plaintext editor, not only in a Markdown viewer.
+
+## Mathematical notation in Markdown
+
+Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
+
+# Base template additions
+
+## Conversations
+
+Record verbatim and commit all conversations in a folder named `Conversations` located at the root of this Git repo.
+Use one file per conversation.
+Prefix these commits with `[cnv]`.
+If I attach images to prompts, save and record these in the conversation logs.
+
+## Compatibility
+
+Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
+
+# Repository-specific
+
+Do not edit anything in the Lore folder.
+
+</INSTRUCTIONS>
+
+## User
+
+remove "shell terminology" and "hex spatial contract" from C:\Users\k\Repository\CSharp\Automapolis\Documentation\Architecture.md and fold the info into the appropriate places
+
+## Assistant
+
+I’ll fold those sections into the relevant architecture topics, then commit the document change and conversation log separately.
+
+## Assistant
+
+Removed both headings and folded their information into the introduction, boundary rules, simulation model, and command protocol in [Architecture.md](C:/Users/k/Repository/CSharp/Automapolis/Documentation/Architecture.md).
+
+Diff checks passed. Document and conversation log committed separately.
