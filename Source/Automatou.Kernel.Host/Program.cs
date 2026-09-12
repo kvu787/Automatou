@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Automapolis.Kernel;
+using Automatou.Kernel;
 
 var jsonOptions = new JsonSerializerOptions
 {

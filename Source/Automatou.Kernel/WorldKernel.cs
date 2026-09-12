@@ -1,4 +1,4 @@
-namespace Automapolis.Kernel;
+namespace Automatou.Kernel;
 
 /// <summary>
 /// The complete game engine. It owns simulation state and rules, but has no dependency on

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Automapolis.Kernel;
+namespace Automatou.Kernel;
 
 /// <summary>
 /// A reference text interface. Optional Shells may render the same snapshot differently.

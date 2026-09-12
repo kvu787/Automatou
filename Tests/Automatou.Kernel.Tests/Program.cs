@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Automapolis.Kernel;
+using Automatou.Kernel;
 
 var tests = new (string Name, Action Run)[]
 {

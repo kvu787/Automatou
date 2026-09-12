@@ -1,6 +1,6 @@
 # Mechanics
 
-This document records the current mechanical design of Automapolis. It begins
+This document records the current mechanical design of Automatou. It begins
 with the spatial foundation and will grow as additional systems are decided.
 Rules stated as current decisions are authoritative for new design work;
 unresolved details are listed separately rather than decided by implication.
@@ -13,7 +13,7 @@ no separate zero-player mode or mode switch; intervention remains available.
 
 ## Grid and scale
 
-Automapolis uses a **pointy-top hexagonal grid**. A base cell is one hexagon.
+Automatou uses a **pointy-top hexagonal grid**. A base cell is one hexagon.
 Each interior cell has six edge-sharing neighbors, with travel axes 60 degrees
 apart. This replaces the previous orthogonal square grid.
 

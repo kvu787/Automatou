@@ -17,7 +17,7 @@ function InvokeBuildCommand {
 Push-Location -LiteralPath $PSScriptRoot
 try {
     $repositoryRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-    $hostProject = Join-Path $repositoryRoot 'Source\Automapolis.Kernel.Host\Automapolis.Kernel.Host.csproj'
+    $hostProject = Join-Path $repositoryRoot 'Source\Automatou.Kernel.Host\Automatou.Kernel.Host.csproj'
     $buildDirectory = Join-Path $PSScriptRoot 'Build'
     $shellExecutable = Join-Path $buildDirectory 'SimplePaint3DShell.exe'
     $godotExecutable = $env:GODOT_EXE
@@ -33,10 +33,10 @@ try {
     }
 
     Write-Host '[1/6] Building the Windows x64 C# shell, Kernel, and tests...'
-    InvokeBuildCommand 'dotnet' @('build', (Join-Path $repositoryRoot 'Automapolis.slnx'), '--configuration', 'Debug')
+    InvokeBuildCommand 'dotnet' @('build', (Join-Path $repositoryRoot 'Automatou.slnx'), '--configuration', 'Debug')
 
     Write-Host '[2/6] Running Kernel tests...'
-    InvokeBuildCommand 'dotnet' @('run', '--project', (Join-Path $repositoryRoot 'Tests\Automapolis.Kernel.Tests'), '--configuration', 'Debug', '--no-build')
+    InvokeBuildCommand 'dotnet' @('run', '--project', (Join-Path $repositoryRoot 'Tests\Automatou.Kernel.Tests'), '--configuration', 'Debug', '--no-build')
 
     Write-Host '[3/6] Publishing the Windows x64 Kernel host for editor play and integration tests...'
     $publishArguments = @('publish', $hostProject, '--configuration', 'Release', '--runtime', 'win-x64', '--self-contained', 'true')

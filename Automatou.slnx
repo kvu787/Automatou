@@ -7,11 +7,11 @@
     </Project>
   </Folder>
   <Folder Name="/Source/">
-    <Project Path="Source/Automapolis.Kernel/Automapolis.Kernel.csproj" />
-    <Project Path="Source/Automapolis.Kernel.Host/Automapolis.Kernel.Host.csproj" />
+    <Project Path="Source/Automatou.Kernel/Automatou.Kernel.csproj" />
+    <Project Path="Source/Automatou.Kernel.Host/Automatou.Kernel.Host.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="Tests/Automapolis.TerminalShell.Tests/Automapolis.TerminalShell.Tests.csproj" />
-    <Project Path="Tests/Automapolis.Kernel.Tests/Automapolis.Kernel.Tests.csproj" />
+    <Project Path="Tests/Automatou.TerminalShell.Tests/Automatou.TerminalShell.Tests.csproj" />
+    <Project Path="Tests/Automatou.Kernel.Tests/Automatou.Kernel.Tests.csproj" />
   </Folder>
 </Solution>

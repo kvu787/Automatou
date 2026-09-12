@@ -1,6 +1,6 @@
 using System.Text.Json;
-using Automapolis.Kernel;
-using Automapolis.TerminalShell;
+using Automatou.Kernel;
+using Automatou.TerminalShell;
 
 var tests = new (string Name, Action Run)[]
 {

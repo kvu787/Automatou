@@ -1,4 +1,4 @@
-namespace Automapolis.Kernel;
+namespace Automatou.Kernel;
 
 /// <summary>Pointy-top hexagons in odd-row offset coordinates: X is column,
 /// Y is row, and odd rows are shifted half a hex to the right.</summary>

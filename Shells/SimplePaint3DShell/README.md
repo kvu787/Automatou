@@ -28,7 +28,7 @@ Set `GODOT_EXE` to the full path of another Godot 4.7.2 .NET Windows x64 console
 if needed. Close a running standalone game before exporting over its files.
 
 The project uses `Godot.NET.Sdk/4.7.2`, targets `net10.0-windows` with the
-`win-x64` runtime and `x64` platform, and participates in `Automapolis.slnx`.
+`win-x64` runtime and `x64` platform, and participates in `Automatou.slnx`.
 `SimplePaint3DShell.slnx` supports the Godot editor's Debug,
 ExportDebug, and ExportRelease configurations. The root solution maps Release
 to the shell's ExportRelease configuration.
@@ -80,7 +80,7 @@ Distribute the entire `Build` folder, keeping
 `data_SimplePaint3DShell_windows_x86_64` and `KernelHost` beside
 `SimplePaint3DShell.exe`. Both the shell and its Kernel host include their .NET
 runtime, so playing the exported game does not require an installed .NET SDK or
-runtime. The shell starts `KernelHost/Automapolis.Kernel.Host.exe` directly.
+runtime. The shell starts `KernelHost/Automatou.Kernel.Host.exe` directly.
 
 ## Hex layout
 
@@ -107,8 +107,8 @@ planned six-direction facing, rotation costs, or variable footprints.
 From the repository root, build the C# tests and publish the Kernel host:
 
 ```powershell
-dotnet build Automapolis.slnx --configuration Debug
-dotnet publish Source/Automapolis.Kernel.Host --configuration Release --runtime win-x64 --self-contained true --output Shells/SimplePaint3DShell/KernelHost
+dotnet build Automatou.slnx --configuration Debug
+dotnet publish Source/Automatou.Kernel.Host --configuration Release --runtime win-x64 --self-contained true --output Shells/SimplePaint3DShell/KernelHost
 $godotExecutable = "$env:USERPROFILE\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe"
 & $godotExecutable --headless --path Shells/SimplePaint3DShell --editor --import
 & $godotExecutable --headless --path Shells/SimplePaint3DShell res://Tests/HexGridSmoke.tscn

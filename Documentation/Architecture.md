@@ -1,6 +1,6 @@
 # Architecture
 
-Automapolis has one mandatory game engine, the **Kernel**, and any number of optional **Shells**.
+Automatou has one mandatory game engine, the **Kernel**, and any number of optional **Shells**.
 
 ```text
 keyboard / mouse / file / bot / network

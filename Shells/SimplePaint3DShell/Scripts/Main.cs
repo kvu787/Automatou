@@ -140,7 +140,7 @@ public partial class Main : Control
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", 10);
         margin.AddChild(row);
-        _titleLabel = Label("AUTOMAPOLIS // THE BASTION FRONT", Ink, 24);
+        _titleLabel = Label("AUTOMATOU // THE BASTION FRONT", Ink, 24);
         _titleLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(_titleLabel);
         _turnLabel = Label("TURN 000", Gold, 18);

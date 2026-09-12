@@ -1,8 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Automapolis.Kernel;
+using Automatou.Kernel;
 
-namespace Automapolis.TerminalShell;
+namespace Automatou.TerminalShell;
 
 /// <summary>Translates terminal input to Kernel commands and renders snapshots.</summary>
 public sealed class TerminalSession(TextWriter output)
@@ -16,7 +16,7 @@ public sealed class TerminalSession(TextWriter output)
     };
 
     public const string Help = """
-        AUTOMAPOLIS / TerminalShell
+        AUTOMATOU / TerminalShell
 
         INSPECT THE FRONT
           map                         Hex map, coordinates, and latest dispatch.
@@ -69,7 +69,7 @@ public sealed class TerminalSession(TextWriter output)
 
     public void Run(TextReader input, bool interactive)
     {
-        output.WriteLine("AUTOMAPOLIS / TerminalShell");
+        output.WriteLine("AUTOMATOU / TerminalShell");
         output.WriteLine("Hold the human enclaves against the bioswarm. Time waits for your command.");
         output.WriteLine("Type help for commands. Try: inspect 2 3, channel 2 3, then advance.");
         output.WriteLine();

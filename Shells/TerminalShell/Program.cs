@@ -1,5 +1,5 @@
 using System.Text;
-using Automapolis.TerminalShell;
+using Automatou.TerminalShell;
 
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = new UTF8Encoding(false);

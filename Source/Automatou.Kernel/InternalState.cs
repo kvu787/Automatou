@@ -1,4 +1,4 @@
-namespace Automapolis.Kernel;
+namespace Automatou.Kernel;
 
 internal sealed class TileState
 {

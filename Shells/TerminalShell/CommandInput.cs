@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Automapolis.TerminalShell;
+namespace Automatou.TerminalShell;
 
 internal sealed class CommandInput
 {

@@ -13,7 +13,7 @@ internal sealed class KernelConnection : IDisposable
 
     internal KernelConnection(string hostDirectory)
     {
-        var application = Path.Combine(hostDirectory, "Automapolis.Kernel.Host.exe");
+        var application = Path.Combine(hostDirectory, "Automatou.Kernel.Host.exe");
         if (!File.Exists(application))
         {
             throw new FileNotFoundException("Run Run.cmd to publish the Kernel host.", application);

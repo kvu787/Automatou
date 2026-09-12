@@ -1,6 +1,6 @@
-using Automapolis.Kernel;
+using Automatou.Kernel;
 
-namespace Automapolis.TerminalShell;
+namespace Automatou.TerminalShell;
 
 internal static class TerminalRenderer
 {

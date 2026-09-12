@@ -1,8 +1,8 @@
 # TerminalShell
 
-A C# command-line Shell for playing Automapolis. Inspect the hex theater, edit
+A C# command-line Shell for playing Automatou. Inspect the hex theater, edit
 world state through field interventions, and resolve the war one explicit turn
-at a time. All simulation rules and state remain in `Automapolis.Kernel`;
+at a time. All simulation rules and state remain in `Automatou.Kernel`;
 TerminalShell calls its C# API directly.
 
 ## Build and run
@@ -29,7 +29,7 @@ To develop without publishing, from the repository root:
 ```powershell
 dotnet run --project Shells/TerminalShell
 dotnet build Shells/TerminalShell/TerminalShell.slnx
-dotnet run --project Tests/Automapolis.TerminalShell.Tests
+dotnet run --project Tests/Automatou.TerminalShell.Tests
 ```
 
 ## First commands
@@ -114,5 +114,5 @@ interactive prompts and end cleanly at end-of-input:
 ```
 
 Output is human-readable; the existing
-[Kernel Host](../../Source/Automapolis.Kernel.Host) remains the JSON-lines
+[Kernel Host](../../Source/Automatou.Kernel.Host) remains the JSON-lines
 request/response interface for other clients.
