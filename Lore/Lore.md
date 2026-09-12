@@ -1,7 +1,7 @@
-This repository and project is named "Automapolis", but that is just a general name to describe the
+This repository and project is named "Automatou", but that is just a general name to describe the
 game mechanics.
 
-Currently, there is only one narrative in Automapolis: Bastion Absolute.
+Currently, there is only one narrative in Automatou: Bastion Absolute.
 
 Bastion Absolute uses the archetype of technologically advanced humanity vs biologically advanced
 aliens as a base. Example inspirations are Terran vs Zerg from Starcraft, humanity vs Tyranids from
