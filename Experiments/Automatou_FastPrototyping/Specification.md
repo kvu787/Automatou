@@ -32,6 +32,17 @@ can be found when relatively simple components interact with each other.
 The most succinct way I can describe this game is a "world-builder-and-runner" game.
 John Conway's "Game of Life" could be viewed as the fundamental progenitor of this style of game.
 
+## Automata
+
+What most games refer to as "artificial intelligence (AI)", this game refers to as "automata (AT)"
+Basically this is the logic for how agents in the world act without explicit player input.
+
+For now, this game is focused on combat, similar to games like Starcraft and Age of Empires.
+Other mechanics will be added later to make this a proper world simulator instead of just a battle
+simulator.
+
+The ATs for factions should focus on "thematic" gameplay instead of "optimal" gameplay.
+
 ## Visual style
 
 Everything is represented simply using colors, shapes, and symbols.
