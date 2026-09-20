@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="TerminalShell.csproj" />
-  <Project Path="../../Source/Automatou.Kernel/Automatou.Kernel.csproj" />
-  <Project Path="../../Tests/Automatou.TerminalShell.Tests/Automatou.TerminalShell.Tests.csproj" />
+    <Project Path="TerminalShell.csproj" />
+    <Project Path="../../Source/Automatou.Kernel/Automatou.Kernel.csproj" />
+    <Project Path="../../Tests/Automatou.TerminalShell.Tests/Automatou.TerminalShell.Tests.csproj" />
 </Solution>

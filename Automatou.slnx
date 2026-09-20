@@ -1,17 +1,17 @@
 <Solution>
-  <Folder Name="/Shells/">
-    <Project Path="Shells/TerminalShell/TerminalShell.csproj" />
-    <Project Path="Shells/SimplePaint3DShell/SimplePaint3DShell.csproj">
-      <BuildType Solution="Debug|*" Project="Debug" />
-      <BuildType Solution="Release|*" Project="ExportRelease" />
-    </Project>
-  </Folder>
-  <Folder Name="/Source/">
-    <Project Path="Source/Automatou.Kernel/Automatou.Kernel.csproj" />
-    <Project Path="Source/Automatou.Kernel.Host/Automatou.Kernel.Host.csproj" />
-  </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="Tests/Automatou.TerminalShell.Tests/Automatou.TerminalShell.Tests.csproj" />
-    <Project Path="Tests/Automatou.Kernel.Tests/Automatou.Kernel.Tests.csproj" />
-  </Folder>
+    <Folder Name="/Shells/">
+        <Project Path="Shells/TerminalShell/TerminalShell.csproj" />
+        <Project Path="Shells/SimplePaint3DShell/SimplePaint3DShell.csproj">
+            <BuildType Solution="Debug|*" Project="Debug" />
+            <BuildType Solution="Release|*" Project="ExportRelease" />
+        </Project>
+    </Folder>
+    <Folder Name="/Source/">
+        <Project Path="Source/Automatou.Kernel/Automatou.Kernel.csproj" />
+        <Project Path="Source/Automatou.Kernel.Host/Automatou.Kernel.Host.csproj" />
+    </Folder>
+    <Folder Name="/Tests/">
+        <Project Path="Tests/Automatou.TerminalShell.Tests/Automatou.TerminalShell.Tests.csproj" />
+        <Project Path="Tests/Automatou.Kernel.Tests/Automatou.Kernel.Tests.csproj" />
+    </Folder>
 </Solution>
