@@ -1,7 +1,6 @@
 namespace Automatou.Kernel;
 
-internal sealed class TileState
-{
+internal sealed class TileState {
     public required GridPoint Position { get; init; }
     public TerrainKind Terrain { get; set; }
     public int Resonance { get; set; }
@@ -9,8 +8,7 @@ internal sealed class TileState
     public int Integrity { get; set; }
 }
 
-internal sealed class ForceState
-{
+internal sealed class ForceState {
     public int Id { get; init; }
     public required GridPoint Position { get; set; }
     public ForceKind Kind { get; init; }

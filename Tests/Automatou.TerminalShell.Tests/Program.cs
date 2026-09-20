@@ -1,9 +1,9 @@
-using System.Text.Json;
 using Automatou.Kernel;
 using Automatou.TerminalShell;
+using System.Text.Json;
 
-var tests = new (string Name, Action Run)[]
-{
+(string Name, Action Run)[] tests =
+[
     ("inspection leaves the complete world unchanged", InspectionDoesNotMutate),
     ("every intervention matches the Kernel without advancing time", InterventionsMatchKernel),
     ("batched turns match individual Kernel turns", AdvanceMatchesKernel),
@@ -16,41 +16,34 @@ var tests = new (string Name, Action Run)[]
     ("quoted, escaped, and Unicode names survive input", QuotedNames),
     ("redirected sessions handle blank lines, errors, quit, and EOF", RedirectedSessions),
     ("interactive sessions show the current turn in the prompt", InteractivePrompt)
-};
+];
 
-var failures = 0;
-foreach (var test in tests)
-{
-    try
-    {
-        test.Run();
-        Console.WriteLine($"PASS  {test.Name}");
-    }
-    catch (Exception exception)
-    {
+int failures = 0;
+foreach ((string? Name, Action? Run) in tests) {
+    try {
+        Run();
+        Console.WriteLine($"PASS  {Name}");
+    } catch (Exception exception) {
         failures++;
-        Console.Error.WriteLine($"FAIL  {test.Name}: {exception.Message}");
+        Console.Error.WriteLine($"FAIL  {Name}: {exception.Message}");
     }
 }
 Console.WriteLine($"{tests.Length - failures}/{tests.Length} tests passed.");
 return failures;
 
-static void InspectionDoesNotMutate()
-{
-    var session = new TerminalSession(TextWriter.Null);
-    var before = Json(session.Snapshot);
-    foreach (var line in new[] { "", "   ", "help", "?", "map", "status", "inspect 2 3", "forces", "forces Soldier", "force 1", "legend", "chronicle", "chronicle 1", "snapshot" })
-    {
+static void InspectionDoesNotMutate() {
+    TerminalSession session = new(TextWriter.Null);
+    string before = Json(session.Snapshot);
+    foreach (string? line in new[] { "", "   ", "help", "?", "map", "status", "inspect 2 3", "forces", "forces Soldier", "force 1", "legend", "chronicle", "chronicle 1", "snapshot" }) {
         True(session.ExecuteLine(line));
         Equal(before, Json(session.Snapshot));
     }
 }
 
-static void InterventionsMatchKernel()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
-    var kernel = new WorldKernel(new WorldConfig());
+static void InterventionsMatchKernel() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
+    WorldKernel kernel = new(new WorldConfig());
     (string Line, WorldCommand Command)[] commands =
     [
         ("channel 2 3", new ChannelResonance(new(2, 3))),
@@ -64,35 +57,34 @@ static void InterventionsMatchKernel()
         ("channel 2 3 -10", new ChannelResonance(new(2, 3), -10)),
         ("purge 2 3 99", new InvokePurge(new(2, 3), 99))
     ];
-    foreach (var (line, command) in commands)
-    {
+    foreach ((string? line, WorldCommand? command) in commands) {
         True(session.ExecuteLine(line));
-        kernel.Execute(command);
+        _ = kernel.Execute(command);
         Equal(Json(kernel.Snapshot()), Json(session.Snapshot));
         Equal(0, session.Snapshot.Turn);
     }
     False(output.ToString().Contains("Error:", StringComparison.Ordinal));
 }
 
-static void AdvanceMatchesKernel()
-{
-    var session = new TerminalSession(TextWriter.Null);
-    var kernel = new WorldKernel(new WorldConfig());
-    session.ExecuteLine("advance 5");
-    session.ExecuteLine("step");
-    session.ExecuteLine("advance");
-    for (var turn = 0; turn < 7; turn++)
-        kernel.Execute(new AdvanceTurn());
+static void AdvanceMatchesKernel() {
+    TerminalSession session = new(TextWriter.Null);
+    WorldKernel kernel = new(new WorldConfig());
+    _ = session.ExecuteLine("advance 5");
+    _ = session.ExecuteLine("step");
+    _ = session.ExecuteLine("advance");
+    for (int turn = 0; turn < 7; turn++) {
+        _ = kernel.Execute(new AdvanceTurn());
+    }
+
     Equal(7, session.Snapshot.Turn);
     Equal(Json(kernel.Snapshot()), Json(session.Snapshot));
 }
 
-static void InvalidInputRecovers()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
-    session.ExecuteLine("advance");
-    var before = Json(session.Snapshot);
+static void InvalidInputRecovers() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
+    _ = session.ExecuteLine("advance");
+    string before = Json(session.Snapshot);
     string[] invalid =
     [
         "unknown", "help extra", "map extra", "status extra", "snapshot extra", "inspect",
@@ -106,102 +98,94 @@ static void InvalidInputRecovers()
         "new 8 51", "new 8 8 nope", "new 8 8 9223372036854775808", "new 8 8 1 ''",
         "new 8 8 1 '" + new string('x', 49) + "'", "quit extra", "exit extra"
     ];
-    foreach (var line in invalid)
-    {
-        output.GetStringBuilder().Clear();
+    foreach (string line in invalid) {
+        _ = output.GetStringBuilder().Clear();
         True(session.ExecuteLine(line));
         Contains(output.ToString(), "Error:");
         Equal(before, Json(session.Snapshot));
     }
-    output.GetStringBuilder().Clear();
-    session.ExecuteLine("advance");
+    _ = output.GetStringBuilder().Clear();
+    _ = session.ExecuteLine("advance");
     Equal(2, session.Snapshot.Turn);
     False(output.ToString().Contains("Error:", StringComparison.Ordinal));
 }
 
-static void NewWorldConfiguration()
-{
-    var session = new TerminalSession(TextWriter.Null);
-    session.ExecuteLine("new 8 6 -9223372036854775808 The Quiet Front");
+static void NewWorldConfiguration() {
+    TerminalSession session = new(TextWriter.Null);
+    _ = session.ExecuteLine("new 8 6 -9223372036854775808 The Quiet Front");
     Equal(Json(new WorldKernel(new(8, 6, long.MinValue, "The Quiet Front")).Snapshot()), Json(session.Snapshot));
-    session.ExecuteLine("advance 2");
-    session.ExecuteLine("new 6 7");
+    _ = session.ExecuteLine("advance 2");
+    _ = session.ExecuteLine("new 6 7");
     Equal(Json(new WorldKernel(new(6, 7)).Snapshot()), Json(session.Snapshot));
-    session.ExecuteLine("new");
+    _ = session.ExecuteLine("new");
     Equal(Json(new WorldKernel(new()).Snapshot()), Json(session.Snapshot));
 }
 
-static void InspectStackedForces()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
-    var enclave = session.Snapshot.Forces.First(force => force.Kind == ForceKind.Enclave);
-    var point = enclave.Position;
-    session.ExecuteLine($"deploy {point.X} {point.Y}");
-    output.GetStringBuilder().Clear();
-    session.ExecuteLine($"inspect {point.X} {point.Y}");
+static void InspectStackedForces() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
+    ForceSnapshot enclave = session.Snapshot.Forces.First(force => force.Kind == ForceKind.Enclave);
+    GridPoint point = enclave.Position;
+    _ = session.ExecuteLine($"deploy {point.X} {point.Y}");
+    _ = output.GetStringBuilder().Clear();
+    _ = session.ExecuteLine($"inspect {point.X} {point.Y}");
     Contains(output.ToString(), session.Snapshot.Tiles.First(tile => tile.Position == point).Description);
-    foreach (var force in session.Snapshot.Forces.Where(force => force.Position == point))
-    {
+    foreach (ForceSnapshot? force in session.Snapshot.Forces.Where(force => force.Position == point)) {
         Contains(output.ToString(), $"#{force.Id} [{force.Glyph}] {force.Name}");
         Contains(output.ToString(), $"Intent: {force.Intent}");
     }
 }
 
-static void ForceInspection()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
-    session.ExecuteLine("forces soldier");
-    foreach (var force in session.Snapshot.Forces)
+static void ForceInspection() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
+    _ = session.ExecuteLine("forces soldier");
+    foreach (ForceSnapshot force in session.Snapshot.Forces) {
         Equal(force.Kind == ForceKind.Soldier, output.ToString().Contains($"#{force.Id} [", StringComparison.Ordinal));
-    output.GetStringBuilder().Clear();
-    session.ExecuteLine("force 1");
+    }
+
+    _ = output.GetStringBuilder().Clear();
+    _ = session.ExecuteLine("force 1");
     Contains(output.ToString(), "#1 [");
     False(output.ToString().Contains("#2 [", StringComparison.Ordinal));
 }
 
-static void MapCoordinates()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
-    session.ExecuteLine("map");
-    var lines = output.ToString().Replace("\r\n", "\n").Split('\n');
+static void MapCoordinates() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
+    _ = session.ExecuteLine("map");
+    string[] lines = output.ToString().Replace("\r\n", "\n").Split('\n');
     True(lines[2].StartsWith("    00  01  02", StringComparison.Ordinal));
-    for (var row = 0; row < session.Snapshot.Height; row++)
-    {
+    for (int row = 0; row < session.Snapshot.Height; row++) {
         True(lines[row + 3].StartsWith($"{row:00} " + (row % 2 == 1 ? "  [" : "["), StringComparison.Ordinal));
         Equal(session.Snapshot.Width, lines[row + 3].Count(character => character == '['));
     }
 }
 
-static void SnapshotOutput()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
-    session.ExecuteLine("snapshot");
-    using var document = JsonDocument.Parse(output.ToString());
-    Equal("hexagonal", document.RootElement.GetProperty("topology").GetString()!);
+static void SnapshotOutput() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
+    _ = session.ExecuteLine("snapshot");
+    using JsonDocument document = JsonDocument.Parse(output.ToString());
+    Equal("hexagonal", document.RootElement.GetProperty("topology").GetString());
     Equal(session.Snapshot.Width * session.Snapshot.Height, document.RootElement.GetProperty("tiles").GetArrayLength());
     Equal(session.Snapshot.Forces.Count, document.RootElement.GetProperty("forces").GetArrayLength());
     Equal(session.Snapshot.Metrics.TotalBiomass, document.RootElement.GetProperty("metrics").GetProperty("totalBiomass").GetInt32());
 }
 
-static void QuotedNames()
-{
-    var session = new TerminalSession(TextWriter.Null);
-    session.ExecuteLine("""establish 2 3 "Vigil \"North\" Annex" """);
+static void QuotedNames() {
+    TerminalSession session = new(TextWriter.Null);
+    _ = session.ExecuteLine("""establish 2 3 "Vigil \"North\" Annex" """);
     True(session.Snapshot.Forces.Any(force => force.Name == "Vigil \"North\" Annex"));
-    session.ExecuteLine("""establish 2 3 'Lumière 東' """);
+    _ = session.ExecuteLine("""establish 2 3 'Lumière 東' """);
     True(session.Snapshot.Forces.Any(force => force.Name == "Lumière 東"));
-    session.ExecuteLine("""establish 2 3 "Vigil \\ Annex" """);
+    _ = session.ExecuteLine("""establish 2 3 "Vigil \\ Annex" """);
     True(session.Snapshot.Forces.Any(force => force.Name == @"Vigil \ Annex"));
 }
 
-static void RedirectedSessions()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
+static void RedirectedSessions() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
     session.Run(new StringReader("\ninvalid\nadvance 2\nquit\nadvance\n"), interactive: false);
     Equal(2, session.Snapshot.Turn);
     Contains(output.ToString(), "Error:");
@@ -212,21 +196,29 @@ static void RedirectedSessions()
     Equal(3, session.Snapshot.Turn);
 }
 
-static void InteractivePrompt()
-{
-    var output = new StringWriter();
-    var session = new TerminalSession(output);
+static void InteractivePrompt() {
+    StringWriter output = new();
+    TerminalSession session = new(output);
     session.Run(new StringReader("advance\nexit\n"), interactive: true);
     Contains(output.ToString(), "Turn 0>");
     Contains(output.ToString(), "Turn 1>");
 }
 
-static string Json(WorldSnapshot snapshot) => JsonSerializer.Serialize(snapshot);
-static void Contains(string actual, string expected) => True(actual.Contains(expected, StringComparison.Ordinal));
-static void True(bool value) { if (!value) throw new InvalidOperationException("Expected true."); }
-static void False(bool value) => True(!value);
-static void Equal<T>(T expected, T actual)
-{
-    if (!EqualityComparer<T>.Default.Equals(expected, actual))
+static string Json(WorldSnapshot snapshot) {
+    return JsonSerializer.Serialize(snapshot);
+}
+
+static void Contains(string actual, string expected) {
+    True(actual.Contains(expected, StringComparison.Ordinal));
+}
+
+static void True(bool value) { if (!value) { throw new InvalidOperationException("Expected true."); } }
+static void False(bool value) {
+    True(!value);
+}
+
+static void Equal<T>(T expected, T actual) {
+    if (!EqualityComparer<T>.Default.Equals(expected, actual)) {
         throw new InvalidOperationException($"Expected {expected}, got {actual}.");
+    }
 }

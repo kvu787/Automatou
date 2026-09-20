@@ -1,10 +1,8 @@
 namespace Automatou.Kernel;
 
-internal static class DeterministicNoise
-{
-    public static ulong At(long seed, int turn, int x, int y, int channel = 0)
-    {
-        var value = unchecked((ulong)seed);
+internal static class DeterministicNoise {
+    public static ulong At(long seed, int turn, int x, int y, int channel = 0) {
+        ulong value = unchecked((ulong)seed);
         value ^= unchecked((ulong)(turn * 0x45d9f3b));
         value ^= unchecked((ulong)(x * 0x27d4eb2d));
         value ^= unchecked((ulong)(y * 0x165667b1));
@@ -15,6 +13,7 @@ internal static class DeterministicNoise
         return value ^ (value >> 31);
     }
 
-    public static int Range(long seed, int turn, int x, int y, int channel, int exclusiveMax) =>
-        (int)(At(seed, turn, x, y, channel) % (uint)exclusiveMax);
+    public static int Range(long seed, int turn, int x, int y, int channel, int exclusiveMax) {
+        return (int)(At(seed, turn, x, y, channel) % (uint)exclusiveMax);
+    }
 }

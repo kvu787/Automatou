@@ -1,7 +1,6 @@
 namespace Automatou.Kernel;
 
-public enum TerrainKind
-{
+public enum TerrainKind {
     ShatteredPlain,
     AshWaste,
     LeyChannel,
@@ -10,8 +9,7 @@ public enum TerrainKind
     BroodMire
 }
 
-public enum ForceKind
-{
+public enum ForceKind {
     Bastion,
     Soldier,
     Ravener,
@@ -20,35 +18,29 @@ public enum ForceKind
 }
 
 /// <summary>Odd-row offset hex coordinates: column X and row Y.</summary>
-public readonly record struct GridPoint(int X, int Y)
-{
-    public override string ToString() => $"{X},{Y}";
+public readonly record struct GridPoint(int X, int Y) {
+    public override string ToString() {
+        return $"{this.X},{this.Y}";
+    }
 }
 
 public sealed record WorldConfig(
     int Width = 16,
     int Height = 12,
     long Seed = 475_023,
-    string Name = "The Bastion Front")
-{
-    public WorldConfig Validate()
-    {
-        if (Width is < 6 or > 80)
-        {
-            throw new ArgumentOutOfRangeException(nameof(Width), "Width must be between 6 and 80.");
+    string Name = "The Bastion Front") {
+    public WorldConfig Validate() {
+        if (this.Width is < 6 or > 80) {
+            throw new ArgumentOutOfRangeException(nameof(this.Width), "Width must be between 6 and 80.");
         }
 
-        if (Height is < 6 or > 50)
-        {
-            throw new ArgumentOutOfRangeException(nameof(Height), "Height must be between 6 and 50.");
+        if (this.Height is < 6 or > 50) {
+            throw new ArgumentOutOfRangeException(nameof(this.Height), "Height must be between 6 and 50.");
         }
 
-        if (string.IsNullOrWhiteSpace(Name) || Name.Length > 48)
-        {
-            throw new ArgumentException("Name must contain 1 to 48 characters.", nameof(Name));
-        }
-
-        return this;
+        return string.IsNullOrWhiteSpace(this.Name) || this.Name.Length > 48
+            ? throw new ArgumentException("Name must contain 1 to 48 characters.", nameof(this.Name))
+            : this;
     }
 }
 
@@ -91,10 +83,9 @@ public sealed record WorldSnapshot(
     IReadOnlyList<TileSnapshot> Tiles,
     IReadOnlyList<ForceSnapshot> Forces,
     WorldMetrics Metrics,
-    IReadOnlyList<string> Chronicle)
-{
-    public string Topology => HexGrid.Topology;
-    public string Coordinates => HexGrid.Coordinates;
+    IReadOnlyList<string> Chronicle) {
+    public string Topology { get; } = HexGrid.Topology;
+    public string Coordinates { get; } = HexGrid.Coordinates;
 }
 
 public sealed record CommandResult(bool Accepted, string Message, WorldSnapshot Snapshot);
