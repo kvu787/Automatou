@@ -33,9 +33,7 @@ public partial class Laboratory {
         _ = this.Button(this.populationTools, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
         _ = this.Button(this.populationTools, "Rotate placement   [R]", this.RotateSelection);
         this.UpdateWorldToolVisibility();
-        CheckButton coordinates = new() { Text = "Show cell coordinates", ButtonPressed = this.board.Coordinates };
-        coordinates.Toggled += value => { this.board.Coordinates = value; this.board.QueueRedraw(); }; this.toolsPanel.AddChild(coordinates);
-        _ = this.Heading(this.toolsPanel, "WORLD FILE");
+        _ = Label(this.toolsPanel, "WORLD FILE", 12, this.accent);
         this.worldName = TextField(this.toolsPanel, this.worldSlotName, "World name");
         this.worldName.TextChanged += value => this.worldSlotName = value;
         HBoxContainer persistence = Row(this.toolsPanel);
@@ -49,10 +47,7 @@ public partial class Laboratory {
         SpinBox width = this.Number(this.toolsPanel, "Width / size", 34, 1, 200);
         SpinBox height = this.Number(this.toolsPanel, "Height", 24, 1, 200);
         shape.ItemSelected += index => height.Editable = index == 0;
-        SpinBox seed = this.Number(this.toolsPanel, "Terrain seed", 72491, 1, 999999);
-        HBoxContainer newWorld = Row(this.toolsPanel);
-        _ = this.Button(newWorld, "Blank", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, false, (int)seed.Value)));
-        _ = this.Button(newWorld, "Generate", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, true, (int)seed.Value)));
+        _ = this.Button(this.toolsPanel, "Create world", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value)));
         _ = Label(this.toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, this.muted);
     }
     private void CreateWorkingWorld(World replacement) {

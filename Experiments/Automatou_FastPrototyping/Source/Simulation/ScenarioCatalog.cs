@@ -19,7 +19,7 @@ public static class ScenarioCatalog {
     }
 
     private static World HeatAndReadiness() {
-        World world = World.Create(false, 22, 20, false);
+        World world = World.Create(false, 22, 20);
         Entity measured = Place(world, new SiegeWalker(), Faction.MechAndTank, 5, 14);
         measured.Unit.Brain.Settings = new() { Aggression = .55, Caution = .4, Commitment = .1, HeatReserve = 70 };
         _ = Place(world, new TrainingTarget(), Faction.Prytu, 10, 14, 3, true);
@@ -31,7 +31,7 @@ public static class ScenarioCatalog {
     }
 
     private static World LostInTheForest() {
-        World world = World.Create(false, 24, 16, false);
+        World world = World.Create(false, 24, 16);
         Entity pursuer = Place(world, new CloneInfantry(), Faction.InfantryAndArtillery, 5, 7);
         Entity runner = Place(world, new TravelerOutrider(), Faction.Travelers, 9, 7);
         runner.Health = 24;
@@ -55,7 +55,7 @@ public static class ScenarioCatalog {
     }
 
     private static World BondsUnderPressure() {
-        World world = World.Create(false, 25, 21, false);
+        World world = World.Create(false, 25, 21);
         Entity guard = Place(world, new Bastion(), Faction.Bastions, 5, 10);
         Entity lower = Place(world, new TrainingTarget(), Faction.Bastions, 10, 6, 0, true);
         Entity upper = Place(world, new TrainingTarget(), Faction.Bastions, 10, 14, 0, true);

@@ -9,7 +9,6 @@ public partial class HexBoard : Control {
     public Func<Hex, Entity?>? Preview { get; set; }
     public Action<Hex, MouseButton>? CellPressed { get; set; }
     public Action<Hex>? HoverChanged { get; set; }
-    public bool Coordinates { get; set; }
     public bool DecisionOverlay { get; set; } = true;
     public bool DimUnseenEnemies { get; set; }
     public Hex? Hovered { get; private set; }
@@ -139,10 +138,6 @@ public partial class HexBoard : Control {
 
             Color fill = new(Catalog.TerrainColors[(int)this.World.Terrain[cell]]);
             this.Hexagon(cell, .7f, fill);
-
-            if (this.Coordinates && this.Zoom > .85f) {
-                this.Text(position + new Vector2(-14, 4), $"{cell.X},{cell.Y}", 10, new Color("9eb2ab"));
-            }
         }
 
         if (this.Selected?.Unit is { } design) {

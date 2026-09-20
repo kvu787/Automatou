@@ -170,7 +170,19 @@ public partial class Laboratory {
             this.RotateSelection(); this.Step();
             await this.Capture("WorldInspector.png");
             this.SwitchMode("World creator");
-            this.ReplaceWorld(World.Create(false, 20, 15, false));
+            OptionButton worldShape = this.toolsPanel.FindChildren("*", "OptionButton", true, false).OfType<OptionButton>().Single(choice => choice.ItemCount == 2 && choice.GetItemText(0) == "Rectangle");
+            SpinBox[] dimensions = this.toolsPanel.FindChildren("*", "SpinBox", true, false).OfType<SpinBox>().ToArray();
+            Button createWorld = this.toolsPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Create world");
+            foreach (int shape in new[] { 1, 0 }) {
+                worldShape.Select(shape);
+                _ = worldShape.EmitSignal(OptionButton.SignalName.ItemSelected, shape);
+                dimensions[0].Value = shape == 1 ? 4 : 20;
+                dimensions[1].Value = 15;
+                _ = createWorld.EmitSignal(BaseButton.SignalName.Pressed);
+                if (this.world.Terrain.Count != (shape == 1 ? 37 : 300) || this.world.Terrain.Values.Any(terrain => terrain != Terrain.Plains) || this.world.Entities.Count != 0 || this.world.Turn != 0 || this.running || this.selected is not null || this.checkpoint != Storage.Encode(this.world) || dimensions[1].Editable != (shape == 0)) {
+                    throw new InvalidOperationException("World creation did not reset the workspace to the requested empty plains map.");
+                }
+            }
             foreach (string tool in ToolNames) {
                 _ = this.toolChoice!.EmitSignal(OptionButton.SignalName.ItemSelected, Array.IndexOf(ToolNames, tool));
                 if (this.Tool != tool || this.terrainTools!.IsVisibleInTree() != (tool == "Paint terrain") || this.populationTools!.IsVisibleInTree() != (tool == "Place unit") || !this.worldName.IsVisibleInTree()) {
@@ -210,7 +222,7 @@ public partial class Laboratory {
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await this.Capture("MinimumWindow.png");
             this.ReplaceWorld(Storage.Decode(this.checkpoint));
-            this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, unit placement, terrain paint, world file round trip, and minimum window.");
+            this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, world creation, unit placement, terrain paint, world file round trip, and minimum window.");
             this.GetTree().Quit();
         } catch (Exception exception) { this.Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); this.GetTree().Quit(1); }
     }

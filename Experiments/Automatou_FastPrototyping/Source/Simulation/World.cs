@@ -35,23 +35,15 @@ public sealed partial class World {
             this.Events.RemoveAt(0);
         }
     }
-    public static World Create(bool hexagonal, int width, int height, bool generated, int seed = 72491) {
+    public static World Create(bool hexagonal, int width, int height) {
         if (width < 1 || height < 1 || (hexagonal ? 1L + (3L * width * (width - 1)) : (long)width * height) > 20000) {
             throw new ArgumentException("Use positive dimensions with at most 20,000 cells.");
         }
 
-        World world = new() { RandomState = (uint)Math.Max(seed, 1) };
+        World world = new();
         IEnumerable<Hex> cells = hexagonal ? Hex.Disk(width) : Enumerable.Range(0, height).SelectMany(y => Enumerable.Range(0, width).Select(x => Hex.FromOffset(x, y)));
         foreach (Hex cell in cells) {
-            Terrain terrain = Simulation.Terrain.Plains;
-            if (generated) {
-                double ridge = Math.Sin((cell.X * .38) + seed) + Math.Cos((cell.Y * .47) + (seed * .17));
-                terrain = ridge > 1.5 ? Simulation.Terrain.Mountain : ridge < -1.45 ? Simulation.Terrain.Water : ridge > .55 ? Simulation.Terrain.Forest : Simulation.Terrain.Plains;
-                if (Math.Abs(cell.Y - (height / 2)) <= 1) {
-                    terrain = Simulation.Terrain.Plains;
-                }
-            }
-            world.Terrain.Add(cell, terrain);
+            world.Terrain.Add(cell, Simulation.Terrain.Plains);
         }
         return world;
     }
@@ -239,14 +231,10 @@ public sealed partial class World {
         }
     }
     public static World Demonstration() {
-        World world = Create(false, 34, 24, true);
+        World world = Create(false, 34, 24);
         List<Unit> designs = Catalog.Units();
         void Place(int index, Faction faction, int x, int y, int facing) {
             Entity entity = new() { Unit = designs[index].CreateFresh(), Faction = faction, Position = Hex.FromOffset(x, y), Facing = facing };
-            foreach (Hex cell in entity.OccupiedCells()) {
-                world.Terrain[cell] = Simulation.Terrain.Plains;
-            }
-
             _ = world.Add(entity, out _);
         }
         Place(0, Faction.Bastions, 5, 17, 5); Place(0, Faction.Bastions, 7, 20, 5);

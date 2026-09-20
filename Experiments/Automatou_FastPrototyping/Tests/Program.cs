@@ -36,13 +36,19 @@ Test("Regular footprints and six rotations preserve distances", () => {
 
     foreach (Hex cell in Hex.Disk(5)) { Check(cell.Rotate(6) == cell, "Full rotation"); Check(cell.Rotate(1).Distance(new()) == cell.Distance(new()), "Distance preserved"); }
 });
-Test("Rectangle and hexagon authoring reject invalid map sizes", () => {
-    Check(World.Create(false, 17, 9, false).Terrain.Count == 153, "Rectangle");
-    Check(World.Create(true, 4, 1, false).Terrain.Count == 37, "Hexagon");
-    Reject(() => World.Create(false, 0, 1, false)); Reject(() => World.Create(true, 200, 1, false));
+Test("Rectangle and hexagon authoring start empty on plains and reject invalid map sizes", () => {
+    World rectangle = World.Create(false, 17, 9), hexagon = World.Create(true, 4, 1), singleCell = World.Create(true, 1, 1);
+    Check(rectangle.Terrain.Count == 153, "Rectangle");
+    Check(hexagon.Terrain.Count == 37, "Hexagon");
+    Check(singleCell.Terrain.Count == 1 && singleCell.Terrain.ContainsKey(new Hex()), "Size-one hexagon");
+    foreach (World world in new[] { rectangle, hexagon, singleCell }) {
+        Check(world.Terrain.Values.All(terrain => terrain == Terrain.Plains), "New maps contain only plains");
+        Check(world.Entities.Count == 0 && world.Turn == 0, "New maps start empty at turn zero");
+    }
+    Reject(() => World.Create(false, 0, 1)); Reject(() => World.Create(true, 200, 1));
 });
 Test("Footprints respect borders, occupied cells and movement domains", () => {
-    World world = World.Create(false, 20, 20, false);
+    World world = World.Create(false, 20, 20);
     Entity unit = Unit(world, Hex.FromOffset(6, 6), design: new TestUnit { Size = 3 });
     Check(world.At(Hex.FromOffset(6, 6) + new Hex(2, 0)) == unit, "Outer occupancy");
     Check(!world.CanOccupy(unit, Hex.FromOffset(0, 0), out _), "Border rejection");
@@ -52,7 +58,7 @@ Test("Footprints respect borders, occupied cells and movement domains", () => {
     Check(!World.Traversable(new TestUnit() { Mobility = Mobility.Spaceflight }, Terrain.ExclusionZone), "Exclusion");
 });
 Test("Forward attacks, rear armor and action points affect combat", () => {
-    World world = World.Create(false, 20, 10, false);
+    World world = World.Create(false, 20, 10);
     Entity attacker = Unit(world, Hex.FromOffset(4, 4), design: new TestUnit() { ActionPoints = 1, Range = 1 });
     Entity defender = Unit(world, attacker.Position + new Hex(1, 0), Faction.Prytu, new TestUnit() { Armor = 20, Behavior = TestBehavior.Hold, ActionPoints = 1 });
     Check(world.CanAttack(attacker, defender), "Forward arc"); attacker.Facing = 3;
@@ -62,7 +68,7 @@ Test("Forward attacks, rear armor and action points affect combat", () => {
     world.Step(); Check(attacker.Health == 80 && defender.Health == 80, "No attack without two points");
 });
 Test("Blast damage includes allies and clears destroyed unit footprints", () => {
-    World world = World.Create(false, 20, 20, false);
+    World world = World.Create(false, 20, 20);
     Entity attacker = Unit(world, Hex.FromOffset(3, 8), design: new TestUnit() { Damage = 100, Range = 10, BlastRadius = 1 });
     Entity enemy = Unit(world, attacker.Position + new Hex(4, 0), Faction.Prytu, new TestUnit { Health = 20 });
     Entity ally = Unit(world, enemy.Position + new Hex(1, 0), design: new TestUnit() { Health = 20 });
@@ -71,7 +77,7 @@ Test("Blast damage includes allies and clears destroyed unit footprints", () => 
     Check(world.At(enemy.Position) is null && world.At(ally.Position) is null && world.Casualties == 2, "Destroyed footprints cleared");
 });
 Test("Units route around impassable terrain and engage", () => {
-    World world = World.Create(false, 18, 14, false);
+    World world = World.Create(false, 18, 14);
     // This fixture measures route finding, not contact acquisition around an obstacle.
     world.Settings.LimitedPerception = false;
     Entity attacker = Unit(world, Hex.FromOffset(3, 6), design: new TestUnit() { ActionPoints = 5, Range = 1, Damage = 10 });
@@ -88,7 +94,7 @@ Test("Units route around impassable terrain and engage", () => {
     Check(attacker.OccupiedCells().All(c => world.Terrain[c] != Terrain.Water), "Never entered water");
 });
 Test("Combat measures range to a large unit's occupied edge", () => {
-    World world = World.Create(false, 20, 15, false);
+    World world = World.Create(false, 20, 15);
     Entity attacker = Unit(world, Hex.FromOffset(4, 5), design: new TestUnit { Range = 1 });
     Entity defender = Unit(world, attacker.Position + new Hex(3, 0), Faction.Prytu, new TestUnit { Size = 3, Health = 500 });
     Check(World.Separation(attacker, defender) == 1 && world.CanAttack(attacker, defender), "Adjacent footprint is in range");
@@ -103,7 +109,7 @@ Test("Worlds reject entities without a unit", () => {
     Reject(() => Storage.Decode(data.ToJsonString()));
 });
 Test("Skirmish, hold and deployed units obey their movement rules", () => {
-    World world = World.Create(false, 30, 20, false);
+    World world = World.Create(false, 30, 20);
     Entity skirmisher = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit() { Behavior = TestBehavior.Skirmish, Range = 4, ActionPoints = 6 });
     Entity holder = Unit(world, Hex.FromOffset(7, 5), Faction.Prytu, new TestUnit() { Behavior = TestBehavior.Hold, Range = 1, ActionPoints = 1 });
     Entity deployed = Unit(world, Hex.FromOffset(15, 15)); deployed.Stationary = true;
@@ -126,6 +132,7 @@ Test("World saves preserve health, rotations, units and deterministic continuati
 Test("Five-faction encounter remains consistent for 120 turns", () => {
     World world = World.Demonstration();
     Check(world.Entities.Select(e => e.Faction).Distinct().Count() == 5, "All factions present");
+    Check(world.Terrain.Values.All(terrain => terrain == Terrain.Plains), "Encounter starts on plains");
     for (int i = 0; i < 120; i++) {
         world.Step();
         Hex[] cells = world.Entities.SelectMany(e => e.OccupiedCells()).ToArray();
@@ -138,7 +145,7 @@ Test("Five-faction encounter remains consistent for 120 turns", () => {
 });
 Test("Every source unit owns a distinct nested automaton and saves its memory", () => {
     foreach (Unit prototype in Catalog.Units()) {
-        World world = World.Create(false, 30, 20, false);
+        World world = World.Create(false, 30, 20);
         Entity actor = Unit(world, Hex.FromOffset(7, 10), design: prototype.CreateFresh());
         Entity other = Unit(world, Hex.FromOffset(20, 10), design: prototype.CreateFresh());
         Check(actor.Unit.Brain.GetType().DeclaringType == actor.Unit.GetType(), "Brain defined by its unit class");
@@ -158,7 +165,7 @@ Test("Every source unit owns a distinct nested automaton and saves its memory", 
     }
 });
 Test("Sensing is detached and refreshes after each accepted action", () => {
-    World world = World.Create(false, 15, 15, false);
+    World world = World.Create(false, 15, 15);
     WorldObservation? before = null, after = null;
     IEnumerable<UnitAction> Actions(UnitSenses senses) {
         before = senses.Observe();
@@ -174,33 +181,33 @@ Test("Sensing is detached and refreshes after each accepted action", () => {
 });
 Test("Actuation rejects invalid requests and enforces per-turn limits", () => {
     foreach (UnitAction request in new UnitAction[] { new TurnAction(6), new AttackAction(9999) }) {
-        World world = World.Create(false, 15, 15, false);
+        World world = World.Create(false, 15, 15);
         Entity actor = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { Actions = _ => [request, new MoveForwardAction()] });
         Hex origin = actor.Position;
         world.Step();
         Check(actor.Position == origin && actor.Facing == 0, "Rejected request ends turn");
     }
     IEnumerable<UnitAction> Forever(UnitSenses _) { while (true) { yield return new TurnAction(1); } }
-    World turning = World.Create(false, 15, 15, false);
+    World turning = World.Create(false, 15, 15);
     Entity spinner = Unit(turning, Hex.FromOffset(5, 5), design: new TestUnit { ActionPoints = 4, Actions = Forever });
     turning.Step(); Check(spinner.Facing == 4, "Infinite requests bounded by budget");
     spinner.Stationary = true; turning.Step(); Check(spinner.Facing == 4, "Deployed unit cannot turn");
-    World combat = World.Create(false, 15, 15, false);
+    World combat = World.Create(false, 15, 15);
     Entity defender = Unit(combat, Hex.FromOffset(8, 5), Faction.Prytu, new TestUnit { Actions = _ => [] });
     Entity attacker = Unit(combat, defender.Position - new Hex(1, 0), design: new TestUnit { ActionPoints = 10, Actions = _ => [new AttackAction(defender.Id), new AttackAction(defender.Id)] });
     combat.Step(); Check(combat.Effects.Count == 1, "Only one attack per turn");
-    World friendly = World.Create(false, 15, 15, false);
+    World friendly = World.Create(false, 15, 15);
     Entity ally = Unit(friendly, Hex.FromOffset(8, 5), design: new TestUnit { Actions = _ => [] });
     _ = Unit(friendly, ally.Position - new Hex(1, 0), design: new TestUnit { Actions = _ => [new AttackAction(ally.Id)] });
     friendly.Step(); Check(friendly.Effects.Count == 0, "Direct friendly attacks rejected");
-    World blocked = World.Create(false, 15, 15, false);
+    World blocked = World.Create(false, 15, 15);
     Entity walker = Unit(blocked, Hex.FromOffset(5, 5), design: new TestUnit { Actions = _ => [new MoveForwardAction()] });
     Hex start = walker.Position;
     blocked.Terrain[start + Hex.Directions[0]] = Terrain.Water;
     blocked.Step(); Check(walker.Position == start, "Brain cannot bypass terrain");
 });
 Test("Sight radius and forest concealment restrict observations for every faction", () => {
-    World world = World.Create(false, 30, 20, false);
+    World world = World.Create(false, 30, 20);
     Entity observer = Unit(world, Hex.FromOffset(5, 8), design: new TestUnit { SightRange = 8, Actions = _ => [] });
     Entity concealed = Unit(world, observer.Position + new Hex(6, 0), Faction.Prytu, new TestUnit { Actions = _ => [] });
     Entity distant = Unit(world, observer.Position + new Hex(12, 0), Faction.Prytu, new TestUnit { Actions = _ => [] });
@@ -226,7 +233,7 @@ Test("Sight radius and forest concealment restrict observations for every factio
     Check(senses.Observe().Entities.Count == world.Entities.Count, "Global perception restores the comparison baseline");
 });
 Test("Hidden units cannot leak through target routes, planning occupancy, or attack requests", () => {
-    World world = World.Create(false, 24, 18, false);
+    World world = World.Create(false, 24, 18);
     Entity? target = null;
     Entity observer = Unit(world, Hex.FromOffset(5, 8), design: new TestUnit {
         SightRange = 10, Range = 10, Actions = _ => [new AttackAction(target!.Id)]
@@ -253,7 +260,7 @@ Test("Hidden units cannot leak through target routes, planning occupancy, or att
     Check(target.Health < health && world.Effects.Count == 1, "The same attack succeeds with global perception");
 });
 Test("Weapon heat is physical, locks at the upper threshold, and recovers at the lower threshold", () => {
-    World world = World.Create(false, 20, 15, false);
+    World world = World.Create(false, 20, 15);
     bool firing = true;
     Entity? target = null;
     Entity shooter = Unit(world, Hex.FromOffset(5, 6), design: new TestUnit {
@@ -284,7 +291,7 @@ Test("Weapon heat is physical, locks at the upper threshold, and recovers at the
 });
 Test("Terrain cooling and disabling heat are consistent across sensing and execution", () => {
     foreach (Terrain terrain in new[] { Terrain.Forest, Terrain.Plains, Terrain.Mountain, Terrain.Water }) {
-        World world = World.Create(false, 15, 15, false);
+        World world = World.Create(false, 15, 15);
         Entity actor = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { Mobility = Mobility.Flight, CoolingPerTurn = 10, Actions = _ => [] });
         world.Terrain[actor.Position] = terrain;
         actor.Heat = 70;
@@ -293,7 +300,7 @@ Test("Terrain cooling and disabling heat are consistent across sensing and execu
         world.Step();
         Check(actor.Heat == 60, "Every terrain uses source-defined cooling once per turn");
     }
-    World baseline = World.Create(false, 15, 15, false);
+    World baseline = World.Create(false, 15, 15);
     baseline.Settings.HeatEnabled = false;
     Entity? target = null;
     Entity shooter = Unit(baseline, Hex.FromOffset(5, 5), design: new TestUnit { HeatPerShot = 80, Actions = _ => [new AttackAction(target!.Id)] });
@@ -303,7 +310,8 @@ Test("Terrain cooling and disabling heat are consistent across sensing and execu
     Check(baseline.Effects.Count == 1 && shooter.Heat == 120, "Disabled heat preserves physical state but bypasses the weapon restriction");
 });
 Test("Evaded shots still consume the weapon's physical heat budget", () => {
-    World world = World.Create(false, 15, 15, false, seed: 1);
+    World world = World.Create(false, 15, 15);
+    world.RandomState = 1;
     Entity? target = null;
     Entity shooter = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { HeatPerShot = 45, Actions = _ => [new AttackAction(target!.Id)] });
     target = Unit(world, shooter.Position + new Hex(2, 0), Faction.Prytu, new TestUnit { Evasion = 90, Actions = _ => [] });
@@ -312,7 +320,7 @@ Test("Evaded shots still consume the weapon's physical heat budget", () => {
     Check(shooter.Heat == 45, "A miss does not refund weapon heat");
 });
 Test("World saves preserve experiment switches, physical heat, and directed bonds", () => {
-    World world = World.Create(false, 30, 20, false);
+    World world = World.Create(false, 30, 20);
     Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
     Entity ally = Unit(world, Hex.FromOffset(15, 8), design: new Bastion());
     actor.Heat = 120; actor.WeaponLocked = true; actor.BondedUnitId = ally.Id;
@@ -326,7 +334,7 @@ Test("World saves preserve experiment switches, physical heat, and directed bond
     Check(!world.Settings.HeatEnabled, "Restored world settings are independent");
 });
 Test("World loading rejects invalid experiment state before it reaches a simulation", () => {
-    World world = World.Create(false, 20, 15, false);
+    World world = World.Create(false, 20, 15);
     _ = Unit(world, Hex.FromOffset(6, 6), design: new SiegeWalker());
     string saved = Storage.Encode(world);
     foreach (int invalidHeat in new[] { -1, 201 }) {
@@ -342,7 +350,7 @@ Test("World loading rejects invalid experiment state before it reaches a simulat
     Reject(() => Storage.Decode(missingSettings.ToJsonString()));
 });
 Test("Lost contacts are pursued at their last sighting and expire without remote tracking", () => {
-    World world = World.Create(false, 35, 20, false);
+    World world = World.Create(false, 35, 20);
     Entity actor = Unit(world, Hex.FromOffset(5, 8), design: new Bastion());
     Entity target = Unit(world, actor.Position + new Hex(6, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
     world.Step();
@@ -365,7 +373,7 @@ Test("Lost contacts are pursued at their last sighting and expire without remote
     Check(memory.Contacts.Count == 0 && actor.Unit.Brain.TargetId is null, "Stale contacts expire and cease supplying a target");
 });
 Test("Contact and decision memory stay bounded and remembering can be disabled", () => {
-    World world = World.Create(false, 35, 20, false);
+    World world = World.Create(false, 35, 20);
     world.Settings.LimitedPerception = false;
     Entity actor = Unit(world, Hex.FromOffset(5, 8), design: new Bastion());
     actor.Stationary = true;
@@ -386,7 +394,7 @@ Test("Contact and decision memory stay bounded and remembering can be disabled",
 });
 Test("Directed bonds change a healthy escort's choice under pressure", () => {
     (World World, Entity Actor, Entity Ward) Encounter(bool bonds) {
-        World world = World.Create(false, 30, 20, false);
+        World world = World.Create(false, 30, 20);
         world.Settings.BondsEnabled = bonds;
         Entity actor = Unit(world, Hex.FromOffset(7, 8), design: new TravelerOutrider(), facing: 3);
         Entity ward = Unit(world, actor.Position + new Hex(6, 0), design: new TestUnit { Health = 1000, Actions = _ => [] });
@@ -405,7 +413,7 @@ Test("Directed bonds change a healthy escort's choice under pressure", () => {
 });
 Test("The same heat-limited machine develops distinct firing rhythms from its policy", () => {
     (World World, Entity Actor) Encounter(double aggression, int reserve) {
-        World world = World.Create(false, 22, 16, false);
+        World world = World.Create(false, 22, 16);
         Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
         actor.Stationary = true;
         actor.Unit.Brain.Settings.Aggression = aggression;
@@ -421,7 +429,7 @@ Test("The same heat-limited machine develops distinct firing rhythms from its po
     Check(measured.Actor.Unit.Brain.State.History.Any(trace => trace.Intention == "Recover"), "The reason for the skipped shot is available in the decision trace");
 });
 Test("Commitment resists minor score changes but yields to emergency recovery", () => {
-    World world = World.Create(false, 15, 15, false);
+    World world = World.Create(false, 15, 15);
     Entity actor = Unit(world, Hex.FromOffset(5, 5));
     UnitAutomaton brain = actor.Unit.Brain;
     brain.Settings.Commitment = .2;
@@ -433,7 +441,7 @@ Test("Commitment resists minor score changes but yields to emergency recovery", 
     Check(brain.State.Intention == "Recover" && brain.State.IntentionSince == 3, "An emergency overrides commitment");
 });
 Test("A heat reserve smaller than one shot still permits firing from cold", () => {
-    World world = World.Create(false, 22, 16, false);
+    World world = World.Create(false, 22, 16);
     Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
     actor.Stationary = true;
     actor.Unit.Brain.Settings.Aggression = .5;
@@ -507,7 +515,7 @@ Test("Invalid automaton preferences and contact records are rejected on load", (
     Reject(() => Storage.Decode(invalidContact.ToJsonString()));
 });
 Test("Finishing the final search probe abandons the exhausted contact", () => {
-    World world = World.Create(false, 20, 16, false);
+    World world = World.Create(false, 20, 16);
     Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new Bastion());
     UnitAutomaton brain = actor.Unit.Brain;
     brain.TargetId = 999;
@@ -521,7 +529,7 @@ Test("Finishing the final search probe abandons the exhausted contact", () => {
     Check(brain.State.Contacts.Count == 0 && brain.TargetId is null && brain.State.Intention != "Investigate", "Reaching the third search destination does not schedule a fourth probe");
 });
 Test("An escort turns toward and attacks a threat while already beside its ward", () => {
-    World world = World.Create(false, 24, 18, false);
+    World world = World.Create(false, 24, 18);
     Entity guard = Unit(world, Hex.FromOffset(7, 8), design: new Bastion(), facing: 2);
     Entity ward = Unit(world, guard.Position + new Hex(2, 0), design: new TestUnit { Health = 1000, Actions = _ => [] });
     ward.Health = 100; guard.BondedUnitId = ward.Id;
@@ -532,7 +540,7 @@ Test("An escort turns toward and attacks a threat while already beside its ward"
     Check(threat.Health < 1000 && guard.Unit.Brain.State.ShotsFired == 1, "Turning and firing completes inside the action budget");
 });
 Test("Artillery distinguishes safe melee attacks from allied exposure to ranged blasts", () => {
-    World world = World.Create(false, 24, 18, false);
+    World world = World.Create(false, 24, 18);
     Entity actor = Unit(world, Hex.FromOffset(5, 8), design: new LongbowArtillery());
     Entity meleeTarget = Unit(world, actor.Position + new Hex(1, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
     Entity meleeAlly = Unit(world, actor.Position + new Hex(1, -1), design: new TestUnit { Actions = _ => [] });

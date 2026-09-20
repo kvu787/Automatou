@@ -28,7 +28,7 @@ The **Limited perception**, **Weapon heat**, and **Protective bonds** switches i
 | Lost in the forest   | A pursuer investigates the last sighting of a fast, injured Traveler.        |
 | Bonds under pressure | Changing a Bastion's directed bond changes which vulnerable ally it assists. |
 
-The five-faction encounter has two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation.
+The five-faction encounter starts on plains with two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation.
 
 | Control           | Action                                           |
 | ----------------- | ------------------------------------------------ |
@@ -50,7 +50,7 @@ Shortcuts are suspended while typing in a text or number field. Sidebars scroll 
 
 The lower section of the World creator toolbar creates either a rectangle from width and height, or a hexagon from size. Positive sizes are required; maps are limited to 20,000 cells. A size-one hexagonal map has one cell. Rectangular coordinates begin at the lower left, with positive X rightward and positive Y upward. Odd rows are offset east. Hexagonal maps are centered at coordinate (0, 0), so they also use negative coordinates.
 
-**Blank** creates plains for manual authoring. **Generate** produces repeatable terrain from the chosen seed. The five terrain types are forest (green), plains (ochre), mountains (gray), water (blue), and exclusion zone (purple). Each is shown only by its unique fill color, with no terrain symbols. All five can be painted. Painting incompatible terrain under a unit is rejected.
+**Create world** creates an empty map of plains for manual authoring. The five terrain types are forest (green), plains (ochre), mountains (gray), water (blue), and exclusion zone (purple). Each is shown only by its unique fill color, with no terrain symbols. All five can be painted. Painting incompatible terrain under a unit is rejected.
 
 **Checkpoint** stores the current state in memory; **Exact rewind** restores it. **Rewind with tuning** restores the checkpoint while retaining the latest preferences and bonds for its units, including units lost during the run, along with the mechanism switches. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved overwrite that file. **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map.
 

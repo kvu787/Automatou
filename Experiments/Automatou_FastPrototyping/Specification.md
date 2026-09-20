@@ -119,7 +119,7 @@ There is no 2D or 3D "art".
   - a hexagonal map and specify a positive integer for the size
   - a rectangular map and specify a positive integer for the width and a positive integer for the height
 - This is used by players to manually author maps.
-- These maps are an alternative to auto-generated maps.
+- New maps start as empty plains, ready for terrain painting and unit placement.
 
 ## Unit definitions and automata
 
