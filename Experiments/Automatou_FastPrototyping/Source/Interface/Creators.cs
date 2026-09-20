@@ -42,9 +42,16 @@ public partial class Laboratory
         shape.ItemSelected += index => height.Editable = index == 0;
         var seed = Number(toolsPanel, "Terrain seed", 72491, 1, 999999);
         var newWorld = Row(toolsPanel);
-        Button(newWorld, "Blank", () => ReplaceWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, false, (int)seed.Value)));
-        Button(newWorld, "Generate", () => ReplaceWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, true, (int)seed.Value)));
+        Button(newWorld, "Blank", () => CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, false, (int)seed.Value)));
+        Button(newWorld, "Generate", () => CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, true, (int)seed.Value)));
         Label(toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, muted);
+    }
+    private void CreateWorkingWorld(World replacement)
+    {
+        experimentName = "Custom world";
+        experimentDescription = "Your starting conditions. Place units, tune their behavior, then checkpoint and compare.";
+        referenceResult = null;
+        ReplaceWorld(replacement);
     }
     private string WorldPath() => System.IO.Path.Combine(contentRoot, "Worlds", Storage.FileName(worldName.Text) + ".json");
 }

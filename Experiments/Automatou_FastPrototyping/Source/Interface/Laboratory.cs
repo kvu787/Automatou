@@ -122,11 +122,11 @@ public partial class Laboratory : Control
         foreach (string entry in entries) choice.AddItem(entry);
         choice.Select(value); choice.ItemSelected += index => Guard(() => changed((int)index)); parent.AddChild(choice); return choice;
     }
-    private SpinBox Number(Node parent, string caption, double value, double minimum, double maximum)
+    private SpinBox Number(Node parent, string caption, double value, double minimum, double maximum, double step = 1)
     {
         var row = Row(parent);
         Label(row, caption, 13, muted);
-        var spin = new SpinBox { MinValue = minimum, MaxValue = maximum, Step = 1, Value = value, CustomMinimumSize = new Vector2(100, 36) };
+        var spin = new SpinBox { MinValue = minimum, MaxValue = maximum, Step = step, Value = value, CustomMinimumSize = new Vector2(100, 36) };
         row.AddChild(spin); return spin;
     }
     private LineEdit TextField(Node parent, string value, string placeholder)
@@ -134,9 +134,9 @@ public partial class Laboratory : Control
         var field = new LineEdit { Text = value, PlaceholderText = placeholder, MaxLength = 60, CustomMinimumSize = new Vector2(0, 36) };
         parent.AddChild(field); return field;
     }
-    private void Heading(Node parent, string text)
+    private Label Heading(Node parent, string text)
     {
-        var separator = new HSeparator(); parent.AddChild(separator); Label(parent, text, 12, accent);
+        var separator = new HSeparator(); parent.AddChild(separator); return Label(parent, text, 12, accent);
     }
     private VBoxContainer Sidebar(Node parent, int width)
     {
@@ -158,19 +158,18 @@ public partial class Laboratory : Control
         Button(header, "Main menu", ShowMainMenu).SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         transport = Row(layout);
         playButton = Button(transport, "▶  Run simulation", ToggleRun); playButton.CustomMinimumSize = new Vector2(175, 42);
-        Button(transport, "Step  →", Step, "Advance exactly one complete turn. Shortcut: N");
+        Button(transport, "Step  →", () => { Pause(); Step(); }, "Advance exactly one complete turn. Shortcut: N");
+        Button(transport, "+10 turns", () => AdvanceTurns(10), "Pause and advance ten complete turns. Shortcut: B");
         Choice(transport, ["1 turn / sec", "2 turns / sec", "4 turns / sec", "8 turns / sec"], 1, index => turnsPerSecond = Math.Pow(2, index));
-        Button(transport, "Checkpoint", () => { checkpoint = Storage.Encode(world); Status("Checkpoint captured. Rewind will return here."); });
-        Button(transport, "↶  Rewind", () => ReplaceWorld(Storage.Decode(checkpoint), false));
         Button(transport, "Frame world", () => board.Fit());
         turnLabel = Label(transport, "TURN 0000", 19, accent); turnLabel.HorizontalAlignment = HorizontalAlignment.Right;
         var workspace = Row(layout); workspace.SizeFlagsVertical = SizeFlags.ExpandFill;
-        toolsPanel = Sidebar(workspace, 246);
+        toolsPanel = Sidebar(workspace, 234);
         board = new HexBoard { World = world, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(340, 300) };
         workspace.AddChild(board);
         board.CellPressed = OnCell; board.Preview = PlacementPreview;
         board.HoverChanged = cell => { if (hoverLabel is not null) hoverLabel.Text = $"CELL {cell}  ·  {(world.Terrain.TryGetValue(cell, out var type) ? Catalog.TerrainNames[(int)type] : "Outside world")}"; };
-        inspectorPanel = Sidebar(workspace, 262);
+        inspectorPanel = Sidebar(workspace, 282);
         var footer = new PanelContainer(); footer.AddThemeStyleboxOverride("panel", Box("101e28")); layout.AddChild(footer);
         var foot = Column(footer, 4);
         var metrics = Row(foot);
@@ -191,10 +190,22 @@ public partial class Laboratory : Control
         if (mode != "World") SwitchMode("World");
         running = !running; elapsed = 0; playButton.Text = running ? "Ⅱ  Pause" : "▶  Run simulation";
         Status(running ? "Simulation running. Every faction acts independently." : "Paused. You can edit the world.");
+        BuildInspector();
     }
     private void Step()
     {
+        CaptureLiveTuning();
+        var actors = world.Entities.ToArray();
+        var counters = actors.ToDictionary(entity => entity.Id, entity => (entity.Unit.Brain.State.ShotsFired, entity.Unit.Brain.State.IntentionChanges));
         world.Step(); board.Flash();
+        foreach (var entity in actors)
+        {
+            var memory = entity.Unit.Brain.State;
+            experimentShots += memory.ShotsFired - counters[entity.Id].ShotsFired;
+            experimentChanges += memory.IntentionChanges - counters[entity.Id].IntentionChanges;
+            if (memory.History.LastOrDefault() is { } decision && decision.Turn == world.Turn)
+                Log("DECISION " + System.Text.Json.JsonSerializer.Serialize(new { world.Turn, entity.Id, entity.Name, entity.Health, entity.Heat, decision.Intention, decision.Reason, decision.Destination }));
+        }
         if (selected is not null && !world.Entities.Contains(selected)) selected = null;
         Refresh();
     }
@@ -220,6 +231,7 @@ public partial class Laboratory : Control
             {
                 case Key.Space when mode == "World": ToggleRun(); break;
                 case Key.N when mode == "World": Pause(); Step(); break;
+                case Key.B when mode == "World": AdvanceTurns(10); break;
                 case Key.F: board.Fit(); break;
                 case Key.R: RotateSelection(); break;
                 case Key.Delete when mode == "World creator": DeleteSelection(); break;
@@ -248,6 +260,7 @@ public partial class Laboratory : Control
         turnLabel.Text = $"TURN {world.Turn:0000}";
         populationLabel.Text = $"{world.Terrain.Count:N0} CELLS     {world.Entities.Count} UNITS     {world.Casualties} LOST";
         eventLabel.Text = string.Join("\n", world.Events.TakeLast(2));
+        RefreshComparison();
         BuildInspector();
     }
     private Entity? PlacementPreview(Hex cell) => mode == "World creator" && tool == "Place unit"
@@ -299,9 +312,16 @@ public partial class Laboratory : Control
     private void ReplaceWorld(World replacement, bool capture = true)
     {
         Pause(); world = replacement; selected = null; board.World = world;
+        ResetTuningCache();
         world.EventRecorded = Log;
         foreach (string entry in world.Events) Log(entry);
-        if (capture) checkpoint = Storage.Encode(world);
+        experimentShots = world.Entities.Sum(entity => entity.Unit.Brain.State.ShotsFired);
+        experimentChanges = world.Entities.Sum(entity => entity.Unit.Brain.State.IntentionChanges);
+        if (capture)
+        {
+            checkpoint = Storage.Encode(world);
+            checkpointShots = experimentShots; checkpointChanges = experimentChanges;
+        }
         Refresh(); board.Fit(); Status("World ready. Simulation paused.");
     }
     private void BuildInspector()
@@ -317,18 +337,10 @@ public partial class Laboratory : Control
         {
             Label(inspectorPanel, selected.Name, 21, new Color(Catalog.FactionColors[(int)selected.Faction]));
             Label(inspectorPanel, Catalog.FactionNames[(int)selected.Faction], 13, muted);
-            Heading(inspectorPanel, "ENTITY");
-            Label(inspectorPanel, $"Origin     {selected.Position}\nFacing    {Hex.DirectionNames[selected.Facing]}\nHealth    {selected.Health} / {selected.MaximumHealth}\nFootprint {selected.OccupiedCells().Count()} cells", 14);
-            var unit = selected.Unit;
-            Label(inspectorPanel, $"{unit.Name} unit statistics\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
-            Label(inspectorPanel, "Gold cells show the forward attack region. Rear attacks bypass most armor.", 12, muted);
-            Button(inspectorPanel, selected.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { Pause(); selected.Stationary = !selected.Stationary; Refresh(); });
-            if (mode == "World creator")
-            {
-                Button(inspectorPanel, "Rotate 60°   [R]", RotateSelection);
-                Button(inspectorPanel, "Remove entity   [Delete]", DeleteSelection);
-            }
+            Label(inspectorPanel, $"Health {selected.Health} / {selected.MaximumHealth}\nHeat {selected.Heat} / 100{(selected.WeaponLocked ? " · LOCKED" : "")}", 13, muted);
+            BuildDecisionInspector(selected);
         }
+        if (selected is not null && inspectorTab != 2) return;
         Heading(inspectorPanel, "FACTIONS / LIVE POPULATION");
         for (int i = 0; i < Catalog.FactionNames.Length; i++)
         {
@@ -336,8 +348,6 @@ public partial class Laboratory : Control
             Label(inspectorPanel, $"●  {Catalog.FactionNames[i]}   {count}", 13, new Color(Catalog.FactionColors[i]));
         }
         Heading(inspectorPanel, "LABORATORY CONTROLS");
-        Label(inspectorPanel, "Space   Run / pause\nN          Single turn\nR          Rotate selection / placement\nF          Frame world\nEsc       Main menu\nRight click   Inspect a cell", 12, muted);
-        Heading(inspectorPanel, "UNIT BEHAVIOR");
-        Label(inspectorPanel, "Bastions advance under heavy armor. Travelers strike and retreat. Walkers close to medium range. Clones rush through rough ground at a cost; artillery can hit allies. Prytu swarm weakened targets.", 12, muted);
+        Label(inspectorPanel, "Space   Run / pause\nN          Single turn\nB          Ten turns\nR          Rotate in creator\nF          Frame world\nEsc       Main menu\nRight click   Inspect a cell", 12, muted);
     }
 }

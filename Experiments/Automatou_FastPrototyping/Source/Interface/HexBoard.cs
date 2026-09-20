@@ -11,6 +11,8 @@ public partial class HexBoard : Control
     public Action<Hex, MouseButton>? CellPressed { get; set; }
     public Action<Hex>? HoverChanged { get; set; }
     public bool Coordinates { get; set; }
+    public bool DecisionOverlay { get; set; } = true;
+    public bool DimUnseenEnemies { get; set; }
     public Hex? Hovered { get; private set; }
     public float Zoom { get; private set; } = 1;
     private Vector2 pan;
@@ -116,6 +118,7 @@ public partial class HexBoard : Control
                 if (World.Terrain.ContainsKey(cell) && Hex.TurnDistance(Selected.Facing, Selected.Position.DirectionTo(cell)) <= 1)
                     Hexagon(cell, 1, new Color(.96f, .78f, .42f, .1f));
         foreach (var entity in World.Entities) DrawEntity(entity, false);
+        if (DecisionOverlay && Selected is not null) DrawDecisionOverlay(Selected);
         if (Hovered is { } hovered && Preview?.Invoke(hovered) is { } preview) DrawEntity(preview, true);
         if (effectTime > 0)
             foreach (var effect in World.Effects)
@@ -128,7 +131,29 @@ public partial class HexBoard : Control
         DrawRect(new Rect2(0, 0, Size.X, 48), new Color(.043f, .078f, .11f, .95f));
         Text(new Vector2(20, 29), "THE OBSERVATORY", 14, new Color("9bc0c9"));
         Text(new Vector2(Size.X - 158, 29), $"{Zoom * 100:0}%   ·   +Y ↑  +X →", 12, Ink);
-        Text(new Vector2(18, Size.Y - 18), "Middle drag to pan   ·   Wheel to zoom   ·   F to frame world", 12, Ink);
+        Text(new Vector2(18, Size.Y - 18), "Middle drag: pan · Wheel: zoom · F: frame", 12, Ink);
+    }
+
+    private void DrawDecisionOverlay(Entity entity)
+    {
+        Color memoryColor = new("87d9cc"), bondColor = new("eab0dc");
+        foreach (var contact in entity.Unit.Brain.State.Contacts)
+        {
+            Vector2 point = Screen(contact.Position);
+            DrawCircle(point, Math.Max(7, Radius * Zoom * .8f), memoryColor, false, 1.5f, true);
+            if (Zoom > .4f) Text(point + new Vector2(7, -8), $"#{contact.Id} T{contact.LastSeenTurn}", 11, memoryColor);
+        }
+        if (entity.Unit.Brain.State.Destination is { } destination)
+        {
+            Vector2 point = Screen(destination);
+            DrawDashedLine(Screen(entity.Position), point, memoryColor, 1.5f, 6, true);
+            DrawPolyline([point + new Vector2(0, -9), point + new Vector2(9, 0), point + new Vector2(0, 9), point + new Vector2(-9, 0), point + new Vector2(0, -9)], memoryColor, 2, true);
+        }
+        if (entity.BondedUnitId is { } bond && World.Entities.FirstOrDefault(candidate => candidate.Id == bond) is { } ally)
+        {
+            DrawDashedLine(Screen(entity.Position), Screen(ally.Position), bondColor, 2, 9, true);
+            DrawCircle(Screen(ally.Position), Math.Max(11, Radius * Zoom), bondColor, false, 2, true);
+        }
     }
     private void TerrainMark(Hex cell, Terrain terrain)
     {
@@ -146,6 +171,8 @@ public partial class HexBoard : Control
     private void DrawEntity(Entity entity, bool preview)
     {
         Color color = new(Catalog.FactionColors[(int)entity.Faction]);
+        if (!preview && DimUnseenEnemies && Selected is { } observer && entity.Faction != observer.Faction && !World.CanObserve(observer, entity))
+            color.A = .22f;
         bool valid = !preview || World.CanOccupy(entity, entity.Position, entity.Facing, out _);
         if (!valid) color = new("f27676");
         foreach (var cell in entity.OccupiedCells())

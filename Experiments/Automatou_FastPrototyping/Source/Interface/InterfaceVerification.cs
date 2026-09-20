@@ -11,6 +11,7 @@ public partial class Laboratory
         {
             // Exercise the same handlers as the controls, then capture the rendered views.
             contentRoot = System.IO.Path.Combine(sessionRoot, "VerificationContent");
+            DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             if (!menuVisible || workspaceRoot.Visible) throw new Exception("Startup did not show the main menu.");
             var menuButtons = menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().ToArray();
@@ -28,7 +29,83 @@ public partial class Laboratory
             if (world.Turn != initialTurn) throw new Exception("Menu allowed simulation shortcuts.");
             ShowWorldBrowser();
             await Capture("LoadWorldEmpty.png");
+            foreach (var scenario in ScenarioCatalog.All)
+            {
+                ShowWorldBrowser();
+                menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == scenario.Name).EmitSignal(Godot.Button.SignalName.Pressed);
+                if (menuVisible || running || world.Turn != 0 || selected is null || world.Entities.Count == 0 || experimentName != scenario.Name)
+                    throw new Exception("Experiment did not load paused: " + scenario.Name);
+                Step();
+                if (selected.Unit.Brain.TurnsObserved == 0 || string.IsNullOrWhiteSpace(selected.Unit.Brain.State.Reason))
+                    throw new Exception("Experiment did not expose decision reasoning: " + scenario.Name);
+            }
+            var checkpointWorld = Storage.Decode(checkpoint);
+            int selectedId = selected!.Id;
+            var initialEntity = checkpointWorld.Entities.Single(entity => entity.Id == selectedId);
+            double changedAggression = initialEntity.Unit.Brain.Settings.Aggression > .5 ? .2 : .9;
+            inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Tuning").EmitSignal(Godot.Button.SignalName.Pressed);
+            if (Math.Abs(inspectorPanel.FindChildren("Aggression", "SpinBox", true, false).OfType<SpinBox>().Single().Value - selected.Unit.Brain.Settings.Aggression) > .000001)
+                throw new Exception("Tuning display rounded the unit's actual setting.");
+            ToggleRun();
+            inspectorPanel.FindChildren("Aggression", "SpinBox", true, false).OfType<SpinBox>().Single().Value = changedAggression;
+            if (running || selected.Unit.Brain.Settings.Aggression != changedAggression) throw new Exception("Tuning did not pause and update the unit.");
+            var peer = world.Entities.FirstOrDefault(entity => entity.Id != selectedId && entity.Faction == selected.Faction);
+            if (peer is not null)
+            {
+                var selector = inspectorPanel.FindChildren("BondChoice", "OptionButton", true, false).OfType<OptionButton>().Single();
+                int index = Enumerable.Range(1, selector.ItemCount - 1).Single(value => selector.GetItemText(value).StartsWith($"#{peer.Id} "));
+                selector.EmitSignal(OptionButton.SignalName.ItemSelected, index);
+                if (selected.BondedUnitId != peer.Id) throw new Exception("Bond selector did not update the unit.");
+            }
+            foreach (string caption in new[] { "Limited perception", "Weapon heat", "Protective bonds" })
+            {
+                var toggle = toolsPanel.FindChildren("*", "CheckButton", true, false).OfType<CheckButton>().Single(control => control.Text == caption);
+                toggle.ButtonPressed = !toggle.ButtonPressed;
+            }
+            if (world.Settings.LimitedPerception == checkpointWorld.Settings.LimitedPerception || world.Settings.HeatEnabled == checkpointWorld.Settings.HeatEnabled || world.Settings.BondsEnabled == checkpointWorld.Settings.BondsEnabled)
+                throw new Exception("Mechanic switches did not update settings.");
+            var tunedSettings = world.Settings with { };
+            // A casualty must retain its last tuning when the checkpoint restores it.
+            world.Remove(selected);
+            RewindExperiment(true);
+            if (selected is null || selected.Unit.Brain.Settings.Aggression != changedAggression || world.Settings != tunedSettings || selected.Unit.Brain.TurnsObserved != initialEntity.Unit.Brain.TurnsObserved || selected.Heat != initialEntity.Heat || selected.Unit.Brain.State.History.Count != initialEntity.Unit.Brain.State.History.Count || (peer is not null && selected.BondedUnitId != peer.Id))
+                throw new Exception("Tuned rewind did not restore the removed unit's tuning and checkpoint state.");
+            AdvanceTurns(10);
+            if (world.Turn != checkpointWorld.Turn + 10 || referenceResult is null) throw new Exception("Batch turn or comparison failed.");
+            RewindExperiment(false);
+            if (selected is null || selected.Unit.Brain.Settings.Aggression != initialEntity.Unit.Brain.Settings.Aggression || world.Settings != checkpointWorld.Settings || world.Turn != checkpointWorld.Turn)
+                throw new Exception("Exact rewind changed checkpoint values.");
+            Step();
+            inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Behavior").EmitSignal(Godot.Button.SignalName.Pressed);
+            foreach (string caption in new[] { "Show intentions", "Dim unseen enemies" })
+            {
+                var toggle = toolsPanel.FindChildren("*", "CheckButton", true, false).OfType<CheckButton>().Single(control => control.Text == caption);
+                toggle.ButtonPressed = false; toggle.ButtonPressed = true;
+            }
+            if (!board.DecisionOverlay || !board.DimUnseenEnemies || !inspectorPanel.FindChildren("*", "Label", true, false).OfType<Label>().Any(label => label.Text == selected!.Unit.Brain.State.Reason))
+                throw new Exception("Decision inspector or observation overlay failed.");
+            await Capture("ExperimentMinimumWindow.png");
+            if (board.Size.X < 300 || board.GlobalPosition.X + board.Size.X > inspectorPanel.GlobalPosition.X || inspectorPanel.GlobalPosition.X + inspectorPanel.Size.X > GetViewportRect().Size.X)
+                throw new Exception("Experiment layout exceeds the minimum window.");
+            inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Tuning").EmitSignal(Godot.Button.SignalName.Pressed);
+            await Capture("TuningMinimumWindow.png");
+            if (inspectorTab != 1 || !inspectorPanel.FindChildren("Aggression", "SpinBox", true, false).Any()) throw new Exception("Tuning tab did not expose settings.");
+            inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Unit").EmitSignal(Godot.Button.SignalName.Pressed);
+            if (!inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Any(button => button.Text is "Mobilize unit" or "Deploy / hold position")) throw new Exception("Unit tab did not expose physical controls.");
+            inspectorTab = 0;
+            var inert = world.Entities.FirstOrDefault(entity => entity.Unit is TrainingTarget);
+            if (inert is not null)
+            {
+                selected = inert; inspectorTab = 1; BuildInspector();
+                if (inspectorPanel.FindChildren("*", "SpinBox", true, false).Any() || inspectorPanel.FindChildren("BondChoice", "OptionButton", true, false).Any())
+                    throw new Exception("Inert target exposes ineffective tuning.");
+            }
             LoadChosenWorld(null, "World");
+            selected = world.Entities.First(entity => entity.Unit is PrytuHunter);
+            inspectorTab = 1; BuildInspector();
+            if (inspectorPanel.FindChildren("BondChoice", "OptionButton", true, false).Any() || !inspectorPanel.FindChildren("*", "Label", true, false).OfType<Label>().Any(label => label.Text.Contains("does not use individual bonds")))
+                throw new Exception("Prytu exposes ineffective bond tuning.");
+            selected = null; inspectorTab = 0; Refresh();
             if (menuVisible || !transport.Visible || world.Entities.Count == 0) throw new Exception("Built-in world did not open for play.");
             await Capture("WorldOverview.png");
             tool = "Inspect";
@@ -64,7 +141,7 @@ public partial class Laboratory
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await Capture("MinimumWindow.png");
             ReplaceWorld(Storage.Decode(checkpoint));
-            Log("PASS: interface, inspect, pan, zoom, rotate, turn, source-defined unit placement, terrain paint, world file round trip, and minimum window.");
+            Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, unit placement, terrain paint, world file round trip, and minimum window.");
             GetTree().Quit();
         }
         catch (Exception exception) { Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); GetTree().Quit(1); }
