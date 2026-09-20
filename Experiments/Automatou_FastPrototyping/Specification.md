@@ -139,17 +139,13 @@ There is no 2D or 3D "art".
 
 ## Terrain types
 
-- Water
-- Air
-- Space
 - Forest
 - Plains
-- Mountain
-- Wetlands
-- Paved
-- Desert
-- Tundra
+- Mountains
+- Water
 - Exclusion zone
+
+Each terrain type is identified only by a unique cell fill color. Do not draw terrain symbols.
 
 ## Theme
 

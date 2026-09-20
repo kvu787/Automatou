@@ -52,26 +52,8 @@ public sealed partial class World {
     }
 
     internal int MovementCost(Entity actor, Hex destination) {
-        return this.Terrain.GetValueOrDefault(destination) is Simulation.Terrain.Forest or Simulation.Terrain.Wetlands or Simulation.Terrain.Tundra &&
+        return this.Terrain.GetValueOrDefault(destination) == Simulation.Terrain.Forest &&
         actor.Unit.Mobility == Mobility.Ground && actor.Faction != Faction.InfantryAndArtillery ? 2 : 1;
-    }
-
-    public int CoolingAt(Entity actor, Hex position) {
-        int cooling = actor.Unit.CoolingPerTurn;
-        return this.Terrain.GetValueOrDefault(position) switch {
-            Simulation.Terrain.Desert => cooling / 2,
-            Simulation.Terrain.Wetlands => cooling * 3 / 2,
-            Simulation.Terrain.Water => cooling,
-            Simulation.Terrain.Air => cooling,
-            Simulation.Terrain.Space => cooling,
-            Simulation.Terrain.Forest => cooling,
-            Simulation.Terrain.Plains => cooling,
-            Simulation.Terrain.Mountain => cooling,
-            Simulation.Terrain.Paved => cooling,
-            Simulation.Terrain.Tundra => cooling,
-            Simulation.Terrain.ExclusionZone => cooling,
-            _ => cooling
-        };
     }
 
     internal bool CanOccupyKnown(Entity actor, Hex position, ISet<Hex>? knownOccupancy = null) {

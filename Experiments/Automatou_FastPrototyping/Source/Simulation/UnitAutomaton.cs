@@ -54,10 +54,6 @@ public sealed class UnitSenses {
         return this.world.MovementCost(this.actor, destination);
     }
 
-    public int CoolingAt(Hex destination) {
-        return this.world.CoolingAt(this.actor, destination);
-    }
-
     public int FindDirection(int targetId) {
         return this.world.Entities.FirstOrDefault(e => e.Id == targetId && this.world.CanObserve(this.actor, e)) is { } target ? this.world.FindDirection(this.actor, target) : -1;
     }

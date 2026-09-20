@@ -139,9 +139,6 @@ public partial class HexBoard : Control {
 
             Color fill = new(Catalog.TerrainColors[(int)this.World.Terrain[cell]]);
             this.Hexagon(cell, .7f, fill);
-            if (this.Zoom > .65f) {
-                this.TerrainMark(cell, this.World.Terrain[cell]);
-            }
 
             if (this.Coordinates && this.Zoom > .85f) {
                 this.Text(position + new Vector2(-14, 4), $"{cell.X},{cell.Y}", 10, new Color("9eb2ab"));
@@ -203,22 +200,6 @@ public partial class HexBoard : Control {
         if (entity.BondedUnitId is { } bond && this.World.Entities.FirstOrDefault(candidate => candidate.Id == bond) is { } ally) {
             this.DrawDashedLine(this.Screen(entity.Position), this.Screen(ally.Position), bondColor, 2, 9, true);
             this.DrawCircle(this.Screen(ally.Position), Math.Max(11, Radius * this.Zoom), bondColor, false, 2, true);
-        }
-    }
-    private void TerrainMark(Hex cell, Terrain terrain) {
-        Vector2 p = this.Screen(cell); float s = this.Zoom * 5;
-        Color ink = new(1, 1, 1, .16f);
-        if (terrain is Terrain.Forest or Terrain.Mountain) {
-            this.DrawPolyline([p + new Vector2(-s, s), p + new Vector2(0, -s), p + new Vector2(s, s)], ink, 1, true);
-        }
-
-        if (terrain is Terrain.Water or Terrain.Wetlands) {
-            this.DrawLine(p - new Vector2(s, 0), p + new Vector2(s, 0), ink, 1, true);
-        }
-
-        if (terrain == Terrain.ExclusionZone) {
-            this.DrawLine(p - new Vector2(s, s), p + new Vector2(s, s), ink, 1, true);
-            this.DrawLine(p - new Vector2(s, -s), p + new Vector2(s, -s), ink, 1, true);
         }
     }
     private void DrawEntity(Entity entity, bool preview) {

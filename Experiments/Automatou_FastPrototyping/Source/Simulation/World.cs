@@ -46,9 +46,9 @@ public sealed partial class World {
             Terrain terrain = Simulation.Terrain.Plains;
             if (generated) {
                 double ridge = Math.Sin((cell.X * .38) + seed) + Math.Cos((cell.Y * .47) + (seed * .17));
-                terrain = ridge > 1.5 ? Simulation.Terrain.Mountain : ridge < -1.45 ? Simulation.Terrain.Water : ridge > .55 ? Simulation.Terrain.Forest : ridge < -.7 ? Simulation.Terrain.Wetlands : Simulation.Terrain.Plains;
+                terrain = ridge > 1.5 ? Simulation.Terrain.Mountain : ridge < -1.45 ? Simulation.Terrain.Water : ridge > .55 ? Simulation.Terrain.Forest : Simulation.Terrain.Plains;
                 if (Math.Abs(cell.Y - (height / 2)) <= 1) {
-                    terrain = Simulation.Terrain.Paved;
+                    terrain = Simulation.Terrain.Plains;
                 }
             }
             world.Terrain.Add(cell, terrain);
@@ -67,10 +67,10 @@ public sealed partial class World {
     public static bool Traversable(Unit unit, Terrain terrain) {
         return terrain != Simulation.Terrain.ExclusionZone && unit.Mobility switch {
             Mobility.Spaceflight => true,
-            Mobility.Flight => terrain != Simulation.Terrain.Space,
-            Mobility.Amphibious => terrain is not (Simulation.Terrain.Air or Simulation.Terrain.Space or Simulation.Terrain.Mountain),
-            Mobility.Ground => terrain is not (Simulation.Terrain.Water or Simulation.Terrain.Air or Simulation.Terrain.Space or Simulation.Terrain.Mountain),
-            _ => terrain is not (Simulation.Terrain.Water or Simulation.Terrain.Air or Simulation.Terrain.Space or Simulation.Terrain.Mountain)
+            Mobility.Flight => true,
+            Mobility.Amphibious => terrain != Simulation.Terrain.Mountain,
+            Mobility.Ground => terrain is not (Simulation.Terrain.Water or Simulation.Terrain.Mountain),
+            _ => terrain is not (Simulation.Terrain.Water or Simulation.Terrain.Mountain)
         };
     }
 
@@ -160,7 +160,7 @@ public sealed partial class World {
         this.Turn++; this.Effects.Clear();
         if (this.Settings.HeatEnabled) {
             foreach (Entity entity in this.Entities) {
-                int cooling = this.CoolingAt(entity, entity.Position);
+                int cooling = entity.Unit.CoolingPerTurn;
                 entity.Heat = Math.Max(0, entity.Heat - cooling);
                 if (entity.WeaponLocked && entity.Heat <= 40) {
                     entity.WeaponLocked = false;
@@ -220,7 +220,7 @@ public sealed partial class World {
                 return false;
             }
 
-            bool rough = this.Terrain[next] is Simulation.Terrain.Forest or Simulation.Terrain.Wetlands or Simulation.Terrain.Tundra;
+            bool rough = this.Terrain[next] == Simulation.Terrain.Forest;
             int cost = this.MovementCost(actor, next);
             if (senses.RemainingPoints < cost) {
                 return false;

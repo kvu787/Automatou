@@ -176,13 +176,13 @@ public partial class Laboratory {
                 throw new InvalidOperationException("Source-defined unit placement failed.");
             }
 
-            this.Tool = "Paint terrain"; this.terrain = Terrain.Desert; this.OnCell(Hex.FromOffset(1, 1), MouseButton.Left);
+            this.Tool = "Paint terrain"; this.terrain = Terrain.ExclusionZone; this.OnCell(Hex.FromOffset(1, 1), MouseButton.Left);
             Storage.SaveWorld(Path.Combine(this.contentRoot, "Worlds", "Verification.json"), this.world);
             this.ShowMainMenu();
             this.ShowWorldBrowser();
             await this.Capture("LoadWorldSaved.png");
             this.LoadChosenWorld(Path.Combine(this.contentRoot, "Worlds", "Verification.json"), "World");
-            if (this.world.Terrain[Hex.FromOffset(1, 1)] != Terrain.Desert || this.world.Entities.Count != 1) {
+            if (this.world.Terrain[Hex.FromOffset(1, 1)] != Terrain.ExclusionZone || this.world.Entities.Count != 1) {
                 throw new InvalidOperationException("Authored world did not restore.");
             }
 

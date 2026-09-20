@@ -207,15 +207,8 @@ public static class BehaviorPlanning {
                     action = new AttackAction(enemy.Id);
                 }
             } else if (intention.Name == "Recover") {
-                // Improve cooling only when an adjacent cell is actually better. Cooling while
-                // waiting is useful too, and prevents a recovery routine from wandering forever.
-                int[] better = Enumerable.Range(0, 6).Where(direction => senses.CanOccupy(self.Position + Hex.Directions[direction]))
-                    .Where(direction => senses.CoolingAt(self.Position + Hex.Directions[direction]) > senses.CoolingAt(self.Position))
-                    .OrderByDescending(direction => senses.CoolingAt(self.Position + Hex.Directions[direction]))
-                    .ThenBy(direction => Hex.TurnDistance(self.Facing, direction)).ToArray();
-                if (better.Length > 0) {
-                    action = DirectionAction(senses, self, better[0]);
-                }
+                // Cooling is identical on every terrain; recover in place.
+                yield break;
             } else if (intention.Name == "Escort") {
                 EntityObservation? ward = observation.Entities.FirstOrDefault(entity => entity.Id == intention.TargetId && entity.Faction == self.Faction);
                 if (ward is null) { brain.State.Reason = "Bonded unit is not currently observed; no hidden location is supplied."; yield break; }

@@ -50,7 +50,7 @@ Shortcuts are suspended while typing in a text or number field. Sidebars scroll 
 
 The lower section of the World creator toolbar creates either a rectangle from width and height, or a hexagon from size. Positive sizes are required; maps are limited to 20,000 cells. A size-one hexagonal map has one cell. Rectangular coordinates begin at the lower left, with positive X rightward and positive Y upward. Odd rows are offset east. Hexagonal maps are centered at coordinate (0, 0), so they also use negative coordinates.
 
-**Blank** creates plains for manual authoring. **Generate** produces repeatable terrain from the chosen seed. All eleven specified terrain types can be painted, including exclusion zones. Painting incompatible terrain under a unit is rejected.
+**Blank** creates plains for manual authoring. **Generate** produces repeatable terrain from the chosen seed. The five terrain types are forest (green), plains (ochre), mountains (gray), water (blue), and exclusion zone (purple). Each is shown only by its unique fill color, with no terrain symbols. All five can be painted. Painting incompatible terrain under a unit is rejected.
 
 **Checkpoint** stores the current state in memory; **Exact rewind** restores it. **Rewind with tuning** restores the checkpoint while retaining the latest preferences and bonds for its units, including units lost during the run, along with the mechanism switches. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved overwrite that file. **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map.
 
@@ -87,9 +87,9 @@ For a quick behavior experiment:
 
 Movement domains:
 
-- Ground: ordinary land; water, mountains, air, and space are blocked.
-- Amphibious: ordinary land and water; mountains, air, and space are blocked.
-- Flight: all terrain except space and exclusion zones.
+- Ground: forest and plains; water, mountains, and exclusion zones are blocked.
+- Amphibious: forest, plains, and water; mountains and exclusion zones are blocked.
+- Flight: all terrain except exclusion zones.
 - Spaceflight: all terrain except exclusion zones.
 
 ## Simulation rules
@@ -97,12 +97,12 @@ Movement domains:
 These are explicit prototype defaults for the combat mechanics left open by the specification. They can be changed in the C# simulation and unit classes.
 
 - Every turn replenishes each unit's action points. Unused points expire.
-- A 60-degree turn costs one point. Units move only forward, spending one point per cell, or two on forest, wetlands, and tundra for ground units.
+- A 60-degree turn costs one point. Units move only forward, spending one point per cell, or two on forest for ground units.
 - Infantry-and-artillery faction units cross rough terrain for one point and take two health damage. Other movement domains ignore the ground movement surcharge.
 - An attack costs two points, with at most one attack per unit per turn. Adjacent targets take melee damage; more distant targets take ranged damage. Range is measured between occupied footprints.
 - Attacks cover the facing direction and its two neighboring directions. Front armor is full strength, front-side armor is two-thirds strength, and rear-side/rear armor is one-quarter strength. Hits always deal at least one damage.
 - Evasion is a deterministic seeded chance to avoid a hit. Ranged blast attacks damage every entity in the impact radius, including allies and potentially the attacker. Melee attacks do not splash.
-- Weapons with a nonzero `HeatPerShot` accumulate heat on each shot, including misses. At 100 heat the weapon locks; it unlocks at 40 or below. All units cool once at the beginning of a turn. Desert halves cooling; wetlands multiply it by 1.5, rounded down. Other terrain uses the source-defined cooling rate. A disabled heat experiment preserves stored heat while bypassing its restrictions and updates.
+- Weapons with a nonzero `HeatPerShot` accumulate heat on each shot, including misses. At 100 heat the weapon locks; it unlocks at 40 or below. All units cool once at the beginning of a turn. All terrain uses the source-defined cooling rate. A disabled heat experiment preserves stored heat while bypassing its restrictions and updates.
 - Automata score engaging, withdrawing, investigating, patrolling, and escorting according to their unit's candidates and preferences. Heat-capable machines can recover. Commitment prevents small score changes from replacing a recent intention; urgent recovery overrides it. Travelers and artillery prefer distance; clones and Prytu favor weakened enemies; artillery considers allied blast exposure.
 - Automata search routes around blocked terrain and occupied footprints. Searches are bounded to 3,000 expanded positions per decision. A route too complex for this bound causes the unit to wait and retry next turn.
 - The first acting unit rotates each turn. Factions are mutually hostile. The simulation keeps running after only one faction remains.

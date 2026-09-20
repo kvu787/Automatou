@@ -283,15 +283,15 @@ Test("Weapon heat is physical, locks at the upper threshold, and recovers at the
     Check(shooter.Heat == 40, "Repeated sensing does not update physical heat");
 });
 Test("Terrain cooling and disabling heat are consistent across sensing and execution", () => {
-    foreach ((Terrain terrain, int expectedCooling) in new[] { (Terrain.Plains, 10), (Terrain.Desert, 5), (Terrain.Wetlands, 15) }) {
+    foreach (Terrain terrain in new[] { Terrain.Forest, Terrain.Plains, Terrain.Mountain, Terrain.Water }) {
         World world = World.Create(false, 15, 15, false);
-        Entity actor = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { CoolingPerTurn = 10, Actions = _ => [] });
+        Entity actor = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { Mobility = Mobility.Flight, CoolingPerTurn = 10, Actions = _ => [] });
         world.Terrain[actor.Position] = terrain;
         actor.Heat = 70;
         UnitSenses senses = new(world, actor);
-        Check(senses.CoolingAt(actor.Position) == expectedCooling, "The automaton estimates the same cooling as the world");
+        Check(senses.Observe().Self.Unit.CoolingPerTurn == 10, "The automaton estimates the same cooling as the world");
         world.Step();
-        Check(actor.Heat == 70 - expectedCooling, "Terrain changes cooling once per turn");
+        Check(actor.Heat == 60, "Every terrain uses source-defined cooling once per turn");
     }
     World baseline = World.Create(false, 15, 15, false);
     baseline.Settings.HeatEnabled = false;

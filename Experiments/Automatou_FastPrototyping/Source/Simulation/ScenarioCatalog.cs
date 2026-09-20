@@ -26,10 +26,6 @@ public static class ScenarioCatalog {
         Entity aggressive = Place(world, new SiegeWalker(), Faction.MechAndTank, 5, 5);
         aggressive.Unit.Brain.Settings = new() { Aggression = .95, Caution = .4, Commitment = .1, HeatReserve = 100 };
         _ = Place(world, new TrainingTarget(), Faction.Prytu, 10, 5, 3, true);
-        for (int x = 1; x < 21; x++) {
-            world.Terrain[Hex.FromOffset(x, 10)] = Terrain.Paved;
-        }
-
         world.Note("Experiment: heat and readiness. Upper walker is measured; lower walker accepts overheating.");
         return world;
     }
