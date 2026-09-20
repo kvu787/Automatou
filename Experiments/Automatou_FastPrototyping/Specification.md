@@ -158,7 +158,7 @@ Takes place in a universe that has both futuristic/sci-fi technology and fantasy
 
 #### Culture
 
-- Reproduction is done through a 
+- Reproduction is done through a crafting- and engineering-like process with magical elements
 - There are very few Bastions in the universe 
 - Although the form and characteristics of Bastions are extremely distinct and instantly recognizable,
   Bastions themselves are highly individualistic. They have a much stronger tendency to live alone
