@@ -48,7 +48,7 @@ automapolis is very different in that we can simulate autonomy at any level. we 
 - a whole faction controlled by a single AT, which mirrors typical multiplayer strategy games
 - individual units have their own ATs but also have faction allegiances
 - certain units have a greater degree of power/authority, so a commander or president can issue orders to other units that have a high likelihood of obeying them
-- ATs that don't have a unit representation such as god-like entities, mother nature, etc that have powerful systemic abilities 
+- ATs that don't have a unit representation such as god-like entities, mother nature, etc that have powerful systemic abilities
 
 ## Assistant
 
