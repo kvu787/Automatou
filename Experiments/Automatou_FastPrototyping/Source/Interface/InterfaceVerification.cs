@@ -7,7 +7,9 @@ public partial class MainInterface {
     private async void RunInterfaceVerification() {
         try {
             // Exercise the same handlers as the controls, then capture the rendered views.
-            this.contentRoot = Path.Combine(this.sessionRoot, "VerificationContent");
+            if (this.savedWorlds.WorldNames.Any()) {
+                throw new InvalidOperationException("Startup restored saved worlds from an earlier session.");
+            }
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             _ = await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
             if (!this.menuVisible || this.workspaceRoot.Visible) {
@@ -222,11 +224,12 @@ public partial class MainInterface {
             }
 
             this.Tool = "Paint terrain"; this.terrain = Terrain.ExclusionZone; this.OnCell(Hex.FromOffset(1, 1), MouseButton.Left);
-            Storage.SaveWorld(Path.Combine(this.contentRoot, "Worlds", "Verification.json"), this.world);
+            this.worldName.Text = "Verification";
+            _ = this.toolsPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Save").EmitSignal(BaseButton.SignalName.Pressed);
             this.ShowMainMenu();
             this.ShowWorldBrowser();
             await this.Capture("LoadWorldSaved.png");
-            this.LoadChosenWorld(Path.Combine(this.contentRoot, "Worlds", "Verification.json"), "World");
+            _ = this.menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Verification").EmitSignal(BaseButton.SignalName.Pressed);
             if (this.world.Terrain[Hex.FromOffset(1, 1)] != Terrain.ExclusionZone || this.world.Entities.Count != 1) {
                 throw new InvalidOperationException("Authored world did not restore.");
             }
@@ -244,7 +247,7 @@ public partial class MainInterface {
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await this.Capture("MinimumWindow.png");
             this.ReplaceWorld(Storage.Decode(this.checkpoint));
-            this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, world creation, unit placement, terrain paint, world file round trip, and minimum window.");
+            this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, world creation, unit placement, terrain paint, in-memory world round trip, and minimum window.");
             this.GetTree().Quit();
         } catch (Exception exception) { this.Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); this.GetTree().Quit(1); }
     }

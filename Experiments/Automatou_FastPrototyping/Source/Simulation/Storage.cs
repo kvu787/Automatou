@@ -3,7 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace Automatou.Simulation;
 
-public static class Storage {
+public sealed class Storage {
+    private readonly Dictionary<string, string> worlds = new(StringComparer.OrdinalIgnoreCase);
+    public IEnumerable<string> WorldNames => this.worlds.Keys.Order(StringComparer.OrdinalIgnoreCase);
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
     public sealed record CellData(Hex Position, Terrain Terrain);
     public sealed class WorldData {
@@ -51,22 +53,12 @@ public static class Storage {
         world.NextId = Math.Max(world.NextId, identifiers.DefaultIfEmpty(0).Max() + 1);
         world.Note("World restored. Simulation paused."); return world;
     }
-    public static void SaveWorld(string path, World world) {
-        Write(path, Encode(world));
+    public void SaveWorld(string name, World world) {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        this.worlds[name.Trim()] = Encode(world);
     }
 
-    public static World LoadWorld(string path) {
-        return Decode(File.ReadAllText(path));
-    }
-
-    private static void Write(string path, string text) {
-        _ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        string temporary = path + ".tmp";
-        File.WriteAllText(temporary, text);
-        File.Move(temporary, path, true);
-    }
-    public static string FileName(string name) {
-        string result = string.Concat(name.Where(c => char.IsLetterOrDigit(c) || c is ' ' or '-' or '_')).Trim();
-        return result.Length == 0 ? throw new ArgumentException("Enter a name containing letters or numbers.") : result;
+    public World LoadWorld(string name) {
+        return Decode(this.worlds[name.Trim()]);
     }
 }

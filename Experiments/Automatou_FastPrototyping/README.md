@@ -4,7 +4,7 @@ A self-contained, native Godot prototype of the world-builder-and-runner describ
 
 ## Run
 
-Double-click **Run.cmd**. It restores the bundled Godot packages, builds the C# project, and launches the game. The game starts at a main menu with **Load world** and **World creator**. Load world lists focused behavior experiments, the five-faction encounter, and saved player worlds. Worlds open paused.
+Double-click **Run.cmd**. It restores the bundled Godot packages, builds the C# project, and launches the game. The game starts at a main menu with **Load world** and **World creator**. Load world lists focused behavior experiments, the five-faction encounter, and player worlds saved during the current session. Worlds open paused. Every launch starts fresh; application state is never read from or written to disk.
 
 Requirements: Windows 11 x64, .NET SDK 10.0.400 or newer in the .NET 10 family, and Godot **4.7.2 .NET x64**. The default Godot location is `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. Set `GODOT_EXE` to the .NET console executable to use another installation. The launcher uses that installation's local NuGet packages; no additional game assets, external repositories, export templates, or network services are required.
 
@@ -52,11 +52,11 @@ The lower section of the World creator toolbar creates either a rectangle from w
 
 **Create world** creates an empty map of plains for manual authoring. The five terrain types are forest (green), plains (ochre), mountains (gray), water (blue), and exclusion zone (purple). Each is shown only by its unique fill color, with no terrain symbols. All five can be painted. Painting incompatible terrain under a unit is rejected.
 
-**Checkpoint** stores the current state in memory; **Exact rewind** restores it. **Rewind with tuning** restores the checkpoint while retaining the latest preferences and bonds for its units, including units lost during the run, along with the mechanism switches. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved overwrite that file. **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map.
+**Checkpoint** stores the current state in memory; **Exact rewind** restores it. **Rewind with tuning** restores the checkpoint while retaining the latest preferences and bonds for its units, including units lost during the run, along with the mechanism switches. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved replace that in-memory snapshot (case-insensitively). **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map.
 
-- `UserContent/Worlds`: map terrain, living entities, faction, facing, health, heat, weapon lock, directed bonds, turn, casualty count, experiment switches, unit type identifiers, automaton settings and memory, and deterministic random state.
+- Session snapshots in RAM: map terrain, living entities, faction, facing, health, heat, weapon lock, directed bonds, turn, casualty count, experiment switches, unit type identifiers, automaton settings and memory, and deterministic random state.
 
-Saving writes a temporary file before replacing the destination. Loading validates the world before replacing the active simulation. Saves are paused on load. User content and logs are ignored by Git. Content formats have no compatibility or migration layer between repository revisions.
+Saving retains an independent snapshot in RAM. Loading restores a fresh copy, so edits and simulation do not modify the saved snapshot. Saved worlds and checkpoints disappear when the application closes. Existing files in `UserContent` are ignored. Diagnostic logs remain on disk under `MyLogOutput` and are never used to restore state.
 
 ## Source-defined units and automata
 
@@ -72,7 +72,7 @@ On each turn, `World.Step()` invokes the living unit's `Brain.Act(UnitSenses)` o
 
 Occupancy and route queries use only currently observed entities. `FindDirection(targetId)` rejects hidden targets; `FindDirection(destination, stoppingDistance)` navigates to a remembered location without looking up the enemy's real position. Movement still resolves against physical occupancy, and attacks require current visibility. This keeps concealment meaningful throughout planning and action execution. `TacticalPlanning` supplies optional target selection and engagement helpers; each unit's automaton chooses its tactics and can implement completely different logic.
 
-Saves store a unit type identifier and the concrete brain's memory. Stats and executable logic come from source. Checkpoint/rewind and save/load restore independent brains and deterministic continuation. Suspended iterators are not saved; turns finish synchronously before a checkpoint can be taken. Old blueprint-based saves are not supported.
+Saves store a unit type identifier and the concrete brain's memory. Stats and executable logic come from source. Checkpoint/rewind and save/load restore independent brains and deterministic continuation. Suspended iterators are not saved; turns finish synchronously before a checkpoint can be taken. Snapshots exist only for the current application session.
 
 To add a unit, derive from `Unit`, define immutable statistics, implement a nested `UnitAutomaton`, expose its concrete memory, implement `CreateFresh()`, and register the class in `Catalog.Units()` and the JSON derived-type declarations in `Unit.cs`. Brain memory must consist of serializable data rather than live world references.
 

@@ -33,12 +33,13 @@ public partial class MainInterface {
         _ = this.Button(this.populationTools, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
         _ = this.Button(this.populationTools, "Rotate placement   [R]", this.RotateSelection);
         this.UpdateWorldToolVisibility();
-        _ = Label(this.toolsPanel, "WORLD FILE", 12, this.accent);
+        _ = Label(this.toolsPanel, "SESSION WORLDS", 12, this.accent);
+        _ = Label(this.toolsPanel, "Saved worlds stay in memory until you close the app.", 12, this.muted);
         this.worldName = TextField(this.toolsPanel, this.worldSlotName, "World name");
         this.worldName.TextChanged += value => this.worldSlotName = value;
         HBoxContainer persistence = Row(this.toolsPanel);
         _ = this.Button(persistence, "Save", () => {
-            string path = this.WorldPath(); Storage.SaveWorld(path, this.world); this.Status($"Saved world: {this.worldName.Text}. Stored in UserContent / Worlds.");
+            this.savedWorlds.SaveWorld(this.worldName.Text, this.world); this.Status($"Saved world: {this.worldName.Text.Trim()}. Available only during this session.");
         });
         _ = this.Button(persistence, "Load", () => this.ShowWorldBrowser("World creator"));
         _ = this.Button(this.toolsPanel, "Play this world", () => this.SwitchMode("World"));
@@ -55,8 +56,5 @@ public partial class MainInterface {
         this.experimentDescription = "";
         this.referenceResult = null;
         this.ReplaceWorld(replacement);
-    }
-    private string WorldPath() {
-        return Path.Combine(this.contentRoot, "Worlds", Storage.FileName(this.worldName.Text) + ".json");
     }
 }

@@ -20,6 +20,22 @@ void Reject(Action action) {
     throw new InvalidOperationException("Invalid input was accepted.");
 }
 
+Test("Session worlds are independent snapshots and new sessions start empty", () => {
+    Storage session = new();
+    World original = ScenarioCatalog.All[0].Create();
+    string snapshot = Storage.Encode(original);
+    session.SaveWorld("  My world  ", original);
+    original.Step();
+    Check(Storage.Encode(session.LoadWorld("My world")) == snapshot, "Editing after saving leaves the snapshot intact");
+    World loaded = session.LoadWorld("My world");
+    loaded.Step();
+    Check(Storage.Encode(session.LoadWorld("My world")) == snapshot, "Playing a loaded world leaves the snapshot intact");
+    session.SaveWorld("my world", loaded);
+    Check(session.WorldNames.Count() == 1 && Storage.Encode(session.LoadWorld("My world")) == Storage.Encode(loaded), "Saving the same name replaces its snapshot");
+    Check(!new Storage().WorldNames.Any(), "A new session has no saved worlds");
+    Reject(() => session.SaveWorld("   ", original));
+});
+
 Test("Odd rows offset east; public coordinates round-trip including negatives", () => {
     for (int y = -20; y <= 20; y++) {
         for (int x = -20; x <= 20; x++) { Hex cell = Hex.FromOffset(x, y); Check(cell.X == x && cell.Y == y, "Offset conversion"); }

@@ -43,26 +43,22 @@ public partial class MainInterface {
         _ = this.Heading(list, "LARGER ENCOUNTER");
         _ = this.Button(list, "Five-faction encounter", () => this.LoadChosenWorld(null, destination));
         _ = this.Heading(list, "PLAYER-CREATED WORLDS");
-        string directory = Path.Combine(this.contentRoot, "Worlds");
-        _ = Directory.CreateDirectory(directory);
-        string[] files = Directory.GetFiles(directory, "*.json")
-            .OrderBy(Path.GetFileNameWithoutExtension, StringComparer.OrdinalIgnoreCase).ToArray();
-        if (files.Length == 0) {
-            _ = Label(list, "No saved worlds yet. Create and save one in World creator.", 14, this.muted);
+        string[] names = this.savedWorlds.WorldNames.ToArray();
+        if (names.Length == 0) {
+            _ = Label(list, "No worlds saved this session. Create and save one in World creator.", 14, this.muted);
         } else {
-            foreach (string file in files) {
-                Button button = this.Button(list, Path.GetFileNameWithoutExtension(file), () => this.LoadChosenWorld(file, destination));
+            foreach (string name in names) {
+                Button button = this.Button(list, name, () => this.LoadChosenWorld(name, destination));
                 button.ClipText = true;
             }
         }
         _ = this.Button(column, "Back", destination == "World" ? this.ShowMainMenu : () => this.SwitchMode(destination));
     }
 
-    private void LoadChosenWorld(string? path, string destination) {
-        // Validate first so a broken save leaves the browser and current world intact.
-        World replacement = path is null ? World.Demonstration() : Storage.LoadWorld(path);
-        this.worldSlotName = path is null ? "My world" : Path.GetFileNameWithoutExtension(path);
-        this.experimentName = path is null ? "Five-faction encounter" : this.worldSlotName;
+    private void LoadChosenWorld(string? name, string destination) {
+        World replacement = name is null ? World.Demonstration() : this.savedWorlds.LoadWorld(name);
+        this.worldSlotName = name ?? "My world";
+        this.experimentName = name is null ? "Five-faction encounter" : this.worldSlotName;
         this.experimentDescription = "";
         this.referenceResult = null;
         this.ReplaceWorld(replacement);

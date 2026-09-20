@@ -36,7 +36,7 @@ public partial class MainInterface : Control {
     private Terrain terrain = Terrain.Forest;
     private Entity? selected;
     private string checkpoint = "";
-    private string contentRoot = "";
+    private readonly Storage savedWorlds = new();
     private string sessionRoot = "";
     private Label? hoverLabel;
     private LineEdit worldName = null!;
@@ -51,7 +51,6 @@ public partial class MainInterface : Control {
 
     public override void _Ready() {
         DisplayServer.WindowSetMinSize(new Vector2I(1100, 700));
-        this.contentRoot = ProjectSettings.GlobalizePath("res://UserContent");
         this.sessionRoot = OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("--session-log=", StringComparison.Ordinal))?[14..]
             ?? Path.Combine(ProjectSettings.GlobalizePath("res://MyLogOutput"), DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture));
         _ = Directory.CreateDirectory(this.sessionRoot);
