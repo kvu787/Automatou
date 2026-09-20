@@ -1,7 +1,30 @@
 using Automatou.Simulation;
-using System.Text.Json.Nodes;
+
 
 int passed = 0;
+bool SameMemory(AutomatonMemory first, AutomatonMemory second) {
+    return (first.Intention, first.Reason, first.IntentionSince, first.LastUpdatedTurn, first.Destination,
+        first.ShotsFired, first.IntentionChanges, first.PatrolIndex) ==
+        (second.Intention, second.Reason, second.IntentionSince, second.LastUpdatedTurn, second.Destination,
+        second.ShotsFired, second.IntentionChanges, second.PatrolIndex) &&
+        first.Contacts.SequenceEqual(second.Contacts) && first.Considerations.SequenceEqual(second.Considerations) &&
+        first.History.SequenceEqual(second.History);
+}
+bool SameWorld(World first, World second) {
+    return (first.Turn, first.NextId, first.RandomState, first.Casualties, first.Settings) ==
+        (second.Turn, second.NextId, second.RandomState, second.Casualties, second.Settings) &&
+        first.Terrain.SequenceEqual(second.Terrain) && first.Events.SequenceEqual(second.Events) && first.Effects.SequenceEqual(second.Effects) &&
+        first.Entities.Count == second.Entities.Count && first.Entities.Zip(second.Entities).All(pair => {
+            Entity a = pair.First, b = pair.Second;
+            return (a.Id, a.Faction, a.Position, a.Facing, a.Health, a.Stationary, a.Heat, a.WeaponLocked, a.BondedUnitId) ==
+                (b.Id, b.Faction, b.Position, b.Facing, b.Health, b.Stationary, b.Heat, b.WeaponLocked, b.BondedUnitId) &&
+                a.Unit.GetType() == b.Unit.GetType() && a.Unit.Statistics == b.Unit.Statistics &&
+                a.Unit.Brain.GetType() == b.Unit.Brain.GetType() &&
+                (a.Unit.Brain.TurnsObserved, a.Unit.Brain.TargetId, a.Unit.Brain.Settings) ==
+                (b.Unit.Brain.TurnsObserved, b.Unit.Brain.TargetId, b.Unit.Brain.Settings) &&
+                SameMemory(a.Unit.Brain.State, b.Unit.Brain.State);
+        });
+}
 List<string> report = [];
 void Check(bool condition, string message) {
     if (!condition) {
@@ -21,19 +44,45 @@ void Reject(Action action) {
 }
 
 Test("Session worlds are independent snapshots and new sessions start empty", () => {
-    Storage session = new();
+    SessionWorlds session = new();
     World original = ScenarioCatalog.All[0].Create();
-    string snapshot = Storage.Encode(original);
+    World snapshot = original.Copy();
     session.SaveWorld("  My world  ", original);
     original.Step();
-    Check(Storage.Encode(session.LoadWorld("My world")) == snapshot, "Editing after saving leaves the snapshot intact");
+    Check(SameWorld(session.LoadWorld("My world"), snapshot), "Editing after saving leaves the snapshot intact");
     World loaded = session.LoadWorld("My world");
     loaded.Step();
-    Check(Storage.Encode(session.LoadWorld("My world")) == snapshot, "Playing a loaded world leaves the snapshot intact");
+    Check(SameWorld(session.LoadWorld("My world"), snapshot), "Playing a loaded world leaves the snapshot intact");
     session.SaveWorld("my world", loaded);
-    Check(session.WorldNames.Count() == 1 && Storage.Encode(session.LoadWorld("My world")) == Storage.Encode(loaded), "Saving the same name replaces its snapshot");
-    Check(!new Storage().WorldNames.Any(), "A new session has no saved worlds");
+    Check(session.WorldNames.Count() == 1 && SameWorld(session.LoadWorld("My world"), loaded), "Saving the same name replaces its snapshot");
+    Check(!new SessionWorlds().WorldNames.Any(), "A new session has no saved worlds");
     Reject(() => session.SaveWorld("   ", original));
+});
+
+Test("World copies detach every mutable collection, brain, and event subscriber", () => {
+    World original = ScenarioCatalog.All[0].Create();
+    for (int turn = 0; turn < 5; turn++) { original.Step(); }
+    int notifications = 0;
+    original.EventRecorded = _ => notifications++;
+    World copy = original.Copy();
+    Check(SameWorld(original, copy), "All snapshot state is preserved");
+    Check(copy.EventRecorded is null, "Live event subscriber is not copied");
+    Check(!ReferenceEquals(original.Settings, copy.Settings), "Separate world settings");
+    foreach ((Entity source, Entity target) in original.Entities.Zip(copy.Entities)) {
+        Check(!ReferenceEquals(source, target) && !ReferenceEquals(source.Unit, target.Unit), "Separate entities and units");
+        UnitAutomaton a = source.Unit.Brain, b = target.Unit.Brain;
+        Check(!ReferenceEquals(a, b) && !ReferenceEquals(a.Settings, b.Settings) && !ReferenceEquals(a.State, b.State), "Separate brains, settings, and state");
+        Check(!ReferenceEquals(a.State.Contacts, b.State.Contacts) && !ReferenceEquals(a.State.Considerations, b.State.Considerations) && !ReferenceEquals(a.State.History, b.State.History), "Separate memory lists");
+        foreach ((ContactMemory first, ContactMemory second) in a.State.Contacts.Zip(b.State.Contacts)) {
+            Check(!ReferenceEquals(first, second), "Mutable contacts are copied");
+            second.SearchStep++;
+            Check(first.SearchStep != second.SearchStep, "Changing a contact leaves the source intact");
+        }
+        foreach (Hex cell in target.OccupiedCells()) { Check(ReferenceEquals(copy.At(cell), target), "Occupancy uses copied entities"); }
+    }
+    copy.Terrain.Clear(); copy.Entities.Clear(); copy.Events.Clear(); copy.Effects.Clear();
+    copy.Note("Copy only");
+    Check(original.Terrain.Count > 0 && original.Entities.Count > 0 && notifications == 0, "World collections and callbacks are independent");
 });
 
 Test("Odd rows offset east; public coordinates round-trip including negatives", () => {
@@ -117,13 +166,6 @@ Test("Combat measures range to a large unit's occupied edge", () => {
     world.Attack(attacker, defender);
     Check(defender.Health < 500, "Attack reaches occupied edge");
 });
-Test("Worlds reject entities without a unit", () => {
-    World world = World.Demonstration();
-    string json = Storage.Encode(world);
-    JsonNode data = JsonNode.Parse(json)!;
-    data["Entities"]![0]!["Unit"] = null;
-    Reject(() => Storage.Decode(data.ToJsonString()));
-});
 Test("Skirmish, hold and deployed units obey their movement rules", () => {
     World world = World.Create(false, 30, 20);
     Entity skirmisher = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit() { Behavior = TestBehavior.Skirmish, Range = 4, ActionPoints = 6 });
@@ -140,10 +182,10 @@ Test("World saves preserve health, rotations, units and deterministic continuati
         original.Step();
     }
 
-    World restored = Storage.Decode(Storage.Encode(original));
-    Check(Storage.Encode(original) == Storage.Encode(restored), "Exact round trip");
+    World restored = original.Copy();
+    Check(SameWorld(original, restored), "Exact round trip");
     for (int i = 0; i < 12; i++) { original.Step(); restored.Step(); }
-    Check(Storage.Encode(original) == Storage.Encode(restored), "Deterministic replay");
+    Check(SameWorld(original, restored), "Deterministic replay");
 });
 Test("Five-faction encounter remains consistent for 120 turns", () => {
     World world = World.Demonstration();
@@ -173,9 +215,8 @@ Test("Every source unit owns a distinct nested automaton and saves its memory", 
         Type memoryType = actor.Unit.Brain.GetType();
         memoryType.GetProperty("TurnsObserved")!.SetValue(actor.Unit.Brain, 41);
         memoryType.GetProperty("TargetId")!.SetValue(actor.Unit.Brain, 123);
-        string json = Storage.Encode(world);
-        Check(!json.Contains("Statistics") && !json.Contains("ActionPoints"), "Stats live in source, not saves");
-        World restored = Storage.Decode(json);
+        World snapshot = world.Copy();
+        World restored = snapshot.Copy();
         UnitAutomaton brain = restored.Entities[0].Unit.Brain;
         Check(brain.GetType() == memoryType && (int)memoryType.GetProperty("TurnsObserved")!.GetValue(brain)! == 41, "Concrete brain and memory restored");
         Check((int)memoryType.GetProperty("TargetId")!.GetValue(brain)! == 123, "Goal memory restored");
@@ -345,29 +386,13 @@ Test("World saves preserve experiment switches, physical heat, and directed bond
     Entity ally = Unit(world, Hex.FromOffset(15, 8), design: new Bastion());
     actor.Heat = 120; actor.WeaponLocked = true; actor.BondedUnitId = ally.Id;
     world.Settings.LimitedPerception = false; world.Settings.HeatEnabled = false; world.Settings.BondsEnabled = false;
-    string saved = Storage.Encode(world);
-    World restored = Storage.Decode(saved);
-    Check(Storage.Encode(restored) == saved, "Experiment setup survives an exact round trip");
+    World saved = world.Copy();
+    World restored = saved.Copy();
+    Check(SameWorld(restored, saved), "Experiment setup survives an exact round trip");
     Check(restored.Entities[0].Heat == 120 && restored.Entities[0].WeaponLocked && restored.Entities[0].BondedUnitId == ally.Id, "Physical state and directed attachment are restored");
     Check(!restored.Settings.LimitedPerception && !restored.Settings.HeatEnabled && !restored.Settings.BondsEnabled, "Mechanism comparisons use the saved switches");
     restored.Settings.HeatEnabled = true;
     Check(!world.Settings.HeatEnabled, "Restored world settings are independent");
-});
-Test("World loading rejects invalid experiment state before it reaches a simulation", () => {
-    World world = World.Create(false, 20, 15);
-    _ = Unit(world, Hex.FromOffset(6, 6), design: new SiegeWalker());
-    string saved = Storage.Encode(world);
-    foreach (int invalidHeat in new[] { -1, 201 }) {
-        JsonNode data = JsonNode.Parse(saved)!;
-        data["Entities"]![0]!["Heat"] = invalidHeat;
-        Reject(() => Storage.Decode(data.ToJsonString()));
-    }
-    JsonNode invalidBond = JsonNode.Parse(saved)!;
-    invalidBond["Entities"]![0]!["BondedUnitId"] = 0;
-    Reject(() => Storage.Decode(invalidBond.ToJsonString()));
-    JsonNode missingSettings = JsonNode.Parse(saved)!;
-    missingSettings["Settings"] = null;
-    Reject(() => Storage.Decode(missingSettings.ToJsonString()));
 });
 Test("Lost contacts are pursued at their last sighting and expire without remote tracking", () => {
     World world = World.Create(false, 35, 20);
@@ -508,31 +533,26 @@ Test("Every focused experiment restores rich automaton state and continues exact
         }
 
         Check(world.Entities.Any(entity => entity.Unit.Brain.State.History.Count > 0 && entity.Unit.Brain.State.Considerations.Count > 0), "The saved state includes real decisions");
-        string saved = Storage.Encode(world);
-        World restored = Storage.Decode(saved);
-        Check(Storage.Encode(restored) == saved, $"{scenario.Name}: full state round-trips exactly");
+        World saved = world.Copy();
+        World restored = saved.Copy();
+        Check(SameWorld(restored, saved), $"{scenario.Name}: full state round-trips exactly");
         foreach (Entity actor in world.Entities) {
             Entity copy = restored.Entities.Single(entity => entity.Id == actor.Id);
             Check(!ReferenceEquals(copy.Unit.Brain.Settings, actor.Unit.Brain.Settings) && !ReferenceEquals(copy.Unit.Brain.State, actor.Unit.Brain.State), "Restored preferences and runtime state are independent");
         }
         for (int i = 0; i < 12; i++) {
             world.Step(); restored.Step();
-            Check(Storage.Encode(world) == Storage.Encode(restored), $"{scenario.Name}: exact continuation at turn {world.Turn}");
+            Check(SameWorld(world, restored), $"{scenario.Name}: exact continuation at turn {world.Turn}");
         }
     }
 });
-Test("Invalid automaton preferences and contact records are rejected on load", () => {
-    string saved = Storage.Encode(ScenarioCatalog.All[0].Create());
-    JsonNode invalidPreference = JsonNode.Parse(saved)!;
-    invalidPreference["Entities"]![0]!["Unit"]!["Memory"]!["Settings"]!["Aggression"] = 1.1;
-    Reject(() => Storage.Decode(invalidPreference.ToJsonString()));
-    JsonNode missingState = JsonNode.Parse(saved)!;
-    missingState["Entities"]![0]!["Unit"]!["Memory"]!["State"] = null;
-    Reject(() => Storage.Decode(missingState.ToJsonString()));
-    JsonNode invalidContact = JsonNode.Parse(saved)!;
-    JsonArray contacts = invalidContact["Entities"]![0]!["Unit"]!["Memory"]!["State"]!["Contacts"]!.AsArray();
-    contacts.Add(JsonNode.Parse("{\"Id\":2,\"Faction\":\"Prytu\",\"LastSeenTurn\":0,\"Health\":5,\"MaximumHealth\":5,\"SearchStep\":4}"));
-    Reject(() => Storage.Decode(invalidContact.ToJsonString()));
+Test("Invalid automaton preferences and contact records are rejected", () => {
+    UnitAutomaton brain = new Bastion().Brain;
+    brain.Settings.Aggression = 1.1;
+    Reject(brain.ValidateMemory);
+    brain.Settings.Aggression = .5;
+    brain.State.Contacts.Add(new() { Id = 2, Faction = Faction.Prytu, LastSeenTurn = 0, Health = 5, MaximumHealth = 5, SearchStep = 4 });
+    Reject(brain.ValidateMemory);
 });
 Test("Finishing the final search probe abandons the exhausted contact", () => {
     World world = World.Create(false, 20, 16);

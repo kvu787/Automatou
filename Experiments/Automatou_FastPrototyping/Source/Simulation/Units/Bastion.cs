@@ -1,12 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace Automatou.Simulation;
 
 public sealed class Bastion : Unit {
-    [JsonIgnore]
     public override UnitStatistics Statistics { get; } = new() { Name = "Bastion", Size = 2, Health = 500, Armor = 22, Damage = 52, MeleeDamage = 75, Range = 4, ActionPoints = 3 };
     public Automaton Memory { get; set; } = new();
-    [JsonIgnore]
     public override UnitAutomaton Brain => this.Memory;
     public override Unit CreateFresh() {
         return new Bastion();

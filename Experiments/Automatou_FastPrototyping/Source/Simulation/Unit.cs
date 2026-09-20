@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace Automatou.Simulation;
 
 public sealed record UnitStatistics {
@@ -19,34 +17,30 @@ public sealed record UnitStatistics {
     public Mobility Mobility { get; init; } = Mobility.Ground;
 }
 
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "UnitType")]
-[JsonDerivedType(typeof(Bastion), "Bastion")]
-[JsonDerivedType(typeof(TravelerOutrider), "TravelerOutrider")]
-[JsonDerivedType(typeof(Home), "Home")]
-[JsonDerivedType(typeof(SiegeWalker), "SiegeWalker")]
-[JsonDerivedType(typeof(CloneInfantry), "CloneInfantry")]
-[JsonDerivedType(typeof(LongbowArtillery), "LongbowArtillery")]
-[JsonDerivedType(typeof(PrytuHunter), "PrytuHunter")]
-[JsonDerivedType(typeof(PrytuManifestation), "PrytuManifestation")]
-[JsonDerivedType(typeof(TrainingTarget), "TrainingTarget")]
 public abstract class Unit {
-    [JsonIgnore] public abstract UnitStatistics Statistics { get; }
-    [JsonIgnore] public abstract UnitAutomaton Brain { get; }
+    public Unit Copy() {
+        Unit copy = this.CreateFresh();
+        this.Brain.CopyTo(copy.Brain);
+        return copy;
+    }
+
+    public abstract UnitStatistics Statistics { get; }
+    public abstract UnitAutomaton Brain { get; }
     public abstract Unit CreateFresh();
-    [JsonIgnore] public string Name => this.Statistics.Name;
-    [JsonIgnore] public int Size => this.Statistics.Size;
-    [JsonIgnore] public int Health => this.Statistics.Health;
-    [JsonIgnore] public int Armor => this.Statistics.Armor;
-    [JsonIgnore] public int Damage => this.Statistics.Damage;
-    [JsonIgnore] public int MeleeDamage => this.Statistics.MeleeDamage;
-    [JsonIgnore] public int Range => this.Statistics.Range;
-    [JsonIgnore] public int ActionPoints => this.Statistics.ActionPoints;
-    [JsonIgnore] public int Evasion => this.Statistics.Evasion;
-    [JsonIgnore] public int BlastRadius => this.Statistics.BlastRadius;
-    [JsonIgnore] public int SightRange => this.Statistics.SightRange;
-    [JsonIgnore] public int HeatPerShot => this.Statistics.HeatPerShot;
-    [JsonIgnore] public int CoolingPerTurn => this.Statistics.CoolingPerTurn;
-    [JsonIgnore] public Mobility Mobility => this.Statistics.Mobility;
+    public string Name => this.Statistics.Name;
+    public int Size => this.Statistics.Size;
+    public int Health => this.Statistics.Health;
+    public int Armor => this.Statistics.Armor;
+    public int Damage => this.Statistics.Damage;
+    public int MeleeDamage => this.Statistics.MeleeDamage;
+    public int Range => this.Statistics.Range;
+    public int ActionPoints => this.Statistics.ActionPoints;
+    public int Evasion => this.Statistics.Evasion;
+    public int BlastRadius => this.Statistics.BlastRadius;
+    public int SightRange => this.Statistics.SightRange;
+    public int HeatPerShot => this.Statistics.HeatPerShot;
+    public int CoolingPerTurn => this.Statistics.CoolingPerTurn;
+    public Mobility Mobility => this.Statistics.Mobility;
     public void Validate() {
         if (this.Brain is null || string.IsNullOrWhiteSpace(this.Name) || this.Size is < 1 or > 12 || this.Health is < 1 or > 10000 ||
             this.Armor is < 0 or > 1000 || this.Damage is < 1 or > 1000 || this.MeleeDamage is < 1 or > 1000 || this.Range is < 1 or > 30 ||

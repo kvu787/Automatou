@@ -11,6 +11,14 @@ public sealed record SimulationSettings {
 }
 
 public sealed class Entity {
+    public Entity Copy() {
+        return new() {
+            Id = this.Id, Faction = this.Faction, Position = this.Position, Facing = this.Facing,
+            Health = this.Health, Unit = this.Unit.Copy(), Stationary = this.Stationary,
+            Heat = this.Heat, WeaponLocked = this.WeaponLocked, BondedUnitId = this.BondedUnitId
+        };
+    }
+
     public int Id { get; set; }
     public Faction Faction { get; set; }
     public Hex Position { get; set; }

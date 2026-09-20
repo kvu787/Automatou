@@ -1,12 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace Automatou.Simulation;
 
 public sealed class LongbowArtillery : Unit {
-    [JsonIgnore]
     public override UnitStatistics Statistics { get; } = new() { Name = "Longbow artillery", Health = 90, Armor = 3, Damage = 60, Range = 9, ActionPoints = 3, BlastRadius = 1 };
     public Automaton Memory { get; set; } = new();
-    [JsonIgnore]
     public override UnitAutomaton Brain => this.Memory;
     public override Unit CreateFresh() {
         return new LongbowArtillery();

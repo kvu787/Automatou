@@ -50,7 +50,7 @@ public partial class MainInterface {
                     throw new InvalidOperationException("Experiment did not expose decision reasoning: " + scenario.Name);
                 }
             }
-            World checkpointWorld = Storage.Decode(this.checkpoint);
+            World checkpointWorld = this.checkpoint.Copy();
             int selectedId = this.selected!.Id;
             Entity initialEntity = checkpointWorld.Entities.Single(entity => entity.Id == selectedId);
             double changedAggression = initialEntity.Unit.Brain.Settings.Aggression > .5 ? .2 : .9;
@@ -203,7 +203,7 @@ public partial class MainInterface {
                 dimensions[0].Value = shape == 1 ? 4 : 20;
                 dimensions[1].Value = 15;
                 _ = createWorld.EmitSignal(BaseButton.SignalName.Pressed);
-                if (this.world.Terrain.Count != (shape == 1 ? 37 : 300) || this.world.Terrain.Values.Any(terrain => terrain != Terrain.Plains) || this.world.Entities.Count != 0 || this.world.Turn != 0 || this.running || this.selected is not null || this.checkpoint != Storage.Encode(this.world) || dimensions[1].Editable != (shape == 0)) {
+                if (this.world.Terrain.Count != (shape == 1 ? 37 : 300) || this.world.Terrain.Values.Any(terrain => terrain != Terrain.Plains) || this.world.Entities.Count != 0 || this.world.Turn != 0 || this.running || this.selected is not null || !this.checkpoint.Terrain.SequenceEqual(this.world.Terrain) || this.checkpoint.Entities.Count != 0 || this.checkpoint.Turn != 0 || dimensions[1].Editable != (shape == 0)) {
                     throw new InvalidOperationException("World creation did not reset the workspace to the requested empty plains map.");
                 }
             }
@@ -246,7 +246,7 @@ public partial class MainInterface {
 
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await this.Capture("MinimumWindow.png");
-            this.ReplaceWorld(Storage.Decode(this.checkpoint));
+            this.ReplaceWorld(this.checkpoint.Copy());
             this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, world creation, unit placement, terrain paint, in-memory world round trip, and minimum window.");
             this.GetTree().Quit();
         } catch (Exception exception) { this.Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); this.GetTree().Quit(1); }

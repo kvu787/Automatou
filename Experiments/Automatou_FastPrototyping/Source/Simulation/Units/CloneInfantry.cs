@@ -1,12 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace Automatou.Simulation;
 
 public sealed class CloneInfantry : Unit {
-    [JsonIgnore]
     public override UnitStatistics Statistics { get; } = new() { Name = "Clone infantry", Health = 38, Armor = 1, Damage = 12, Range = 2, ActionPoints = 5 };
     public Automaton Memory { get; set; } = new();
-    [JsonIgnore]
     public override UnitAutomaton Brain => this.Memory;
     public override Unit CreateFresh() {
         return new CloneInfantry();

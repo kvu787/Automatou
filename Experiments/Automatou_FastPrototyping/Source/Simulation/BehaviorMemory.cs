@@ -23,6 +23,16 @@ public sealed record DecisionConsideration(string Name, double Score, string Rea
 public sealed record DecisionTrace(int Turn, string Intention, string Reason, Hex? Destination);
 
 public sealed class AutomatonMemory {
+    public AutomatonMemory Copy() {
+        return new() {
+            Intention = this.Intention, Reason = this.Reason, IntentionSince = this.IntentionSince,
+            LastUpdatedTurn = this.LastUpdatedTurn, Destination = this.Destination,
+            Contacts = this.Contacts.Select(contact => contact with { }).ToList(),
+            Considerations = [.. this.Considerations], History = [.. this.History],
+            ShotsFired = this.ShotsFired, IntentionChanges = this.IntentionChanges, PatrolIndex = this.PatrolIndex
+        };
+    }
+
     public string Intention { get; set; } = "Observe";
     public string Reason { get; set; } = "Waiting for the first turn.";
     public int IntentionSince { get; set; }
@@ -37,6 +47,13 @@ public sealed class AutomatonMemory {
 }
 
 public abstract partial class UnitAutomaton {
+    public void CopyTo(UnitAutomaton copy) {
+        copy.TurnsObserved = this.TurnsObserved;
+        copy.TargetId = this.TargetId;
+        copy.Settings = this.Settings with { };
+        copy.State = this.State.Copy();
+    }
+
     public int TurnsObserved { get; set; }
     public int? TargetId { get; set; }
     public BehaviorSettings Settings { get; set; } = new();

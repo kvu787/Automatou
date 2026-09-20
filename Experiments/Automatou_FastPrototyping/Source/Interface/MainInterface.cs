@@ -35,8 +35,8 @@ public partial class MainInterface : Control {
     private Faction faction = Faction.Bastions;
     private Terrain terrain = Terrain.Forest;
     private Entity? selected;
-    private string checkpoint = "";
-    private readonly Storage savedWorlds = new();
+    private World checkpoint = null!;
+    private readonly SessionWorlds savedWorlds = new();
     private string sessionRoot = "";
     private Label? hoverLabel;
     private LineEdit worldName = null!;
@@ -62,7 +62,7 @@ public partial class MainInterface : Control {
 
         this.Theme = CreateTheme();
         this.BuildInterface();
-        this.checkpoint = Storage.Encode(this.world);
+        this.checkpoint = this.world.Copy();
         this.SwitchMode("World");
         this.Refresh();
         this.ShowMainMenu();
@@ -211,7 +211,7 @@ public partial class MainInterface : Control {
             this.experimentShots += memory.ShotsFired - counters[entity.Id].ShotsFired;
             this.experimentChanges += memory.IntentionChanges - counters[entity.Id].IntentionChanges;
             if (memory.History.LastOrDefault() is { } decision && decision.Turn == this.world.Turn) {
-                this.Log("DECISION " + System.Text.Json.JsonSerializer.Serialize(new { this.world.Turn, entity.Id, entity.Name, entity.Health, entity.Heat, decision.Intention, decision.Reason, decision.Destination }));
+                this.Log("DECISION " + $"Turn={this.world.Turn} Id={entity.Id} Name={entity.Name} Health={entity.Health} Heat={entity.Heat} Intention={decision.Intention} Reason={decision.Reason} Destination={decision.Destination}");
             }
         }
         if (this.selected is not null && !this.world.Entities.Contains(this.selected)) {
@@ -709,7 +709,7 @@ public partial class MainInterface : Control {
                 } else { this.selected = entity; this.Status($"Placed {entity.Name} at {cell}."); }
             }
             if (this.world.Turn == 0) {
-                this.checkpoint = Storage.Encode(this.world);
+                this.checkpoint = this.world.Copy();
             }
 
             this.Refresh();
@@ -745,7 +745,7 @@ public partial class MainInterface : Control {
         this.experimentShots = this.world.Entities.Sum(entity => entity.Unit.Brain.State.ShotsFired);
         this.experimentChanges = this.world.Entities.Sum(entity => entity.Unit.Brain.State.IntentionChanges);
         if (capture) {
-            this.checkpoint = Storage.Encode(this.world);
+            this.checkpoint = this.world.Copy();
             this.checkpointShots = this.experimentShots; this.checkpointChanges = this.experimentChanges;
         }
         this.Refresh(); this.board.Fit(); this.Status("Simulation paused.");

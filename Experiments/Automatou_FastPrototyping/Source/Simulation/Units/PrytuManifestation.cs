@@ -1,12 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace Automatou.Simulation;
 
 public sealed class PrytuManifestation : Unit {
-    [JsonIgnore]
     public override UnitStatistics Statistics { get; } = new() { Name = "Prytu manifestation", Size = 3, Health = 600, Armor = 10, Damage = 65, MeleeDamage = 65, Range = 2, ActionPoints = 4 };
     public Automaton Memory { get; set; } = new();
-    [JsonIgnore]
     public override UnitAutomaton Brain => this.Memory;
     public override Unit CreateFresh() {
         return new PrytuManifestation();

@@ -1,12 +1,8 @@
-using System.Text.Json.Serialization;
-
 namespace Automatou.Simulation;
 
 public sealed class SiegeWalker : Unit {
-    [JsonIgnore]
     public override UnitStatistics Statistics { get; } = new() { Name = "Siege walker", Size = 2, Health = 210, Armor = 12, Damage = 35, Range = 3, ActionPoints = 4, HeatPerShot = 45, CoolingPerTurn = 12 };
     public Automaton Memory { get; set; } = new();
-    [JsonIgnore]
     public override UnitAutomaton Brain => this.Memory;
     public override Unit CreateFresh() {
         return new SiegeWalker();

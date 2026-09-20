@@ -10,7 +10,7 @@ sealed class TestUnit : Unit {
     private UnitAutomaton? brain;
     public override UnitAutomaton Brain => this.brain ??= new TestAutomaton(this);
     public override Unit CreateFresh() {
-        return new TestUnit();
+        return new TestUnit { statistics = this.statistics, Behavior = this.Behavior, Actions = this.Actions };
     }
 
     public new string Name { get => this.statistics.Name; init => this.statistics = this.statistics with { Name = value }; }

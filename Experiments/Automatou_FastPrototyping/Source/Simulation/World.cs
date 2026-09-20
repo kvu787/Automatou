@@ -3,6 +3,20 @@ namespace Automatou.Simulation;
 public sealed record BattleEffect(Hex From, Hex To, bool Hit, int Damage);
 
 public sealed partial class World {
+    public World Copy() {
+        World copy = new() {
+            Settings = this.Settings with { }, Turn = this.Turn, NextId = this.NextId,
+            RandomState = this.RandomState, Casualties = this.Casualties
+        };
+        foreach (KeyValuePair<Hex, Terrain> cell in this.Terrain) { copy.Terrain.Add(cell.Key, cell.Value); }
+        copy.Entities.AddRange(this.Entities.Select(entity => entity.Copy()));
+        copy.Events.AddRange(this.Events);
+        copy.Effects.AddRange(this.Effects);
+        copy.RebuildOccupancy();
+        // Event subscribers belong to the live workspace, never to a saved copy.
+        return copy;
+    }
+
     public SimulationSettings Settings { get; set; } = new();
     public Dictionary<Hex, Terrain> Terrain { get; } = [];
     public List<Entity> Entities { get; } = [];

@@ -38,7 +38,7 @@ public partial class MainInterface {
     }
 
     private void LogResult(string operation, ExperimentResult result) {
-        this.Log(operation + " " + System.Text.Json.JsonSerializer.Serialize(new { Experiment = this.experimentName, Result = result, this.world.Settings }));
+        this.Log(operation + " " + $"Experiment={this.experimentName} Result={result} Settings={this.world.Settings}");
     }
 
     private void RefreshComparison() {
@@ -60,7 +60,7 @@ public partial class MainInterface {
 
     private void CaptureCheckpoint() {
         this.Pause();
-        this.checkpoint = Storage.Encode(this.world);
+        this.checkpoint = this.world.Copy();
         this.ResetTuningCache();
         this.checkpointShots = this.experimentShots; this.checkpointChanges = this.experimentChanges;
         this.referenceResult = null;
@@ -77,7 +77,7 @@ public partial class MainInterface {
             entry => (Settings: entry.Value.Settings with { }, entry.Value.BondedUnitId));
         this.referenceResult = this.Result();
         this.LogResult(preserveTuning ? "COMPARE_TUNED" : "COMPARE_EXACT", this.referenceResult);
-        World replacement = Storage.Decode(this.checkpoint);
+        World replacement = this.checkpoint.Copy();
         if (preserveTuning) {
             replacement.Settings = settings;
             foreach (Entity entity in replacement.Entities) {
@@ -117,7 +117,7 @@ public partial class MainInterface {
 
     private void ChangeMechanics(Action change) {
         this.Pause(); change(); this.Refresh();
-        this.Log("MECHANICS " + System.Text.Json.JsonSerializer.Serialize(this.world.Settings));
+        this.Log("MECHANICS " + this.world.Settings);
         this.Status("World mechanics changed. Rewind with tuning to replay from the checkpoint.");
     }
 
@@ -159,7 +159,7 @@ public partial class MainInterface {
         void Tune(Action edit) {
             this.Pause(); edit();
             this.RememberTuning(entity);
-            this.Log("TUNING " + System.Text.Json.JsonSerializer.Serialize(new { entity.Id, entity.Unit.Brain.Settings, entity.BondedUnitId }));
+            this.Log("TUNING " + $"Id={entity.Id} Settings={entity.Unit.Brain.Settings} BondedUnitId={entity.BondedUnitId}");
             this.board.QueueRedraw();
             this.Status($"Tuned #{entity.Id} {entity.Name}. Playback paused; Rewind with tuning replays the change.");
         }

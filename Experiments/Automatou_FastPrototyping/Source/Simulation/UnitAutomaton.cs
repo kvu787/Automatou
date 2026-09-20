@@ -1,7 +1,7 @@
 namespace Automatou.Simulation;
 
 // One invocation per turn. Each yielded request is resolved before the iterator resumes.
-// Store lasting goals/state in serializable properties of the concrete automaton.
+// Store lasting goals/state in the memory types copied by UnitAutomaton.CopyTo.
 public abstract partial class UnitAutomaton {
     public abstract IEnumerable<UnitAction> Act(UnitSenses senses);
 }
