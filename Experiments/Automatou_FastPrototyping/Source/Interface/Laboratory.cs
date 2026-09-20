@@ -8,6 +8,8 @@ public partial class Laboratory : Control {
     private World world = World.Demonstration();
     private HexBoard board = null!;
     private VBoxContainer toolsPanel = null!;
+    private PanelContainer modePillbox = null!;
+    private VBoxContainer modePanel = null!;
     private VBoxContainer inspectorPanel = null!;
     private Label turnLabel = null!, statusLabel = null!, eventLabel = null!, populationLabel = null!;
     private Button playButton = null!;
@@ -165,7 +167,13 @@ public partial class Laboratory : Control {
         _ = this.Button(this.transport, "Frame world", () => this.board.Fit());
         this.turnLabel = Label(this.transport, "TURN 0000", 19, this.accent); this.turnLabel.HorizontalAlignment = HorizontalAlignment.Right;
         HBoxContainer workspace = Row(layout); workspace.SizeFlagsVertical = SizeFlags.ExpandFill;
-        this.toolsPanel = Sidebar(workspace, 234);
+        VBoxContainer toolsColumn = Column(workspace);
+        this.modePillbox = new PanelContainer();
+        this.modePillbox.AddThemeStyleboxOverride("panel", Box("101e28", "263b48", 8));
+        toolsColumn.AddChild(this.modePillbox);
+        this.modePanel = Column(this.modePillbox);
+        this.toolsPanel = Sidebar(toolsColumn, 234);
+        ((Control)this.toolsPanel.GetParent().GetParent()).SizeFlagsVertical = SizeFlags.ExpandFill;
         this.board = new HexBoard { World = this.world, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(340, 300) };
         workspace.AddChild(this.board);
         this.board.CellPressed = this.OnCell; this.board.Preview = this.PlacementPreview;
@@ -646,6 +654,9 @@ public partial class Laboratory : Control {
         }
 
         Clear(this.toolsPanel);
+        Clear(this.modePanel);
+        this.toolChoice = null;
+        this.modePillbox.Visible = this.mode == "World creator";
         if (this.mode == "World creator") {
             this.BuildWorldTools();
         } else if (this.mode == "World") {

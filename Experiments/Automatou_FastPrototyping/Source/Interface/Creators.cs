@@ -7,12 +7,12 @@ public partial class Laboratory {
     private string worldSlotName = "My world";
 
     private void BuildWorldTools() {
-        _ = Label(this.toolsPanel, "WORLD CREATOR", 12, this.accent);
-        this.toolChoice = this.Choice(this.toolsPanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => {
+        _ = Label(this.modePanel, "MODE", 12, this.accent);
+        this.toolChoice = this.Choice(this.modePanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => {
             this.Tool = ToolNames[index];
             this.Status($"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
         });
-        _ = this.Heading(this.toolsPanel, "TERRAIN BRUSH");
+        _ = Label(this.toolsPanel, "TERRAIN BRUSH", 12, this.accent);
         _ = this.Choice(this.toolsPanel, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.Tool = "Paint terrain"; this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
         _ = this.Heading(this.toolsPanel, "POPULATE THE WORLD");
         _ = this.Choice(this.toolsPanel, Catalog.FactionNames, (int)this.faction, index => { this.faction = (Faction)index; this.board.QueueRedraw(); });
