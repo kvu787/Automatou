@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Automatou.csproj">
+    <BuildType Solution="Debug|*" Project="Debug" />
+    <BuildType Solution="Release|*" Project="ExportRelease" />
+  </Project>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/SimulationTests.csproj" />
+  </Folder>
+</Solution>
