@@ -4,6 +4,7 @@
 
 - Godot 4.7.2 .NET C#
 - .NET 10, C# version 14
+- Windows 11, x64
 - 2D
 - Hex grid
 - Turn based
