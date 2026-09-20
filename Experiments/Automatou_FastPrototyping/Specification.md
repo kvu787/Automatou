@@ -44,6 +44,19 @@ simulator.
 
 Each unit's automaton should choose actions that support its faction's "thematic" gameplay instead of "optimal" gameplay.
 
+## Experimentation workflow
+
+The immediate priority is to experiment with, understand, and develop interesting automata quickly. Small, consequential mechanisms and readable decisions are more useful than an expanding general-purpose AI framework.
+
+- Focused, repeatable scenarios isolate weapon heat, imperfect information, and directed protective bonds before combining them in larger encounters.
+- Inspectors expose current intentions, competing considerations, relevant physical state, remembered contacts, and recent decisions.
+- Per-unit preferences can be changed while paused. The world separately controls whether limited perception, weapon heat, and bonds are enabled.
+- A checkpoint captures the physical world, automaton memory, settings, and random state. Exact rewind restores all of them; rewind with tuning restores the initial situation while carrying current preferences, bonds, and mechanism switches back to matching unit identifiers.
+- Short batches and summaries make it easy to compare the same number of turns. Combat effectiveness is one observation, not a score for interestingness.
+- New behavior remains ordinary editable C# source. Shared helpers should remain small enough to understand and replace.
+
+The current experiments use deterministic utility scoring, commitment to intentions, bounded contact memory, and authored bonds. Learning, dynamic social relationships, diplomacy, sensing errors, and squad task auctions remain future experiments.
+
 ## Visual style
 
 Everything is represented simply using colors, shapes, and symbols.
@@ -117,6 +130,11 @@ There is no 2D or 3D "art".
 - Each turn, the automaton senses the world, executes its logic, and outputs requested actions.
 - The world validates and applies actions. Automata can sense again after each action within the turn.
 - The automaton holds memory that persists across turns, including longer-term goals, and is restored with saved worlds.
+- Behavior preferences are distinct from runtime memory and physical unit state. An automaton may choose to tolerate heat, but cannot bypass a locked weapon.
+- Observations include only entities currently within sight, including allies. Terrain is public knowledge. The spectator retains an omniscient world view.
+- Forest conceals units beyond two cells and blocks sight through intervening forest cells. Target selection, route queries, and attacks honor the same information boundary. Planning ignores hidden occupants; the world still enforces physical collision.
+- Remembered contacts hold last-seen positions and expire; investigating a contact cannot track its invisible real position.
+- Protective bonds are directed attachments to a particular ally. They influence escort decisions when that ally is observed, and do not grant remote knowledge or interception of incoming fire.
 - Unit size is defined as an integer 1 or greater.
 
 ## Terrain types

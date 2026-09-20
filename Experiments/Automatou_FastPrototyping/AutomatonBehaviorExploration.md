@@ -1,6 +1,6 @@
 # Exploring More Interesting Automata
 
-Research and design proposal, 2026-09-20. These are candidate experiments, not implemented features or changes to the specification. Numerical limits below are proposed starting budgets, not results established by the cited research.
+Research and design proposal, 2026-09-20. The first implementation now includes heat and readiness, pursuit through concealment, protective bonds, persistent intentions, and inspection/replay tools; see [README.md](README.md) for the actual controls and rules. The proposals below retain the broader research directions, including future work. Numerical limits are proposed starting budgets, not results established by the cited research.
 
 The recommendation is to introduce a few consequential internal states, imperfect knowledge, and commitments that persist across turns. Use small decision procedures to connect them to visible behavior. Judge success by understandable differences in behavior under changing circumstances, consistent with the specification's preference for thematic behavior.
 
