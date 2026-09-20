@@ -15,8 +15,10 @@ Spatial model
     - Cell (0, 1) is northeast of the cell (0, 0).
     - Cell (0, 2) is northwest of the cell (0, 1).
 
-Map
+World
 - Each cell has one terrain type
+- A cell can be occupied or unoccupied
+- Occupied cells may contain a unit cell or a buliding cell
 
 Units
 - All units have a regular hexagonal shape.
@@ -39,8 +41,6 @@ Buildings
 - When a cell is occupied by a building, it's terrain is irrelevant.
 - When a buliding is destroyed, the terrain of the underlying cells returns.
 
-Terrain
-
 Position and rotation
 - Position defines where something is in the world
 - Rotation defines what direction something is facing.
@@ -59,13 +59,13 @@ Position and rotation
   - Defense stats: Most units have strong defense when attacked from the front, medium at the front sides, and weak at the rear sides and rear.
   - Movement: Most units can only travel in the direction they are facing. Turning costs action points.
 
-Map view
+World view
 - This is the standard gameplay view
 - The player sees the grid map with terrain, units, and buildings
 - Player can pan by holding the middle mouse button and moving the mouse
 - Player can zoom in/out with the scroll wheel.
 
-Map creator
+World creator
 - When creating a new map, you can start with:
   - a hexagonal map and specify a positive integer for the size
   - a rectangular map and specify a positive integer for the width and a positive integer for the height
