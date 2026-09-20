@@ -18,7 +18,7 @@ public partial class Laboratory
 
     private void BuildWorldTools()
     {
-        Label(toolsPanel, "WORLD TOOLS", 12, accent);
+        Label(toolsPanel, "WORLD CREATOR", 12, accent);
         Label(toolsPanel, "Set the conditions.", 21);
         toolChoice = Choice(toolsPanel, ToolNames, Array.IndexOf(ToolNames, tool), index =>
         {
@@ -44,11 +44,10 @@ public partial class Laboratory
         {
             string path = WorldPath(); Storage.SaveWorld(path, world); Status($"Saved world: {worldName.Text}. Stored in UserContent / Worlds.");
         });
-        Button(persistence, "Load", () => ReplaceWorld(Storage.LoadWorld(WorldPath())));
-        string directory = System.IO.Path.Combine(contentRoot, "Worlds");
-        System.IO.Directory.CreateDirectory(directory);
-        var files = System.IO.Directory.GetFiles(directory, "*.json").Select(System.IO.Path.GetFileNameWithoutExtension).OfType<string>().Order().ToArray();
-        if (files.Length > 0) Choice(toolsPanel, ["Saved worlds…", .. files], 0, index => { if (index > 0) { worldName.Text = files[index - 1]; worldSlotName = worldName.Text; } });
+        Button(persistence, "Load", () => ShowWorldBrowser("World creator"));
+        Button(toolsPanel, "Building creator", () => SwitchMode("Building creator"));
+        Button(toolsPanel, "Unit creator", () => SwitchMode("Unit creator"));
+        Button(toolsPanel, "Play this world", () => SwitchMode("World"));
         Heading(toolsPanel, "NEW WORLD");
         var shape = Choice(toolsPanel, ["Rectangle", "Hexagon"], 0, _ => { });
         var width = Number(toolsPanel, "Width / size", 34, 1, 200);
@@ -59,7 +58,6 @@ public partial class Laboratory
         Button(newWorld, "Blank", () => ReplaceWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, false, (int)seed.Value)));
         Button(newWorld, "Generate", () => ReplaceWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, true, (int)seed.Value)));
         Label(toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, muted);
-        Button(toolsPanel, "Load five-faction encounter", () => ReplaceWorld(World.Demonstration()));
     }
     private string WorldPath() => System.IO.Path.Combine(contentRoot, "Worlds", Storage.FileName(worldName.Text) + ".json");
     private void BuildUnitCreator()
@@ -69,7 +67,7 @@ public partial class Laboratory
         Label(toolsPanel, "Give it a purpose.", 21);
         Choice(toolsPanel, unitDesigns.Select(u => u.Name), unitIndex, index => { unitIndex = index; unitDraft = null; SwitchMode("Unit creator"); });
         unitName = TextField(toolsPanel, design.Name, "Unit name");
-        Button(toolsPanel, "Save & place in world", () => { SaveUnit(); tool = "Place unit"; SwitchMode("World"); });
+        Button(toolsPanel, "Save & place in world", () => { SaveUnit(); tool = "Place unit"; SwitchMode("World creator"); });
         Heading(toolsPanel, "BODY & COMBAT");
         unitNumbers.Clear();
         unitNumbers["Size"] = Number(toolsPanel, "Size", design.Size, 1, 12);
@@ -88,7 +86,7 @@ public partial class Laboratory
         mobilityChoice = Choice(toolsPanel, Enum.GetNames<Mobility>(), (int)design.Mobility, _ => { });
         Label(toolsPanel, "Advance: close and fight. Skirmish: strike then retreat. Hold: defend current ground. Artillery: maintain distance. Swarm: prefer weakened prey.", 12, muted);
         Button(toolsPanel, "Save unit blueprint", SaveUnit);
-        Button(toolsPanel, "Save & place in world", () => { SaveUnit(); tool = "Place unit"; SwitchMode("World"); });
+        Button(toolsPanel, "Save & place in world", () => { SaveUnit(); tool = "Place unit"; SwitchMode("World creator"); });
         Label(toolsPanel, "A blueprint is independent of faction. Select its faction when placing. Saving affects future placements.", 12, muted);
         foreach (var spin in unitNumbers.Values) spin.ValueChanged += _ => UpdateUnitPreview();
         unitName.TextChanged += _ => UpdateUnitPreview(false);
@@ -148,7 +146,7 @@ public partial class Laboratory
         Label(toolsPanel, "Make your mark.", 21);
         Choice(toolsPanel, buildingDesigns.Select(b => b.Name), buildingIndex, index => { buildingIndex = index; buildingDraft = null; OpenBuilding(buildingDesigns[index]); SwitchMode("Building creator"); });
         buildingName = TextField(toolsPanel, design.Name, "Building name");
-        Button(toolsPanel, "Save & place in world", () => { SaveBuilding(); tool = "Place building"; SwitchMode("World"); });
+        Button(toolsPanel, "Save & place in world", () => { SaveBuilding(); tool = "Place building"; SwitchMode("World creator"); });
         buildingHealth = Number(toolsPanel, "Shared health", design.Health, 1, 10000);
         patchWidth = Number(toolsPanel, "Patch width", design.PatchWidth, 2, 100);
         patchHeight = Number(toolsPanel, "Patch height", design.PatchHeight, 2, 100);
@@ -160,7 +158,7 @@ public partial class Laboratory
         Label(toolsPanel, "The starting grid is 20 × 10. Clicking an edge expands that side by the chosen patch size.", 12, muted);
         Heading(toolsPanel, "SAVE YOUR DESIGN");
         Button(toolsPanel, "Save building blueprint", SaveBuilding);
-        Button(toolsPanel, "Save & place in world", () => { SaveBuilding(); tool = "Place building"; SwitchMode("World"); });
+        Button(toolsPanel, "Save & place in world", () => { SaveBuilding(); tool = "Place building"; SwitchMode("World creator"); });
         Label(toolsPanel, "All cells must connect. The pivot may sit outside the footprint. Rotate a placed building with R while inspecting it.", 12, muted);
     }
     private void UpdateBuildingSummary()

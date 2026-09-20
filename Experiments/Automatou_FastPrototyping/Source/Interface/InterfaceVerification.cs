@@ -12,6 +12,24 @@ public partial class Laboratory
             // Exercise the same handlers as the controls, then capture the rendered views.
             contentRoot = System.IO.Path.Combine(sessionRoot, "VerificationContent");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (!menuVisible || workspaceRoot.Visible) throw new Exception("Startup did not show the main menu.");
+            var menuButtons = menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().ToArray();
+            if (!menuButtons.Select(button => button.Text).SequenceEqual(new[] { "Load world", "World creator", "Unit creator", "Building creator" }))
+                throw new Exception("Main menu choices or order are incorrect.");
+            await Capture("MainMenu.png");
+            foreach (string creator in new[] { "World creator", "Unit creator", "Building creator" })
+            {
+                menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == creator).EmitSignal(Godot.Button.SignalName.Pressed);
+                if (menuVisible || mode != creator || transport.Visible) throw new Exception("Creator navigation failed: " + creator);
+                ShowMainMenu();
+            }
+            int initialTurn = world.Turn;
+            _UnhandledKeyInput(new InputEventKey { Keycode = Key.N, Pressed = true });
+            if (world.Turn != initialTurn) throw new Exception("Menu allowed simulation shortcuts.");
+            ShowWorldBrowser();
+            await Capture("LoadWorldEmpty.png");
+            LoadChosenWorld(null, "World");
+            if (menuVisible || !transport.Visible || world.Entities.Count == 0) throw new Exception("Built-in world did not open for play.");
             await Capture("WorldOverview.png");
             tool = "Inspect";
             board._GuiInput(new InputEventMouseButton { Position = board.Screen(world.Entities[0].Position), ButtonIndex = MouseButton.Left, Pressed = true });
@@ -45,7 +63,7 @@ public partial class Laboratory
             OpenBuilding(reopened);
             if (board.BuildingOrigin != Hex.FromOffset(8, 5)) throw new Exception("Saved pivot did not reopen.");
             await Capture("BuildingCreator.png");
-            SwitchMode("World");
+            SwitchMode("World creator");
             ReplaceWorld(World.Create(false, 20, 15, false));
             tool = "Place unit"; OnCell(Hex.FromOffset(6, 6), MouseButton.Left);
             if (world.Entities.Single().Unit?.Size != 4) throw new Exception("Custom unit placement failed.");
@@ -53,8 +71,15 @@ public partial class Laboratory
             if (world.Entities.Count != 2) throw new Exception("Custom building placement failed.");
             tool = "Paint terrain"; terrain = Terrain.Desert; OnCell(Hex.FromOffset(1, 1), MouseButton.Left);
             Storage.SaveWorld(System.IO.Path.Combine(contentRoot, "Worlds", "Verification.json"), world);
-            ReplaceWorld(Storage.LoadWorld(System.IO.Path.Combine(contentRoot, "Worlds", "Verification.json")));
+            ShowMainMenu();
+            ShowWorldBrowser();
+            await Capture("LoadWorldSaved.png");
+            LoadChosenWorld(System.IO.Path.Combine(contentRoot, "Worlds", "Verification.json"), "World");
             if (world.Terrain[Hex.FromOffset(1, 1)] != Terrain.Desert || world.Entities.Count != 2) throw new Exception("Authored world did not restore.");
+            ToggleRun(); ShowMainMenu();
+            if (running) throw new Exception("Returning to menu did not pause.");
+            SwitchMode("World creator");
+            if (transport.Visible) throw new Exception("World creator exposes simulation transport.");
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await Capture("MinimumWindow.png");
             ReplaceWorld(Storage.Decode(checkpoint));

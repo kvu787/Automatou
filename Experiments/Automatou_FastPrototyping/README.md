@@ -4,7 +4,7 @@ A self-contained, native Godot prototype of the world-builder-and-runner describ
 
 ## Run
 
-Double-click **Run.cmd**. It restores the bundled Godot packages, builds the C# project, and launches the game. The initial world is a paused encounter containing all five factions.
+Double-click **Run.cmd**. It restores the bundled Godot packages, builds the C# project, and launches the game. The game starts at a main menu with **Load world**, **World creator**, **Unit creator**, and **Building creator**. Load world lists the built-in five-faction encounter and every saved player world. Worlds open paused.
 
 Requirements: Windows 11 x64, .NET SDK 10.0.400 or newer in the .NET 10 family, and Godot **4.7.2 .NET x64**. The default Godot location is `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. Set `GODOT_EXE` to the .NET console executable to use another installation. The launcher uses that installation's local NuGet packages; no additional game assets, external repositories, export templates, or network services are required.
 
@@ -12,10 +12,10 @@ All session logs are written under `MyLogOutput/yyyy-MM-dd_HH-mm-ss`. `Launcher.
 
 ## First experiment
 
-1. Press **Step** to advance one turn, or **Run automata** to watch continuously. Choose one to eight turns per second.
+1. Choose **Load world**, then **Five-faction encounter**. Press **Step** to advance one turn, or **Run automata** to watch continuously. Choose one to eight turns per second.
 2. Select an entity with **Inspect**. Its arrow shows its facing; the gold region shows its forward attack region. The inspector reports health, weapons, armor, and automaton.
-3. Use **Paint terrain**, **Place unit**, **Place building**, or **Erase entity** to modify the world. Editing pauses the simulation. Placement previews become red where a footprint cannot fit.
-4. Open either creator, change a design, and use **Save & place in world**. Choose the faction independently of the blueprint.
+3. Open **Edit in World creator**. Use **Paint terrain**, **Place unit**, **Place building**, or **Erase entity** to modify the world. Editing pauses the simulation. Placement previews become red where a footprint cannot fit.
+4. Open Unit creator or Building creator, change a design, and use **Save & place in world**. Choose the faction independently of the blueprint.
 5. Save a named world before replacing it with a blank map, generated map, or the demonstration encounter.
 
 The starting world has two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation, plus one explicitly authored watch station.
@@ -31,17 +31,17 @@ The starting world has two Bastions, five Traveler outriders and a mobile H.O.M.
 | R                 | Rotate selection, placement, or unit preview     |
 | F                 | Fit the current world or creator grid            |
 | Delete            | Remove the selected entity                       |
-| Escape            | Return to world inspection                       |
+| Escape            | Return to main menu                       |
 
 Shortcuts are suspended while typing in a text or number field. Sidebars scroll independently. The window can be resized down to 1100 × 700.
 
 ## World creator and storage
 
-The lower section of the world toolbar creates either a rectangle from width and height, or a hexagon from size. Positive sizes are required; maps are limited to 20,000 cells. A size-one hexagonal map has one cell. Rectangular coordinates begin at the lower left, with positive X rightward and positive Y upward. Odd rows are offset east. Hexagonal maps are centered at coordinate (0, 0), so they also use negative coordinates.
+The lower section of the World creator toolbar creates either a rectangle from width and height, or a hexagon from size. Positive sizes are required; maps are limited to 20,000 cells. A size-one hexagonal map has one cell. Rectangular coordinates begin at the lower left, with positive X rightward and positive Y upward. Odd rows are offset east. Hexagonal maps are centered at coordinate (0, 0), so they also use negative coordinates.
 
 **Blank** creates plains for manual authoring. **Generate** produces repeatable terrain from the chosen seed. All eleven specified terrain types can be painted, including exclusion zones. Painting under a building changes the terrain that will return when that building is removed. Painting incompatible terrain under a unit is rejected.
 
-**Checkpoint** stores the current state in memory; **Rewind** restores it. Edits at turn zero also refresh the starting checkpoint. **Save** and **Load** use the name in the world field. Names already saved overwrite that file. The saved-world picker refreshes when you return to the World tab.
+**Checkpoint** stores the current state in memory; **Rewind** restores it. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved overwrite that file. **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map and creator drafts.
 
 - `UserContent/Worlds`: map terrain, living entities, faction, facing, health, turn, casualty count, embedded blueprints, and deterministic random state.
 - `UserContent/Units`: reusable unit blueprints, loaded automatically at startup.
@@ -51,7 +51,7 @@ Saving writes a temporary file before replacing the destination. Loading validat
 
 ## Unit creator
 
-Create a design by editing a blueprint and giving it a new name. Saving an existing name updates that blueprint; existing placed entities keep their own copies. Unsaved fields survive switching between creator tabs; choosing another blueprint replaces the draft.
+Create a design by editing a blueprint and giving it a new name. Saving an existing name updates that blueprint; existing placed entities keep their own copies. Unsaved fields survive navigating between screens; choosing another blueprint replaces the draft.
 
 The central view shows the live footprint, origin, facing, and attack region. Sizes 1, 2, 3, and 4 occupy 1, 7, 19, and 37 cells respectively. The prototype supports sizes 1–12. Set health, armor, ranged and melee damage, attack range, action points, evasion, splash radius, automaton, and mobility.
 

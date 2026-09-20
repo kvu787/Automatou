@@ -40,7 +40,11 @@ public partial class Laboratory : Control
     private Label? hoverLabel;
     private LineEdit worldName = null!;
     private OptionButton unitChoice = null!, buildingChoice = null!;
-    private readonly Dictionary<string, Button> modeButtons = [];
+    private Control workspaceRoot = null!, menuRoot = null!;
+    private HBoxContainer transport = null!;
+    private Label screenTitle = null!;
+    private Label? menuStatus;
+    private bool menuVisible;
     private readonly Color muted = new("93a8b7");
     private readonly Color accent = new("87d9cc");
 
@@ -60,7 +64,7 @@ public partial class Laboratory : Control
         checkpoint = Storage.Encode(world);
         SwitchMode("World");
         Refresh();
-        Callable.From(() => board.Fit()).CallDeferred();
+        ShowMainMenu();
         if (OS.GetCmdlineUserArgs().Contains("--verify-interface")) Callable.From(RunInterfaceVerification).CallDeferred();
     }
     private void Log(string message) => System.IO.File.AppendAllText(System.IO.Path.Combine(sessionRoot, "Session.log"), $"{DateTime.Now:HH:mm:ss.fff} {message}{System.Environment.NewLine}");
@@ -173,17 +177,13 @@ public partial class Laboratory : Control
     {
         var margin = new MarginContainer(); margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         foreach (string side in new[] { "left", "right", "top", "bottom" }) margin.AddThemeConstantOverride("margin_" + side, 18);
-        AddChild(margin); var layout = Column(margin, 12);
+        AddChild(margin); workspaceRoot = margin; var layout = Column(margin, 12);
         var header = Row(layout);
         var brand = Column(header, 1); brand.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         Label(brand, "A U T O M A T O U", 24, new Color("eef3ec"));
-        Label(brand, "WORLD LABORATORY   /   FAST PROTOTYPING", 11, muted);
-        foreach (string name in new[] { "World", "Unit creator", "Building creator" })
-        {
-            var button = Button(header, name, () => SwitchMode(name)); button.CustomMinimumSize = new Vector2(140, 44); button.SizeFlagsHorizontal = SizeFlags.ShrinkCenter;
-            modeButtons[name] = button;
-        }
-        var transport = Row(layout);
+        screenTitle = Label(brand, "", 11, muted);
+        Button(header, "Main menu", ShowMainMenu).SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
+        transport = Row(layout);
         playButton = Button(transport, "▶  Run automata", ToggleRun); playButton.CustomMinimumSize = new Vector2(175, 42);
         Button(transport, "Step  →", Step, "Advance exactly one complete turn. Shortcut: N");
         Choice(transport, ["1 turn / sec", "2 turns / sec", "4 turns / sec", "8 turns / sec"], 1, index => turnsPerSecond = Math.Pow(2, index));
@@ -211,7 +211,7 @@ public partial class Laboratory : Control
         try { action(); }
         catch (Exception exception) { Pause(); Status(exception.Message); Log(exception.ToString()); GD.PushWarning(exception.Message); }
     }
-    private void Status(string message) { statusLabel.Text = message; Log(message); }
+    private void Status(string message) { statusLabel.Text = message; if (menuStatus is not null && IsInstanceValid(menuStatus)) menuStatus.Text = message; Log(message); }
     private void Pause() { running = false; playButton.Text = "▶  Run automata"; }
     private void ToggleRun()
     {
@@ -233,18 +233,23 @@ public partial class Laboratory : Control
     }
     public override void _UnhandledKeyInput(InputEvent input)
     {
+        if (input is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
+        {
+            ShowMainMenu();
+            return;
+        }
+        if (menuVisible) return;
         if (GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit) return;
         if (input is not InputEventKey { Pressed: true, Echo: false } key) return;
         Guard(() =>
         {
             switch (key.Keycode)
             {
-                case Key.Space: ToggleRun(); break;
-                case Key.N: Pause(); Step(); break;
+                case Key.Space when mode == "World": ToggleRun(); break;
+                case Key.N when mode == "World": Pause(); Step(); break;
                 case Key.F: board.Fit(); break;
                 case Key.R: RotateSelection(); break;
-                case Key.Delete: DeleteSelection(); break;
-                case Key.Escape: tool = "Inspect"; selected = null; SwitchMode("World"); break;
+                case Key.Delete when mode == "World creator": DeleteSelection(); break;
             }
         });
     }
@@ -253,12 +258,19 @@ public partial class Laboratory : Control
         Pause();
         if (value != mode) RememberDraft();
         mode = value; board.BuildingMode = mode == "Building creator"; board.UnitMode = mode == "Unit creator";
-        foreach (var pair in modeButtons) pair.Value.Modulate = pair.Key == value ? accent : Colors.White;
+        menuVisible = false;
+        if (menuRoot is not null) menuRoot.Hide();
+        workspaceRoot.Show();
+        screenTitle.Text = value;
+        transport.Visible = mode == "World";
+        if (mode == "World") tool = "Inspect";
         Clear(toolsPanel);
-        if (mode == "World") BuildWorldTools();
+        if (mode == "World creator") BuildWorldTools();
+        else if (mode == "World") BuildPlaybackTools();
         else if (mode == "Unit creator") BuildUnitCreator();
         else BuildBuildingCreator();
         BuildInspector(); board.Fit(); board.QueueRedraw();
+        Callable.From(() => board.Fit()).CallDeferred();
     }
     private void Refresh()
     {
@@ -268,7 +280,7 @@ public partial class Laboratory : Control
         eventLabel.Text = string.Join("\n", world.Events.TakeLast(2));
         BuildInspector();
     }
-    private Entity? PlacementPreview(Hex cell) => mode == "World" && tool is "Place unit" or "Place building"
+    private Entity? PlacementPreview(Hex cell) => mode == "World creator" && tool is "Place unit" or "Place building"
         ? new() { Position = cell, Facing = facing, Faction = faction, Unit = tool == "Place unit" ? unitDesigns[unitIndex] : null, Building = tool == "Place building" ? buildingDesigns[buildingIndex] : null }
         : null;
     private void OnCell(Hex cell, MouseButton button)
@@ -276,7 +288,7 @@ public partial class Laboratory : Control
         Guard(() =>
         {
             if (mode == "Building creator") { EditBuilding(cell, button); return; }
-            if (mode != "World") return;
+            if (menuVisible || mode is not ("World" or "World creator")) return;
             if (button == MouseButton.Right) { tool = "Inspect"; selected = world.At(cell); Refresh(); return; }
             if (tool == "Inspect") { selected = world.At(cell); Refresh(); return; }
             Pause();
@@ -300,9 +312,10 @@ public partial class Laboratory : Control
     }
     private void RotateSelection()
     {
+        if (mode == "World") return;
         Pause(); facing = (facing + 1) % 6;
         if (mode == "Unit creator") { UpdateUnitPreview(false); return; }
-        if (tool == "Inspect" && selected is not null)
+        if (mode == "World creator" && tool == "Inspect" && selected is not null)
         {
             int rotation = (selected.Facing + 1) % 6;
             if (world.CanOccupy(selected, selected.Position, rotation, out string reason)) { selected.Facing = rotation; world.RebuildOccupancy(); }
@@ -369,8 +382,11 @@ public partial class Laboratory : Control
                 Label(inspectorPanel, "Gold cells show the forward attack region. Rear attacks bypass most armor.", 12, muted);
                 Button(inspectorPanel, selected.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { Pause(); selected.Stationary = !selected.Stationary; Refresh(); });
             }
-            Button(inspectorPanel, "Rotate 60°   [R]", RotateSelection);
-            Button(inspectorPanel, "Remove entity   [Delete]", DeleteSelection);
+            if (mode == "World creator")
+            {
+                Button(inspectorPanel, "Rotate 60°   [R]", RotateSelection);
+                Button(inspectorPanel, "Remove entity   [Delete]", DeleteSelection);
+            }
         }
         Heading(inspectorPanel, "FACTIONS / LIVE POPULATION");
         for (int i = 0; i < Catalog.FactionNames.Length; i++)
@@ -379,7 +395,7 @@ public partial class Laboratory : Control
             Label(inspectorPanel, $"●  {Catalog.FactionNames[i]}   {count}", 13, new Color(Catalog.FactionColors[i]));
         }
         Heading(inspectorPanel, "LABORATORY CONTROLS");
-        Label(inspectorPanel, "Space   Run / pause\nN          Single turn\nR          Rotate selection / placement\nF          Frame world\nEsc       Inspect mode\nRight click   Inspect a cell", 12, muted);
+        Label(inspectorPanel, "Space   Run / pause\nN          Single turn\nR          Rotate selection / placement\nF          Frame world\nEsc       Main menu\nRight click   Inspect a cell", 12, muted);
         Heading(inspectorPanel, "AUTOMATA");
         Label(inspectorPanel, "Bastions advance under heavy armor. Travelers strike and retreat. Walkers close to medium range. Clones rush through rough ground at a cost; artillery can hit allies. Prytu swarm weakened targets.", 12, muted);
     }
