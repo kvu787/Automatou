@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="../Source/Simulation/**/*.cs" Link="Simulation/%(Filename)%(Extension)" />
-  </ItemGroup>
+    <PropertyGroup>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="../Source/Simulation/**/*.cs" Link="Simulation/%(Filename)%(Extension)" />
+    </ItemGroup>
 </Project>
