@@ -5,7 +5,8 @@ Turn-based strategy
 hex grid, pointy top
 combat-focused
 
-Hex grid
+Spatial model
+- The world is a 2D hexagonal grid
 - All player-facing representations of the hex grid should use coordinates that are natural to people
   - This means that +x means right and +y means up
 - Every row that has an odd index is offset to the east.
@@ -18,8 +19,20 @@ Map
 - Each cell has one terrain type
 
 Units
+- All units have a regular hexagonal shape.
+- The origin of a unit is its central cell.
+- A unit has a size. It defines its "radius".
+  - Size 1 = 1 occupied cells
+  - Size 2 = 7 occupied cells
+  - Size 3 = 19 occupied cells
+  - Size 4 = 37 occupied cells
+  - Etc...
+- 
 
 Buildings
+- A building has an origin.
+  - The positions of the building's cells are defined with respect to the origin.
+  - The position and rotation of the building uses the building's origin.
 - A building is something that occupies cells and doesn't move.
 - A building has a single health pool.
 - A single building consists of one island of connected cells.
@@ -27,6 +40,24 @@ Buildings
 - When a buliding is destroyed, the terrain of the underlying cells returns.
 
 Terrain
+
+Position and rotation
+- Position defines where something is in the world
+- Rotation defines what direction something is facing.
+  - Rotation has 6 values: northwest, northeast, east, southeast, southwest, west
+- Terrain has a position but no rotation.
+  - However, we don't really treat each terrain as a separate "thing". It's better represented as an attribute of a cell.
+- Units and buildings have positions and rotations.
+- The position of a unit/building is the position of its origin in the world.
+- Building rotation
+  - This is used to determine where to place its cells with respect to the origin.
+  - Unlike unit rotation, it doesn't matter for other stuff.
+- Unit rotation
+  - Unlike building rotation, it doesn't matter spatially because units are always regular hexagons.
+  - However, unit rotation is used to for many other things.
+  - Attack region: Most units can only attack in the direction they are facing.
+  - Defense stats: Most units have strong defense when attacked from the front, medium at the front sides, and weak at the rear sides and rear.
+  - Movement: Most units can only travel in the direction they are facing. Turning costs action points.
 
 Map view
 - This is the standard gameplay view
