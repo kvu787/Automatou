@@ -5,13 +5,10 @@ namespace Automatou.Interface;
 
 public partial class Laboratory
 {
-    private readonly Dictionary<string, SpinBox> unitNumbers = [];
-    private LineEdit unitName = null!, buildingName = null!;
-    private OptionButton behaviorChoice = null!, mobilityChoice = null!;
+    private LineEdit buildingName = null!;
     private SpinBox buildingHealth = null!, patchWidth = null!, patchHeight = null!;
     private bool choosingPivot;
-    private Label buildingSummary = null!, unitSummary = null!;
-    private UnitDesign? unitDraft;
+    private Label buildingSummary = null!;
     private BuildingDesign? buildingDraft;
     private bool buildingOpened;
     private string worldSlotName = "My world";
@@ -46,7 +43,6 @@ public partial class Laboratory
         });
         Button(persistence, "Load", () => ShowWorldBrowser("World creator"));
         Button(toolsPanel, "Building creator", () => SwitchMode("Building creator"));
-        Button(toolsPanel, "Unit creator", () => SwitchMode("Unit creator"));
         Button(toolsPanel, "Play this world", () => SwitchMode("World"));
         Heading(toolsPanel, "NEW WORLD");
         var shape = Choice(toolsPanel, ["Rectangle", "Hexagon"], 0, _ => { });
@@ -60,69 +56,6 @@ public partial class Laboratory
         Label(toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, muted);
     }
     private string WorldPath() => System.IO.Path.Combine(contentRoot, "Worlds", Storage.FileName(worldName.Text) + ".json");
-    private void BuildUnitCreator()
-    {
-        UnitDesign design = unitDraft ?? unitDesigns[unitIndex];
-        Label(toolsPanel, "UNIT CREATOR", 12, accent);
-        Label(toolsPanel, "Give it a purpose.", 21);
-        Choice(toolsPanel, unitDesigns.Select(u => u.Name), unitIndex, index => { unitIndex = index; unitDraft = null; SwitchMode("Unit creator"); });
-        unitName = TextField(toolsPanel, design.Name, "Unit name");
-        Button(toolsPanel, "Save & place in world", () => { SaveUnit(); tool = "Place unit"; SwitchMode("World creator"); });
-        Heading(toolsPanel, "BODY & COMBAT");
-        unitNumbers.Clear();
-        unitNumbers["Size"] = Number(toolsPanel, "Size", design.Size, 1, 12);
-        unitSummary = Label(toolsPanel, $"{1 + 3 * design.Size * (design.Size - 1)} occupied cells", 12, accent);
-        unitNumbers["Size"].ValueChanged += value => unitSummary.Text = $"{1 + 3 * value * (value - 1)} occupied cells";
-        unitNumbers["Health"] = Number(toolsPanel, "Health", design.Health, 1, 10000);
-        unitNumbers["Armor"] = Number(toolsPanel, "Front armor", design.Armor, 0, 1000);
-        unitNumbers["Damage"] = Number(toolsPanel, "Ranged damage", design.Damage, 1, 1000);
-        unitNumbers["MeleeDamage"] = Number(toolsPanel, "Melee damage", design.MeleeDamage, 1, 1000);
-        unitNumbers["Range"] = Number(toolsPanel, "Attack range", design.Range, 1, 30);
-        unitNumbers["ActionPoints"] = Number(toolsPanel, "Action points", design.ActionPoints, 1, 20);
-        unitNumbers["Evasion"] = Number(toolsPanel, "Evasion %", design.Evasion, 0, 90);
-        unitNumbers["BlastRadius"] = Number(toolsPanel, "Blast radius", design.BlastRadius, 0, 3);
-        Heading(toolsPanel, "AUTOMATON & MOVEMENT");
-        behaviorChoice = Choice(toolsPanel, Enum.GetNames<Automaton>(), (int)design.Automaton, _ => { });
-        mobilityChoice = Choice(toolsPanel, Enum.GetNames<Mobility>(), (int)design.Mobility, _ => { });
-        Label(toolsPanel, "Advance: close and fight. Skirmish: strike then retreat. Hold: defend current ground. Artillery: maintain distance. Swarm: prefer weakened prey.", 12, muted);
-        Button(toolsPanel, "Save unit blueprint", SaveUnit);
-        Button(toolsPanel, "Save & place in world", () => { SaveUnit(); tool = "Place unit"; SwitchMode("World creator"); });
-        Label(toolsPanel, "A blueprint is independent of faction. Select its faction when placing. Saving affects future placements.", 12, muted);
-        foreach (var spin in unitNumbers.Values) spin.ValueChanged += _ => UpdateUnitPreview();
-        unitName.TextChanged += _ => UpdateUnitPreview(false);
-        behaviorChoice.ItemSelected += _ => UpdateUnitPreview(false);
-        mobilityChoice.ItemSelected += _ => UpdateUnitPreview(false);
-        UpdateUnitPreview();
-    }
-    private UnitDesign ReadUnitDraft()
-    {
-        int Value(string name) => (int)unitNumbers[name].Value;
-        return new UnitDesign
-        {
-            Name = unitName.Text.Trim(), Size = Value("Size"), Health = Value("Health"), Armor = Value("Armor"), Damage = Value("Damage"), MeleeDamage = Value("MeleeDamage"),
-            Range = Value("Range"), ActionPoints = Value("ActionPoints"), Evasion = Value("Evasion"), BlastRadius = Value("BlastRadius"),
-            Automaton = (Automaton)behaviorChoice.Selected, Mobility = (Mobility)mobilityChoice.Selected
-        };
-    }
-    private void UpdateUnitPreview(bool fit = true)
-    {
-        var design = ReadUnitDraft();
-        board.PreviewUnit = new Entity { Unit = design, Faction = faction, Facing = facing, Health = design.Health };
-        if (fit) board.Fit();
-        board.QueueRedraw(); BuildInspector();
-    }
-    private void SaveUnit()
-    {
-        var design = ReadUnitDraft();
-        design.Validate();
-        Storage.SaveDesign(System.IO.Path.Combine(contentRoot, "Units", Storage.FileName(design.Name) + ".json"), design);
-        int index = unitDesigns.FindIndex(d => d.Name == design.Name);
-        if (index >= 0) { unitDesigns[index] = design; unitIndex = index; }
-        else { unitIndex = unitDesigns.Count; unitDesigns.Add(design); }
-        unitDraft = design.Copy();
-        UpdateUnitPreview(false);
-        Status($"Saved {design.Name}. Blueprint ready for placement.");
-    }
     private void OpenBuilding(BuildingDesign design)
     {
         buildingOpened = true;
@@ -207,7 +140,6 @@ public partial class Laboratory
     }
     private void RememberDraft()
     {
-        if (mode == "Unit creator" && unitName is not null) unitDraft = ReadUnitDraft();
         if (mode == "Building creator" && buildingName is not null)
             buildingDraft = new BuildingDesign { Name = buildingName.Text, Health = (int)buildingHealth.Value, PatchWidth = (int)patchWidth.Value, PatchHeight = (int)patchHeight.Value };
     }

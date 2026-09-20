@@ -11,8 +11,6 @@ public partial class HexBoard : Control
     public Action<Hex, MouseButton>? CellPressed { get; set; }
     public Action<Hex>? HoverChanged { get; set; }
     public bool BuildingMode { get; set; }
-    public bool UnitMode { get; set; }
-    public Entity? PreviewUnit { get; set; }
     public bool Coordinates { get; set; }
     public HashSet<Hex> BuildingCells { get; set; } = [];
     public Hex BuildingOrigin { get; set; } = Hex.FromOffset(10, 5);
@@ -46,7 +44,7 @@ public partial class HexBoard : Control
     }
     private IEnumerable<Hex> DisplayCells() => BuildingMode
         ? Enumerable.Range(EditorBounds.Position.Y, EditorBounds.Size.Y).SelectMany(y => Enumerable.Range(EditorBounds.Position.X, EditorBounds.Size.X).Select(x => Hex.FromOffset(x, y)))
-        : UnitMode && PreviewUnit?.Unit is { } unit ? Hex.Disk(Math.Max(5, unit.Size + unit.Range + 1)) : World.Terrain.Keys;
+        : World.Terrain.Keys;
     public void Fit()
     {
         if (World is null || Size.X < 1 || Size.Y < 1) return;
@@ -113,7 +111,7 @@ public partial class HexBoard : Control
         {
             var position = Screen(cell);
             if (position.X < -50 || position.Y < -50 || position.X > Size.X + 50 || position.Y > Size.Y + 50) continue;
-            Color fill = BuildingMode || UnitMode ? new("172733") : new(Catalog.TerrainColors[(int)World.Terrain[cell]]);
+            Color fill = BuildingMode ? new("172733") : new(Catalog.TerrainColors[(int)World.Terrain[cell]]);
             Hexagon(cell, .7f, fill);
             if (BuildingMode)
             {
@@ -121,21 +119,10 @@ public partial class HexBoard : Control
                     Hexagon(cell, 1, new Color("213946"), new Color("45606d"));
                 if (BuildingCells.Contains(cell)) Hexagon(cell, 2, new Color("548b96"), new Color("8cdfda"));
             }
-            else if (!UnitMode && Zoom > .65f) TerrainMark(cell, World.Terrain[cell]);
+            else if (Zoom > .65f) TerrainMark(cell, World.Terrain[cell]);
             if (Coordinates && Zoom > .85f) Text(position + new Vector2(-14, 4), $"{cell.X},{cell.Y}", 10, new Color("9eb2ab"));
         }
-        if (UnitMode && PreviewUnit?.Unit is { } previewDesign)
-        {
-            foreach (var cell in Hex.Disk(previewDesign.Range + previewDesign.Size))
-                if (Hex.TurnDistance(PreviewUnit.Facing, new Hex().DirectionTo(cell)) <= 1)
-                    Hexagon(cell, 1, new Color(.96f, .78f, .42f, .18f));
-            DrawEntity(PreviewUnit, false);
-            Vector2 origin = Screen(new());
-            Text(new Vector2(22, 79), PreviewUnit.Name.ToUpperInvariant(), 22, new Color("e5ece6"));
-            Text(new Vector2(22, 103), $"SIZE {previewDesign.Size}   /   {1 + 3 * previewDesign.Size * (previewDesign.Size - 1)} CELLS   /   {Hex.DirectionNames[PreviewUnit.Facing].ToUpperInvariant()}", 12, Ink);
-            DrawCircle(origin, 3, Colors.White);
-        }
-        else if (BuildingMode)
+        if (BuildingMode)
         {
             Vector2 origin = Screen(BuildingOrigin);
             DrawCircle(origin, 7, new Color("f3c66b"), false, 2, true);
@@ -160,9 +147,9 @@ public partial class HexBoard : Control
         }
         if (Hovered is { } hover) Hexagon(hover, 1, new Color(1, 1, 1, .04f), new Color("d6eceb"), 1.5f);
         DrawRect(new Rect2(0, 0, Size.X, 48), new Color(.043f, .078f, .11f, .95f));
-        Text(new Vector2(20, 29), BuildingMode ? "FOOTPRINT WORKSHOP" : UnitMode ? "UNIT ANATOMY" : "THE OBSERVATORY", 14, new Color("9bc0c9"));
+        Text(new Vector2(20, 29), BuildingMode ? "FOOTPRINT WORKSHOP" : "THE OBSERVATORY", 14, new Color("9bc0c9"));
         Text(new Vector2(Size.X - 158, 29), $"{Zoom * 100:0}%   ·   +Y ↑  +X →", 12, Ink);
-        Text(new Vector2(18, Size.Y - 18), BuildingMode ? "Gold cross = pivot   ·   Click a border cell to expand" : UnitMode ? "Gold cells = attack region   ·   White dot = origin   ·   R to rotate" : "Middle drag to pan   ·   Wheel to zoom   ·   F to frame world", 12, Ink);
+        Text(new Vector2(18, Size.Y - 18), BuildingMode ? "Gold cross = pivot   ·   Click a border cell to expand" : "Middle drag to pan   ·   Wheel to zoom   ·   F to frame world", 12, Ink);
     }
     private void TerrainMark(Hex cell, Terrain terrain)
     {

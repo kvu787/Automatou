@@ -31,7 +31,6 @@ public partial class Laboratory
         var column = OpenMenu("Main menu");
         Button(column, "Load world", () => ShowWorldBrowser());
         Button(column, "World creator", () => SwitchMode("World creator"));
-        Button(column, "Unit creator", () => SwitchMode("Unit creator"));
         Button(column, "Building creator", () => SwitchMode("Building creator"));
     }
 

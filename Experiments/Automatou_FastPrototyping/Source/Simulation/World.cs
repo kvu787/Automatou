@@ -58,7 +58,7 @@ public sealed class World
         }
         reason = ""; return true;
     }
-    public static bool Traversable(UnitDesign unit, Terrain terrain) => terrain != Simulation.Terrain.ExclusionZone && unit.Mobility switch
+    public static bool Traversable(Unit unit, Terrain terrain) => terrain != Simulation.Terrain.ExclusionZone && unit.Mobility switch
     {
         Mobility.Spaceflight => true,
         Mobility.Flight => terrain != Simulation.Terrain.Space,
@@ -132,59 +132,46 @@ public sealed class World
         foreach (var actor in order)
         {
             if (!Entities.Contains(actor)) continue;
-            int points = actor.Unit!.ActionPoints;
-            bool fired = false;
-            while (points > 0 && Entities.Contains(actor))
-            {
-                var target = Entities.Where(e => e.Faction != actor.Faction)
-                    .OrderBy(e => actor.Position.Distance(AimCell(actor.Position, e)) - (actor.Unit.Automaton == Automaton.Swarm ? (1 - (double)e.Health / e.MaximumHealth) * 5 : 0)).ThenBy(e => e.Id).FirstOrDefault();
-                if (target is null) break;
-                int distance = Separation(actor, target);
-                if (!fired && CanAttack(actor, target) && points >= 2)
-                {
-                    Attack(actor, target); points -= 2; fired = true; continue;
-                }
-                if (actor.Stationary) break;
-                if (actor.Unit.Automaton == Automaton.Hold && distance > actor.Unit.Range) break;
-                bool retreat = actor.Unit.Automaton is Automaton.Skirmish or Automaton.Artillery && distance < Math.Max(2, actor.Unit.Range - 1);
-                int desired;
-                if (retreat)
-                {
-                    var escape = Enumerable.Range(0, 6).Where(d => CanOccupy(actor, actor.Position + Hex.Directions[d], d, out _))
-                        .OrderByDescending(d => (actor.Position + Hex.Directions[d]).Distance(target.Position)).ThenBy(d => Hex.TurnDistance(actor.Facing, d)).ToArray();
-                    if (escape.Length == 0) break;
-                    desired = escape[0];
-                }
-                else if (distance <= actor.Unit.Range)
-                {
-                    if (fired || InAttackArc(actor, target)) break;
-                    desired = actor.Position.DirectionTo(AimCell(actor.Position, target));
-                }
-                else
-                {
-                    desired = FindDirection(actor, target);
-                    if (desired < 0) break;
-                }
-                if (actor.Facing != desired)
-                {
-                    actor.Facing = (actor.Facing + ((desired - actor.Facing + 6) % 6 <= 3 ? 1 : 5)) % 6;
-                    points--; continue;
-                }
-                if (!retreat && distance <= actor.Unit.Range) break;
+            var senses = new UnitSenses(this, actor);
+            // A rejected request ends this turn. Successful actions always consume points,
+            // so even a brain yielding endlessly cannot exceed its action budget.
+            using var actions = actor.Unit!.Brain.Act(senses).GetEnumerator();
+            while (senses.RemainingPoints > 0 && Entities.Contains(actor) && actions.MoveNext())
+                if (!ApplyAction(actor, senses, actions.Current)) break;
+        }
+    }
+    private bool ApplyAction(Entity actor, UnitSenses senses, UnitAction action)
+    {
+        switch (action)
+        {
+            case AttackAction attack:
+                var target = Entities.FirstOrDefault(e => e.Id == attack.TargetId);
+                if (senses.HasAttacked || senses.RemainingPoints < 2 || target is null || !CanAttack(actor, target)) return false;
+                Attack(actor, target);
+                senses.RemainingPoints -= 2; senses.HasAttacked = true;
+                return true;
+            case TurnAction turn:
+                if (actor.Stationary || turn.Direction is not (-1 or 1)) return false;
+                actor.Facing = (actor.Facing + turn.Direction + 6) % 6;
+                senses.RemainingPoints--;
+                return true;
+            case MoveForwardAction:
+                if (actor.Stationary) return false;
                 Hex next = actor.Position + Hex.Directions[actor.Facing];
-                if (!CanOccupy(actor, next, actor.Facing, out _)) break;
-                var terrain = Terrain[next];
-                bool rough = terrain is Simulation.Terrain.Forest or Simulation.Terrain.Wetlands or Simulation.Terrain.Tundra;
-                int cost = rough && actor.Unit.Mobility == Mobility.Ground && actor.Faction != Faction.InfantryAndArtillery ? 2 : 1;
-                if (points < cost) break;
-                actor.Position = next; points -= cost;
+                if (!CanOccupy(actor, next, actor.Facing, out _)) return false;
+                bool rough = Terrain[next] is Simulation.Terrain.Forest or Simulation.Terrain.Wetlands or Simulation.Terrain.Tundra;
+                int cost = rough && actor.Unit!.Mobility == Mobility.Ground && actor.Faction != Faction.InfantryAndArtillery ? 2 : 1;
+                if (senses.RemainingPoints < cost) return false;
+                actor.Position = next; senses.RemainingPoints -= cost;
                 if (rough && actor.Faction == Faction.InfantryAndArtillery) actor.Health -= 2;
                 if (actor.Health <= 0) { Entities.Remove(actor); Casualties++; Note($"{actor.Name} lost crossing rough terrain."); }
                 RebuildOccupancy();
-            }
+                return true;
+            default:
+                return false;
         }
     }
-    private int FindDirection(Entity actor, Entity target)
+    internal int FindDirection(Entity actor, Entity target)
     {
         var frontier = new PriorityQueue<(Hex Cell, int First), int>();
         var costs = new Dictionary<Hex, int> { [actor.Position] = 0 };
@@ -212,7 +199,7 @@ public sealed class World
         var designs = Catalog.Units();
         void Place(int index, Faction faction, int x, int y, int facing)
         {
-            var entity = new Entity { Unit = designs[index].Copy(), Faction = faction, Position = Hex.FromOffset(x, y), Facing = facing };
+            var entity = new Entity { Unit = designs[index].CreateFresh(), Faction = faction, Position = Hex.FromOffset(x, y), Facing = facing };
             foreach (var cell in entity.OccupiedCells()) world.Terrain[cell] = Simulation.Terrain.Plains;
             world.Add(entity, out _);
         }

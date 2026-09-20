@@ -14,10 +14,10 @@ public partial class Laboratory
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             if (!menuVisible || workspaceRoot.Visible) throw new Exception("Startup did not show the main menu.");
             var menuButtons = menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().ToArray();
-            if (!menuButtons.Select(button => button.Text).SequenceEqual(new[] { "Load world", "World creator", "Unit creator", "Building creator" }))
+            if (!menuButtons.Select(button => button.Text).SequenceEqual(new[] { "Load world", "World creator", "Building creator" }))
                 throw new Exception("Main menu choices or order are incorrect.");
             await Capture("MainMenu.png");
-            foreach (string creator in new[] { "World creator", "Unit creator", "Building creator" })
+            foreach (string creator in new[] { "World creator", "Building creator" })
             {
                 menuRoot.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == creator).EmitSignal(Godot.Button.SignalName.Pressed);
                 if (menuVisible || mode != creator || transport.Visible) throw new Exception("Creator navigation failed: " + creator);
@@ -46,12 +46,6 @@ public partial class Laboratory
             board.Fit();
             RotateSelection(); Step();
             await Capture("WorldInspector.png");
-            SwitchMode("Unit creator");
-            unitNumbers["Size"].Value = 4;
-            if (!unitSummary.Text.Contains("37")) throw new Exception("Unit size did not update its footprint.");
-            unitName.Text = "Verification unit"; SaveUnit();
-            if (!System.IO.File.Exists(System.IO.Path.Combine(contentRoot, "Units", "Verification unit.json"))) throw new Exception("Unit blueprint not saved.");
-            await Capture("UnitCreator.png");
             SwitchMode("Building creator");
             int before = board.EditorBounds.Size.X;
             EditBuilding(Hex.FromOffset(board.EditorBounds.End.X - 1, 5), MouseButton.Left);
@@ -66,7 +60,7 @@ public partial class Laboratory
             SwitchMode("World creator");
             ReplaceWorld(World.Create(false, 20, 15, false));
             tool = "Place unit"; OnCell(Hex.FromOffset(6, 6), MouseButton.Left);
-            if (world.Entities.Single().Unit?.Size != 4) throw new Exception("Custom unit placement failed.");
+            if (world.Entities.Single().Unit is not Bastion) throw new Exception("Source-defined unit placement failed.");
             tool = "Place building"; OnCell(Hex.FromOffset(14, 7), MouseButton.Left);
             if (world.Entities.Count != 2) throw new Exception("Custom building placement failed.");
             tool = "Paint terrain"; terrain = Terrain.Desert; OnCell(Hex.FromOffset(1, 1), MouseButton.Left);
@@ -83,7 +77,7 @@ public partial class Laboratory
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await Capture("MinimumWindow.png");
             ReplaceWorld(Storage.Decode(checkpoint));
-            Log("PASS: interface, inspect, pan, zoom, rotate, turn, unit preview/save/place, building expand/pivot/save/reopen/place, terrain paint, world file round trip, and minimum window.");
+            Log("PASS: interface, inspect, pan, zoom, rotate, turn, source-defined unit placement, building expand/pivot/save/reopen/place, terrain paint, world file round trip, and minimum window.");
             GetTree().Quit();
         }
         catch (Exception exception) { Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); GetTree().Quit(1); }

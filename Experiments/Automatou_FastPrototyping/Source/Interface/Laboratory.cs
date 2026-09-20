@@ -11,7 +11,7 @@ public partial class Laboratory : Control
     private VBoxContainer inspectorPanel = null!;
     private Label turnLabel = null!, statusLabel = null!, eventLabel = null!, populationLabel = null!;
     private Button playButton = null!;
-    private readonly List<UnitDesign> unitDesigns = Catalog.Units();
+    private readonly List<Unit> unitDesigns = Catalog.Units();
     private readonly List<BuildingDesign> buildingDesigns = [Catalog.Outpost()];
     private string mode = "World";
     private string currentTool = "Inspect";
@@ -70,28 +70,16 @@ public partial class Laboratory : Control
     private void Log(string message) => System.IO.File.AppendAllText(System.IO.Path.Combine(sessionRoot, "Session.log"), $"{DateTime.Now:HH:mm:ss.fff} {message}{System.Environment.NewLine}");
     private void LoadLibrary()
     {
-        foreach (string kind in new[] { "Units", "Buildings" })
-        {
-            string directory = System.IO.Path.Combine(contentRoot, kind);
-            System.IO.Directory.CreateDirectory(directory);
-            foreach (string file in System.IO.Directory.EnumerateFiles(directory, "*.json"))
-                try
-                {
-                    if (kind == "Units")
-                    {
-                        var design = Storage.LoadDesign<UnitDesign>(file); design.Validate();
-                        int index = unitDesigns.FindIndex(d => d.Name == design.Name);
-                        if (index < 0) unitDesigns.Add(design); else unitDesigns[index] = design;
-                    }
-                    else
-                    {
-                        var design = Storage.LoadDesign<BuildingDesign>(file); design.Validate();
-                        int index = buildingDesigns.FindIndex(d => d.Name == design.Name);
-                        if (index < 0) buildingDesigns.Add(design); else buildingDesigns[index] = design;
-                    }
-                }
-                catch (Exception exception) { Log($"Skipped invalid blueprint {file}: {exception.Message}"); }
-        }
+        string directory = System.IO.Path.Combine(contentRoot, "Buildings");
+        System.IO.Directory.CreateDirectory(directory);
+        foreach (string file in System.IO.Directory.EnumerateFiles(directory, "*.json"))
+            try
+            {
+                var design = Storage.LoadDesign<BuildingDesign>(file); design.Validate();
+                int index = buildingDesigns.FindIndex(d => d.Name == design.Name);
+                if (index < 0) buildingDesigns.Add(design); else buildingDesigns[index] = design;
+            }
+            catch (Exception exception) { Log($"Skipped invalid blueprint {file}: {exception.Message}"); }
     }
     private static StyleBoxFlat Box(string background, string border = "263b48", int radius = 6)
     {
@@ -257,7 +245,7 @@ public partial class Laboratory : Control
     {
         Pause();
         if (value != mode) RememberDraft();
-        mode = value; board.BuildingMode = mode == "Building creator"; board.UnitMode = mode == "Unit creator";
+        mode = value; board.BuildingMode = mode == "Building creator";
         menuVisible = false;
         if (menuRoot is not null) menuRoot.Hide();
         workspaceRoot.Show();
@@ -267,7 +255,6 @@ public partial class Laboratory : Control
         Clear(toolsPanel);
         if (mode == "World creator") BuildWorldTools();
         else if (mode == "World") BuildPlaybackTools();
-        else if (mode == "Unit creator") BuildUnitCreator();
         else BuildBuildingCreator();
         BuildInspector(); board.Fit(); board.QueueRedraw();
         Callable.From(() => board.Fit()).CallDeferred();
@@ -302,7 +289,7 @@ public partial class Laboratory : Control
             }
             else if (PlacementPreview(cell) is { } entity)
             {
-                entity.Unit = entity.Unit?.Copy(); entity.Building = entity.Building?.Copy();
+                entity.Unit = entity.Unit?.CreateFresh(); entity.Building = entity.Building?.Copy();
                 if (!world.Add(entity, out string reason)) Status(reason);
                 else { selected = entity; Status($"Placed {entity.Name} at {cell}."); }
             }
@@ -314,7 +301,6 @@ public partial class Laboratory : Control
     {
         if (mode == "World") return;
         Pause(); facing = (facing + 1) % 6;
-        if (mode == "Unit creator") { UpdateUnitPreview(false); return; }
         if (mode == "World creator" && tool == "Inspect" && selected is not null)
         {
             int rotation = (selected.Facing + 1) % 6;
@@ -340,21 +326,6 @@ public partial class Laboratory : Control
     {
         Clear(inspectorPanel);
         Label(inspectorPanel, mode == "Building creator" ? "DESIGN NOTES" : "WORLD TELEMETRY", 12, accent);
-        if (mode == "Unit creator" && board.PreviewUnit?.Unit is { } preview)
-        {
-            Label(inspectorPanel, "Simple rules.\nComplex encounters.", 21);
-            Label(inspectorPanel, "The preview updates as you edit. Unit size determines the complete occupied footprint; the origin is always its center.", 13, muted);
-            Heading(inspectorPanel, "DIRECTIONAL COMBAT");
-            Label(inspectorPanel, "The arrow marks the facing direction. Gold cells show the forward attack region. Adjacent attacks use melee damage; other attacks use ranged damage.", 13, muted);
-            Heading(inspectorPanel, "ACTION ECONOMY");
-            Label(inspectorPanel, "Turn 60°: 1 point\nMove forward: 1 point\nRough ground: 2 points\nAttack: 2 points, once per turn", 13);
-            Label(inspectorPanel, "Infantry & artillery units cross rough ground for 1 point and lose 2 health. Unused points expire each turn.", 12, muted);
-            Heading(inspectorPanel, "DEFENSE BY DIRECTION");
-            Label(inspectorPanel, $"Front armor: {preview.Armor}\nFront sides: {preview.Armor * 2 / 3}\nRear & rear sides: {preview.Armor / 4}", 13);
-            Heading(inspectorPanel, "EXPERIMENT FREELY");
-            Label(inspectorPanel, "Any faction can use any blueprint. Existing units keep their original design when you save changes. A blast radius above zero causes ranged attacks to damage allies as well as enemies.", 12, muted);
-            return;
-        }
         if (mode == "Building creator")
         {
             Label(inspectorPanel, "A place to take shape.", 21);
@@ -378,7 +349,7 @@ public partial class Laboratory : Control
             Label(inspectorPanel, $"Origin     {selected.Position}\nFacing    {Hex.DirectionNames[selected.Facing]}\nHealth    {selected.Health} / {selected.MaximumHealth}\nFootprint {selected.OccupiedCells().Count()} cells", 14);
             if (selected.Unit is { } unit)
             {
-                Label(inspectorPanel, $"{unit.Automaton} automaton\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
+                Label(inspectorPanel, $"{unit.Name} automaton\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
                 Label(inspectorPanel, "Gold cells show the forward attack region. Rear attacks bypass most armor.", 12, muted);
                 Button(inspectorPanel, selected.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { Pause(); selected.Stationary = !selected.Stationary; Refresh(); });
             }
