@@ -145,6 +145,28 @@ public partial class MainInterface {
             }
 
             await this.Capture("WorldOverview.png");
+            DisplayServer.WindowSetSize(new Vector2I(1440, 900));
+            _ = await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
+            while (this.board.Zoom > .12f) {
+                this.board._GuiInput(new InputEventMouseButton { Position = this.board.Size / 2, ButtonIndex = MouseButton.WheelDown, Pressed = true });
+            }
+            foreach (float targetZoom in new[] { .12f, 1f, 3.1f, 4f }) {
+                while (this.board.Zoom < targetZoom) {
+                    this.board._GuiInput(new InputEventMouseButton { Position = this.board.Size / 2, ButtonIndex = MouseButton.WheelUp, Pressed = true });
+                }
+                await this.Capture($"EdgesZoom{targetZoom * 100:0}.png");
+            }
+            this.board._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Middle, Pressed = true });
+            this.board._GuiInput(new InputEventMouseMotion { Position = this.board.Size / 2, Relative = new Vector2(.35f, .65f), ButtonMask = MouseButtonMask.Middle });
+            this.board._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Middle, Pressed = false });
+            await this.Capture("EdgesFractionalPan.png");
+            this.board._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Middle, Pressed = true });
+            this.board._GuiInput(new InputEventMouseMotion { Position = this.board.Size / 2, Relative = this.board.Size / 2 - this.board.Screen(this.world.Entities[0].Position), ButtonMask = MouseButtonMask.Middle });
+            this.board._GuiInput(new InputEventMouseButton { ButtonIndex = MouseButton.Middle, Pressed = false });
+            await this.Capture("EdgesUnitCloseup.png");
+            DisplayServer.WindowSetSize(new Vector2I(1100, 700));
+            _ = await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
+            this.board.Fit();
             this.Tool = "Inspect";
             this.board._GuiInput(new InputEventMouseButton { Position = this.board.Screen(this.world.Entities[0].Position), ButtonIndex = MouseButton.Left, Pressed = true });
             this.board._GuiInput(new InputEventMouseButton { Position = this.board.Screen(this.world.Entities[0].Position), ButtonIndex = MouseButton.Left, Pressed = false });

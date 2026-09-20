@@ -113,9 +113,42 @@ public partial class HexBoard : Control {
         return [.. Enumerable.Range(0, 6).Select(i => center + (Vector2.FromAngle(Mathf.DegToRad(30 + (i * 60))) * radius))];
     }
 
+    private void DrawSmoothConvexPolygon(Vector2[] points, Color color) {
+        // Blend across one physical pixel, centered on the original edge. Unlike
+        // MSAA alone, this provides continuous coverage as the board pans and zooms.
+        Transform2D screenTransform = this.GetScreenTransform();
+        Transform2D localTransform = screenTransform.AffineInverse();
+        int count = points.Length;
+        Vector2[] screenPoints = points.Select(point => screenTransform * point).ToArray();
+        Vector2 center = screenPoints.Aggregate(Vector2.Zero, (sum, point) => sum + point) / count;
+        Vector2[] normals = new Vector2[count];
+        for (int i = 0; i < count; i++) {
+            Vector2 next = screenPoints[(i + 1) % count];
+            Vector2 normal = (next - screenPoints[i]).Normalized().Orthogonal();
+            normals[i] = normal.Dot((screenPoints[i] + next) / 2 - center) > 0 ? normal : -normal;
+        }
+        Vector2[] vertices = new Vector2[count * 2];
+        Color[] colors = new Color[count * 2];
+        List<int> indices = new((count - 2) * 3 + count * 6);
+        for (int i = 0; i < count; i++) {
+            Vector2 previousNormal = normals[(i + count - 1) % count];
+            Vector2 offset = (previousNormal + normals[i]) * (.5f / (1 + previousNormal.Dot(normals[i])));
+            vertices[i] = localTransform * (screenPoints[i] - offset);
+            vertices[i + count] = localTransform * (screenPoints[i] + offset);
+            colors[i] = color;
+            colors[i + count] = new Color(color, 0);
+            int next = (i + 1) % count;
+            indices.AddRange([i, i + count, next + count, i, next + count, next]);
+            if (i > 0 && i < count - 1) {
+                indices.AddRange([0, i, i + 1]);
+            }
+        }
+        RenderingServer.CanvasItemAddTriangleArray(this.GetCanvasItem(), indices.ToArray(), vertices, colors);
+    }
+
     private void Hexagon(Hex cell, float inset, Color fill, Color? stroke = null, float width = 1) {
         Vector2[] points = Polygon(this.Screen(cell), Math.Max(1, (Radius * this.Zoom) - inset));
-        this.DrawColoredPolygon(points, fill);
+        this.DrawSmoothConvexPolygon(points, fill);
         if (stroke is { } color) {
             this.DrawPolyline([.. points, points[0]], color, width, true);
         }
@@ -130,9 +163,10 @@ public partial class HexBoard : Control {
         }
 
         this.DrawRect(new Rect2(Vector2.Zero, this.Size), new Color("0b141c"));
+        float visibleMargin = Radius * this.Zoom + 1;
         foreach (Hex cell in this.DisplayCells()) {
             Vector2 position = this.Screen(cell);
-            if (position.X < -50 || position.Y < -50 || position.X > this.Size.X + 50 || position.Y > this.Size.Y + 50) {
+            if (position.X < -visibleMargin || position.Y < -visibleMargin || position.X > this.Size.X + visibleMargin || position.Y > this.Size.Y + visibleMargin) {
                 continue;
             }
 
@@ -188,11 +222,11 @@ public partial class HexBoard : Control {
         }
         if (entity.Unit.Brain.State.Destination is { } destination) {
             Vector2 point = this.Screen(destination);
-            this.DrawDashedLine(this.Screen(entity.Position), point, memoryColor, 1.5f, 6, true);
+            this.DrawDashedLine(this.Screen(entity.Position), point, memoryColor, 1.5f, 6, true, true);
             this.DrawPolyline([point + new Vector2(0, -9), point + new Vector2(9, 0), point + new Vector2(0, 9), point + new Vector2(-9, 0), point + new Vector2(0, -9)], memoryColor, 2, true);
         }
         if (entity.BondedUnitId is { } bond && this.World.Entities.FirstOrDefault(candidate => candidate.Id == bond) is { } ally) {
-            this.DrawDashedLine(this.Screen(entity.Position), this.Screen(ally.Position), bondColor, 2, 9, true);
+            this.DrawDashedLine(this.Screen(entity.Position), this.Screen(ally.Position), bondColor, 2, 9, true, true);
             this.DrawCircle(this.Screen(ally.Position), Math.Max(11, Radius * this.Zoom), bondColor, false, 2, true);
         }
     }
@@ -220,15 +254,15 @@ public partial class HexBoard : Control {
         Vector2 center = this.Screen(entity.Position);
         Vector2 forward = Center(Hex.Directions[entity.Facing]).Normalized();
         Vector2 side = forward.Orthogonal(); float s = Math.Clamp(8 * this.Zoom, 3, 11);
-        this.DrawColoredPolygon([center + (forward * s), center - (forward * s * .7f) + (side * s * .7f), center - (forward * s * .7f) - (side * s * .7f)], color);
+        this.DrawSmoothConvexPolygon([center + (forward * s), center - (forward * s * .7f) + (side * s * .7f), center - (forward * s * .7f) - (side * s * .7f)], color);
         if (entity.Stationary) {
-            this.DrawCircle(center, s * 1.5f, color, false, 2);
+            this.DrawCircle(center, s * 1.5f, color, false, 2, true);
         }
 
         if (!preview && entity.Health < entity.MaximumHealth) {
             Vector2 start = center + (new Vector2(-12, 14) * this.Zoom);
-            this.DrawLine(start, start + new Vector2(24 * this.Zoom, 0), new Color("101b23"), 3);
-            this.DrawLine(start, start + new Vector2(24 * this.Zoom * entity.Health / entity.MaximumHealth, 0), color, 3);
+            this.DrawLine(start, start + new Vector2(24 * this.Zoom, 0), new Color("101b23"), 3, true);
+            this.DrawLine(start, start + new Vector2(24 * this.Zoom * entity.Health / entity.MaximumHealth, 0), color, 3, true);
         }
         if (entity == this.Selected) {
             this.DrawArc(center, (Radius * this.Zoom * entity.Unit.Size) + 4, 0, Mathf.Tau, 48, new Color("ffffff"), 1, true);

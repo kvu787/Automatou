@@ -10,7 +10,7 @@ Requirements: Windows 11 x64, .NET SDK 10.0.400 or newer in the .NET 10 family, 
 
 All session logs are written under `MyLogOutput/yyyy-MM-dd_HH-mm-ss`. `Launcher.log` records the build, `Godot.log` records engine output, and `Session.log` records actions, combat, per-turn decisions, tuning, and rewinds. Opening the project directly in Godot also creates a timestamped application session log.
 
-Rendering uses Godot's Mobile renderer with 4× multisample anti-aliasing for smoother hexagon edges, unit arrows, and other 2D geometry. This requires a graphics driver supported by the Mobile renderer; the OpenGL Compatibility renderer does not support 2D MSAA. VSync is off and the frame rate is limited to 60 FPS.
+Rendering uses Godot's Forward+ renderer with Direct3D 12 and 8× multisample anti-aliasing. Filled hexagons and unit arrows also blend across a one-pixel edge fringe to reduce the remaining stair steps during zooming and panning. The fringe follows physical screen pixels, keeping its width consistent across zoom levels and window scaling. Lines, circles, and dashed overlays enable their own edge smoothing. VSync is off and the frame rate is limited to 60 FPS.
 
 ## First experiment
 

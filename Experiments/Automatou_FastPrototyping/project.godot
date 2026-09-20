@@ -23,5 +23,5 @@ renderer/rendering_method="forward_plus"
 rendering_device/driver.windows="d3d12"
 rendering_device/fallback_to_vulkan=false
 rendering_device/fallback_to_opengl3=false
-anti_aliasing/quality/msaa_2d=2
+anti_aliasing/quality/msaa_2d=3
 environment/defaults/default_clear_color=Color(0.031, 0.047, 0.071, 1)
