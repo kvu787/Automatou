@@ -23,6 +23,7 @@ public partial class Laboratory : Control {
             if (this.toolChoice is not null && IsInstanceValid(this.toolChoice)) {
                 this.toolChoice.Select(Array.IndexOf(ToolNames, value));
             }
+            this.UpdateWorldToolVisibility();
         }
     } = "Inspect";
     private static readonly string[] ToolNames = ["Inspect", "Paint terrain", "Place unit", "Erase entity"];
@@ -656,6 +657,8 @@ public partial class Laboratory : Control {
         Clear(this.toolsPanel);
         Clear(this.modePanel);
         this.toolChoice = null;
+        this.terrainTools = null;
+        this.populationTools = null;
         this.modePillbox.Visible = this.mode == "World creator";
         if (this.mode == "World creator") {
             this.BuildWorldTools();

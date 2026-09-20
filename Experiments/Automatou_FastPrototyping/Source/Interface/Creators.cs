@@ -5,6 +5,17 @@ namespace Automatou.UserInterface;
 
 public partial class Laboratory {
     private string worldSlotName = "My world";
+    private VBoxContainer? terrainTools;
+    private VBoxContainer? populationTools;
+
+    private void UpdateWorldToolVisibility() {
+        if (this.terrainTools is not null && IsInstanceValid(this.terrainTools)) {
+            this.terrainTools.Visible = this.Tool == "Paint terrain";
+        }
+        if (this.populationTools is not null && IsInstanceValid(this.populationTools)) {
+            this.populationTools.Visible = this.Tool == "Place unit";
+        }
+    }
 
     private void BuildWorldTools() {
         _ = Label(this.modePanel, "MODE", 12, this.accent);
@@ -12,13 +23,16 @@ public partial class Laboratory {
             this.Tool = ToolNames[index];
             this.Status($"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
         });
-        _ = Label(this.toolsPanel, "TERRAIN BRUSH", 12, this.accent);
-        _ = this.Choice(this.toolsPanel, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.Tool = "Paint terrain"; this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
-        _ = this.Heading(this.toolsPanel, "POPULATE THE WORLD");
-        _ = this.Choice(this.toolsPanel, Catalog.FactionNames, (int)this.faction, index => { this.faction = (Faction)index; this.board.QueueRedraw(); });
-        this.unitChoice = this.Choice(this.toolsPanel, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.Tool = "Place unit"; this.board.QueueRedraw(); });
-        _ = this.Button(this.toolsPanel, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
-        _ = this.Button(this.toolsPanel, "Rotate placement   [R]", this.RotateSelection);
+        this.terrainTools = Column(this.toolsPanel);
+        _ = Label(this.terrainTools, "TERRAIN BRUSH", 12, this.accent);
+        _ = this.Choice(this.terrainTools, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.Tool = "Paint terrain"; this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
+        this.populationTools = Column(this.toolsPanel);
+        _ = Label(this.populationTools, "POPULATE THE WORLD", 12, this.accent);
+        _ = this.Choice(this.populationTools, Catalog.FactionNames, (int)this.faction, index => { this.faction = (Faction)index; this.board.QueueRedraw(); });
+        this.unitChoice = this.Choice(this.populationTools, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.Tool = "Place unit"; this.board.QueueRedraw(); });
+        _ = this.Button(this.populationTools, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
+        _ = this.Button(this.populationTools, "Rotate placement   [R]", this.RotateSelection);
+        this.UpdateWorldToolVisibility();
         CheckButton coordinates = new() { Text = "Show cell coordinates", ButtonPressed = this.board.Coordinates };
         coordinates.Toggled += value => { this.board.Coordinates = value; this.board.QueueRedraw(); }; this.toolsPanel.AddChild(coordinates);
         _ = this.Heading(this.toolsPanel, "WORLD FILE");

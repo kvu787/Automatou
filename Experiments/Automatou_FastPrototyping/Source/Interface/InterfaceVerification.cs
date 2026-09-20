@@ -171,6 +171,17 @@ public partial class Laboratory {
             await this.Capture("WorldInspector.png");
             this.SwitchMode("World creator");
             this.ReplaceWorld(World.Create(false, 20, 15, false));
+            foreach (string tool in ToolNames) {
+                _ = this.toolChoice!.EmitSignal(OptionButton.SignalName.ItemSelected, Array.IndexOf(ToolNames, tool));
+                if (this.Tool != tool || this.terrainTools!.IsVisibleInTree() != (tool == "Paint terrain") || this.populationTools!.IsVisibleInTree() != (tool == "Place unit") || !this.worldName.IsVisibleInTree()) {
+                    throw new InvalidOperationException("World creator shows unrelated controls for: " + tool);
+                }
+                await this.Capture("Creator" + tool.Replace(" ", "") + ".png");
+                this.OnCell(Hex.FromOffset(1, 1), MouseButton.Right);
+                if (this.Tool != "Inspect" || this.toolChoice.Selected != 0 || this.terrainTools.IsVisibleInTree() || this.populationTools.IsVisibleInTree()) {
+                    throw new InvalidOperationException("Right-click inspect did not hide editing tools.");
+                }
+            }
             this.Tool = "Place unit"; this.OnCell(Hex.FromOffset(6, 6), MouseButton.Left);
             if (this.world.Entities.Single().Unit is not Bastion) {
                 throw new InvalidOperationException("Source-defined unit placement failed.");
