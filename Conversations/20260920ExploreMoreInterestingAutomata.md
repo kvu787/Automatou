@@ -128,3 +128,43 @@ I would include a small inspector explanation from the first experiment: **curre
 One especially relevant research lead is [*Amorphous Fortress*](https://arxiv.org/abs/2306.13169), an open-ended spatial simulation that explores emergent interactions using generated and evolved finite-state machines. It is close to Automatou’s observer-oriented premise and worth examining after the first authored experiments.
 
 I saved and committed the [full proposal](C:/Users/k/Repository/Automatou/Experiments/Automatou_FastPrototyping/AutomatonBehaviorExploration.md), including integration details, failure modes, experimental limits, and approaches to defer.
+
+## User
+
+all this sounds pretty interesting. go ahead and change C:\Users\k\Repository\Automatou\Experiments\Automatou_FastPrototyping as you see fit. my goal is to experiment with, understand, and develop new interesting automata as quickly as possible.
+
+## Assistant
+
+I’ll turn the proposal into a runnable set of experiments, with visible decision reasons and quick ways to compare behaviors. I’ll start with machine heat, remembered sightings, and a bonded pair, and use those to improve the tools for developing new automata.
+
+## Assistant
+
+The work is now split into three parts: simulation rules, the experiment interface, and regression checks. The interface will let you pause, inspect a unit’s reasons, change a few behavior settings, and replay the same starting state with those settings preserved. I’m keeping behavior definitions in the existing unit classes so new ideas stay quick to edit.
+
+## Assistant
+
+The three scenarios are running, and the checks confirm different outcomes: cautious and aggressive walkers have different firing rhythms, pursuers investigate remembered positions, and changing a bond changes where a guard moves. The application also passed its interface checks at the minimum window size. I’m tightening the inspection controls so tuning and replay take fewer clicks.
+
+## Assistant
+
+The inspector now has separate Behavior, Tuning, and Unit tabs. Final review also caught two edge cases: escorts now turn toward nearby threats before firing, and artillery no longer penalizes melee attacks for splash damage that cannot occur. I’m checking those fixes before committing the simulation and interface changes separately.
+
+## Assistant
+
+The implementation and verification are complete. Replays now preserve tuning even when a unit dies during a run. I’m finishing the documentation and conversation record; the simulation and interface changes are already committed separately.
+
+## Assistant
+
+Implemented and committed a working automaton laboratory.
+
+Double-click [Run.cmd](C:/Users/k/Repository/Automatou/Experiments/Automatou_FastPrototyping/Run.cmd), select **Load world**, and try:
+
+- **Heat and readiness** — compare cautious and aggressive firing styles.
+- **Lost in the forest** — watch pursuit and searching based on remembered sightings.
+- **Bonds under pressure** — change whom a Bastion protects.
+
+The inspector shows intentions, decision scores, memory, and recent choices. **Tuning** lets you change behavior; **Rewind with tuning** repeats the same starting state while preserving your edits, including those for units that died.
+
+There are also mechanic switches, visual overlays, ten-turn stepping, and comparisons between runs. The [README](C:/Users/k/Repository/Automatou/Experiments/Automatou_FastPrototyping/README.md) explains the experiment workflow and how to develop new automata.
+
+Verified: clean build, **34 simulation checks**, and automated interface checks, including the minimum 1100 × 700 window.
