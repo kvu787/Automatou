@@ -17,6 +17,7 @@ You may refer to local copies of source repos in `%UserProfile%\Repository\Exter
 
 ## Git
 
+Unless explicitly told not to by the user, commit your changes like a normal developer would.
 When implementing stuff, avoid difficult-to-review "mega-commits".
 Split large work into multiple commits to make it easier to review.
 Separate commits that record conversations from other commits.
