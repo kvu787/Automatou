@@ -13,22 +13,23 @@ public sealed class Home : Unit
 
     public sealed class Automaton : UnitAutomaton
     {
-        public int TurnsObserved { get; set; }
-        public int? TargetId { get; set; }
+        public Automaton() => Settings = new() { Aggression = .35, Caution = .95, Commitment = .2 };
 
         public override IEnumerable<UnitAction> Act(UnitSenses senses)
         {
-            TurnsObserved++;
-            while (senses.RemainingPoints > 0)
+            var observation = BehaviorPlanning.Begin(this, senses);
+            var target = BehaviorPlanning.Enemy(this, observation, preferWounded: false, considerBlast: false);
+            var choices = new List<BehaviorOption?>();
+            if (target is not null)
             {
-                var observation = senses.Observe();
-                var target = TacticalPlanning.SelectTarget(observation, TargetId, preferWounded: false);
-                TargetId = target?.Id;
-                if (target is null) yield break;
-                var action = TacticalPlanning.Engage(senses, observation, target, keepDistance: true);
-                if (action is null) yield break;
-                yield return action;
+                choices.Add(BehaviorPlanning.Engage(this, observation, target, considerBlast: false));
+                choices.Add(BehaviorPlanning.Withdraw(this, observation, target, skirmish: true));
             }
+            else choices.Add(BehaviorPlanning.Explore(this, senses, observation));
+            choices.Add(BehaviorPlanning.Escort(this, senses, observation));
+            var intention = BehaviorPlanning.Choose(this, observation, choices);
+            foreach (var action in BehaviorPlanning.Execute(this, senses, intention, keepDistance: true))
+                yield return action;
         }
     }
 }

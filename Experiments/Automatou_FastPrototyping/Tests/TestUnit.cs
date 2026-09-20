@@ -21,6 +21,9 @@ sealed class TestUnit : Unit
     public new int ActionPoints { get => statistics.ActionPoints; init => statistics = statistics with { ActionPoints = value }; }
     public new int Evasion { get => statistics.Evasion; init => statistics = statistics with { Evasion = value }; }
     public new int BlastRadius { get => statistics.BlastRadius; init => statistics = statistics with { BlastRadius = value }; }
+    public new int SightRange { get => statistics.SightRange; init => statistics = statistics with { SightRange = value }; }
+    public new int HeatPerShot { get => statistics.HeatPerShot; init => statistics = statistics with { HeatPerShot = value }; }
+    public new int CoolingPerTurn { get => statistics.CoolingPerTurn; init => statistics = statistics with { CoolingPerTurn = value }; }
     public new Mobility Mobility { get => statistics.Mobility; init => statistics = statistics with { Mobility = value }; }
     private sealed class TestAutomaton(TestUnit unit) : UnitAutomaton
     {

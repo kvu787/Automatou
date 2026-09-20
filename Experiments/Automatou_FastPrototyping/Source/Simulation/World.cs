@@ -2,8 +2,9 @@ namespace Automatou.Simulation;
 
 public sealed record BattleEffect(Hex From, Hex To, bool Hit, int Damage);
 
-public sealed class World
+public sealed partial class World
 {
+    public SimulationSettings Settings { get; set; } = new();
     public Dictionary<Hex, Terrain> Terrain { get; } = [];
     public List<Entity> Entities { get; } = [];
     public List<string> Events { get; } = [];
@@ -93,7 +94,8 @@ public sealed class World
     public int Separation(Entity a, Entity b) => a.OccupiedCells().Min(c => b.OccupiedCells().Min(c.Distance));
     public static Hex AimCell(Hex from, Entity target) => target.OccupiedCells().MinBy(c => c.Distance(from));
     public bool InAttackArc(Entity a, Entity b) => Hex.TurnDistance(a.Facing, a.Position.DirectionTo(AimCell(a.Position, b))) <= 1;
-    public bool CanAttack(Entity a, Entity b) => a.Faction != b.Faction && Separation(a, b) <= a.Unit.Range && InAttackArc(a, b);
+    public bool CanAttack(Entity a, Entity b) => a.Faction != b.Faction && (!Settings.HeatEnabled || !a.WeaponLocked) &&
+        CanObserve(a, b) && Separation(a, b) <= a.Unit.Range && InAttackArc(a, b);
     public int ArmorAgainst(Entity defender, Hex attacker)
     {
         int difference = Hex.TurnDistance(defender.Facing, defender.Position.DirectionTo(attacker));
@@ -102,6 +104,16 @@ public sealed class World
     public void Attack(Entity attacker, Entity defender)
     {
         if (!CanAttack(attacker, defender)) return;
+        attacker.Unit.Brain.State.ShotsFired++;
+        if (Settings.HeatEnabled && attacker.Unit.HeatPerShot > 0)
+        {
+            attacker.Heat = Math.Min(200, attacker.Heat + attacker.Unit.HeatPerShot);
+            if (attacker.Heat >= 100 && !attacker.WeaponLocked)
+            {
+                attacker.WeaponLocked = true;
+                Note($"{attacker.Name} overheated; weapon locked until heat falls to 40.");
+            }
+        }
         bool hit = RandomPercent() >= (defender.Stationary ? 0 : defender.Unit.Evasion);
         bool melee = Separation(attacker, defender) <= 1;
         int power = melee ? attacker.Unit.MeleeDamage : attacker.Unit.Damage;
@@ -124,6 +136,17 @@ public sealed class World
     public void Step()
     {
         Turn++; Effects.Clear();
+        if (Settings.HeatEnabled)
+            foreach (var entity in Entities)
+            {
+                int cooling = CoolingAt(entity, entity.Position);
+                entity.Heat = Math.Max(0, entity.Heat - cooling);
+                if (entity.WeaponLocked && entity.Heat <= 40)
+                {
+                    entity.WeaponLocked = false;
+                    Note($"{entity.Name} cooled; weapon ready.");
+                }
+            }
         var order = Entities.OrderBy(e => e.Id).ToArray();
         if (order.Length == 0) return;
         // Rotate first actor each turn, avoiding a permanent first-faction advantage.
@@ -159,7 +182,7 @@ public sealed class World
                 Hex next = actor.Position + Hex.Directions[actor.Facing];
                 if (!CanOccupy(actor, next, actor.Facing, out _)) return false;
                 bool rough = Terrain[next] is Simulation.Terrain.Forest or Simulation.Terrain.Wetlands or Simulation.Terrain.Tundra;
-                int cost = rough && actor.Unit.Mobility == Mobility.Ground && actor.Faction != Faction.InfantryAndArtillery ? 2 : 1;
+                int cost = MovementCost(actor, next);
                 if (senses.RemainingPoints < cost) return false;
                 actor.Position = next; senses.RemainingPoints -= cost;
                 if (rough && actor.Faction == Faction.InfantryAndArtillery) actor.Health -= 2;
@@ -169,28 +192,6 @@ public sealed class World
             default:
                 return false;
         }
-    }
-    internal int FindDirection(Entity actor, Entity target)
-    {
-        var frontier = new PriorityQueue<(Hex Cell, int First), int>();
-        var costs = new Dictionary<Hex, int> { [actor.Position] = 0 };
-        var targetCells = target.OccupiedCells().ToArray();
-        frontier.Enqueue((actor.Position, -1), 0);
-        int expanded = 0;
-        while (frontier.TryDequeue(out var current, out _) && expanded++ < 3000)
-        {
-            if (current.First >= 0 && targetCells.Min(current.Cell.Distance) <= actor.Unit.Range + actor.Unit.Size - 1) return current.First;
-            foreach (int direction in Enumerable.Range(0, 6).OrderBy(d => Hex.TurnDistance(actor.Facing, d)))
-            {
-                var next = current.Cell + Hex.Directions[direction];
-                if (!CanOccupy(actor, next, direction, out _)) continue;
-                int cost = costs[current.Cell] + 1;
-                if (costs.TryGetValue(next, out var old) && old <= cost) continue;
-                costs[next] = cost;
-                frontier.Enqueue((next, current.First < 0 ? direction : current.First), cost + targetCells.Min(next.Distance));
-            }
-        }
-        return -1;
     }
     public static World Demonstration()
     {

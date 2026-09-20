@@ -2,7 +2,7 @@ namespace Automatou.Simulation;
 
 // One invocation per turn. Each yielded request is resolved before the iterator resumes.
 // Store lasting goals/state in serializable properties of the concrete automaton.
-public abstract class UnitAutomaton
+public abstract partial class UnitAutomaton
 {
     public abstract IEnumerable<UnitAction> Act(UnitSenses senses);
 }
@@ -13,12 +13,13 @@ public sealed record MoveForwardAction : UnitAction;
 public sealed record AttackAction(int TargetId) : UnitAction;
 
 public sealed record EntityObservation(int Id, Faction Faction, Hex Position, int Facing,
-    int Health, int MaximumHealth, bool Stationary, UnitStatistics Unit, IReadOnlyList<Hex> Cells);
+    int Health, int MaximumHealth, bool Stationary, UnitStatistics Unit, IReadOnlyList<Hex> Cells,
+    int Heat = 0, bool WeaponLocked = false, int? BondedUnitId = null);
 public sealed record WorldObservation(int Turn, EntityObservation Self, IReadOnlyList<EntityObservation> Entities);
 
 // No mutable world/entity/brain references escape this read-only sensing interface.
 // Observe returns detached values; call it again after actuation for fresh information.
-// Visibility is currently global; future sensing restrictions belong here.
+// Terrain is known globally. Every entity query obeys the same current visibility.
 public sealed class UnitSenses
 {
     private readonly World world;
@@ -26,12 +27,20 @@ public sealed class UnitSenses
     internal UnitSenses(World world, Entity actor) { this.world = world; this.actor = actor; RemainingPoints = actor.Unit.ActionPoints; }
     public int RemainingPoints { get; internal set; }
     public bool HasAttacked { get; internal set; }
+    public SimulationSettings Settings => world.Settings with { };
+    public IReadOnlyList<Hex> KnownCells => Array.AsReadOnly(world.Terrain.Keys.ToArray());
     private static EntityObservation Copy(Entity entity) => new(entity.Id, entity.Faction, entity.Position, entity.Facing,
-        entity.Health, entity.MaximumHealth, entity.Stationary, entity.Unit.Statistics, Array.AsReadOnly(entity.OccupiedCells().ToArray()));
-    public WorldObservation Observe() => new(world.Turn, Copy(actor), Array.AsReadOnly(world.Entities.Select(Copy).ToArray()));
+        entity.Health, entity.MaximumHealth, entity.Stationary, entity.Unit.Statistics, Array.AsReadOnly(entity.OccupiedCells().ToArray()),
+        entity.Heat, entity.WeaponLocked, entity.BondedUnitId);
+    public WorldObservation Observe() => new(world.Turn, Copy(actor), Array.AsReadOnly(world.Entities.Where(entity => world.CanObserve(actor, entity)).Select(Copy).ToArray()));
     public Terrain? TerrainAt(Hex cell) => world.Terrain.TryGetValue(cell, out var terrain) ? terrain : null;
-    public bool CanOccupy(Hex position, int facing) => world.CanOccupy(actor, position, facing, out _);
-    public int FindDirection(int targetId) => world.Entities.FirstOrDefault(e => e.Id == targetId) is { } target ? world.FindDirection(actor, target) : -1;
+    public bool CanOccupy(Hex position, int facing) => world.CanOccupyKnown(actor, position);
+    public bool CanAttack(int targetId) => !HasAttacked && RemainingPoints >= 2 &&
+        world.Entities.FirstOrDefault(entity => entity.Id == targetId) is { } target && world.CanAttack(actor, target);
+    public int MovementCost(Hex destination) => world.MovementCost(actor, destination);
+    public int CoolingAt(Hex destination) => world.CoolingAt(actor, destination);
+    public int FindDirection(int targetId) => world.Entities.FirstOrDefault(e => e.Id == targetId && world.CanObserve(actor, e)) is { } target ? world.FindDirection(actor, target) : -1;
+    public int FindDirection(Hex destination, int stoppingDistance = 0) => world.FindDirection(actor, destination, stoppingDistance);
 }
 
 // Reusable tactics, not a behavior registry. Each unit's nested automaton chooses
@@ -50,7 +59,7 @@ public static class TacticalPlanning
         int distance = actor.Cells.Min(c => target.Cells.Min(c.Distance));
         Hex aim = target.Cells.MinBy(c => c.Distance(actor.Position));
         bool inArc = Hex.TurnDistance(actor.Facing, actor.Position.DirectionTo(aim)) <= 1;
-        if (!senses.HasAttacked && distance <= unit.Range && inArc && senses.RemainingPoints >= 2) return new AttackAction(target.Id);
+        if (senses.CanAttack(target.Id)) return new AttackAction(target.Id);
         if (actor.Stationary) return null;
         bool retreat = keepDistance && distance < Math.Max(2, unit.Range - 1);
         int desired;
@@ -74,6 +83,6 @@ public static class TacticalPlanning
         }
         if (actor.Facing != desired) return new TurnAction((desired - actor.Facing + 6) % 6 <= 3 ? 1 : -1);
         if (!retreat && distance <= unit.Range) return null;
-        return new MoveForwardAction();
+        return senses.RemainingPoints >= senses.MovementCost(actor.Position + Hex.Directions[actor.Facing]) ? new MoveForwardAction() : null;
     }
 }

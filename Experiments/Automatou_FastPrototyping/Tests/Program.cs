@@ -74,6 +74,8 @@ Test("Blast damage includes allies and clears destroyed unit footprints", () =>
 Test("Units route around impassable terrain and engage", () =>
 {
     var world = World.Create(false, 18, 14, false);
+    // This fixture measures route finding, not contact acquisition around an obstacle.
+    world.Settings.LimitedPerception = false;
     var attacker = Unit(world, Hex.FromOffset(3, 6), design: new TestUnit() { ActionPoints = 5, Range = 1, Damage = 10 });
     var defender = Unit(world, Hex.FromOffset(12, 6), Faction.Prytu, new TestUnit() { Behavior = TestBehavior.Hold, Health = 1000, Damage = 1 });
     for (int y = 3; y < 10; y++) world.Terrain[Hex.FromOffset(8, y)] = Terrain.Water;
@@ -201,6 +203,371 @@ Test("Actuation rejects invalid requests and enforces per-turn limits", () =>
     Hex start = walker.Position;
     blocked.Terrain[start + Hex.Directions[0]] = Terrain.Water;
     blocked.Step(); Check(walker.Position == start, "Brain cannot bypass terrain");
+});
+Test("Sight radius and forest concealment restrict observations for every faction", () =>
+{
+    var world = World.Create(false, 30, 20, false);
+    var observer = Unit(world, Hex.FromOffset(5, 8), design: new TestUnit { SightRange = 8, Actions = _ => [] });
+    var concealed = Unit(world, observer.Position + new Hex(6, 0), Faction.Prytu, new TestUnit { Actions = _ => [] });
+    var distant = Unit(world, observer.Position + new Hex(12, 0), Faction.Prytu, new TestUnit { Actions = _ => [] });
+    var ally = Unit(world, observer.Position + new Hex(14, 0), design: new TestUnit { Actions = _ => [] });
+    var senses = new UnitSenses(world, observer);
+    Check(senses.Observe().Entities.Any(e => e.Id == concealed.Id), "An exposed enemy inside the sight radius is visible");
+    Check(senses.Observe().Entities.All(e => e.Id != distant.Id), "An enemy outside sight is hidden");
+    world.Terrain[concealed.Position] = Terrain.Forest;
+    var observation = senses.Observe();
+    Check(observation.Entities.All(e => e.Id != concealed.Id), "Forest conceals the enemy");
+    Check(observation.Entities.All(e => e.Id != ally.Id), "Distant allies are not a global information channel");
+    Check(observation.Entities.Any(e => e.Id == observer.Id), "The unit always observes itself");
+    world.Terrain[concealed.Position] = Terrain.Plains;
+    world.Terrain[observer.Position + new Hex(3, 0)] = Terrain.Forest;
+    Check(senses.Observe().Entities.All(e => e.Id != concealed.Id), "An intervening forest cell blocks sight of an exposed target");
+    concealed.Position = observer.Position + new Hex(2, 0);
+    world.Terrain[concealed.Position] = Terrain.Forest;
+    world.RebuildOccupancy();
+    Check(senses.Observe().Entities.Any(e => e.Id == concealed.Id), "A nearby enemy in forest is detectable");
+    senses.Settings.LimitedPerception = false;
+    Check(world.Settings.LimitedPerception, "Sensing exposes a detached copy of world settings");
+    world.Settings.LimitedPerception = false;
+    Check(senses.Observe().Entities.Count == world.Entities.Count, "Global perception restores the comparison baseline");
+});
+Test("Hidden units cannot leak through target routes, planning occupancy, or attack requests", () =>
+{
+    var world = World.Create(false, 24, 18, false);
+    Entity? target = null;
+    var observer = Unit(world, Hex.FromOffset(5, 8), design: new TestUnit
+    {
+        SightRange = 10, Range = 10, Actions = _ => [new AttackAction(target!.Id)]
+    });
+    target = Unit(world, observer.Position + new Hex(6, 0), Faction.Prytu, new TestUnit { Actions = _ => [] });
+    world.Terrain[target.Position] = Terrain.Forest;
+    var senses = new UnitSenses(world, observer);
+    Check(senses.FindDirection(target.Id) == -1, "Target routes cannot look up an unseen enemy");
+    Check(senses.CanOccupy(target.Position, 0), "Planning occupancy cannot reveal an unseen footprint");
+    Check(!world.CanOccupy(observer, target.Position, 0, out _), "Physical collision still rejects the occupied cell");
+    Hex destination = target.Position + new Hex(2, 0);
+    int directionWithHiddenUnit = senses.FindDirection(destination);
+    target.Position += new Hex(0, 3);
+    world.Terrain[target.Position] = Terrain.Forest;
+    world.RebuildOccupancy();
+    Check(senses.FindDirection(destination) == directionWithHiddenUnit, "Destination routes do not change with an unseen unit's position");
+    target.Position -= new Hex(0, 3);
+    world.RebuildOccupancy();
+    int health = target.Health;
+    world.Step();
+    Check(target.Health == health && world.Effects.Count == 0, "An otherwise legal attack by hidden identity is rejected");
+    world.Settings.LimitedPerception = false;
+    world.Step();
+    Check(target.Health < health && world.Effects.Count == 1, "The same attack succeeds with global perception");
+});
+Test("Weapon heat is physical, locks at the upper threshold, and recovers at the lower threshold", () =>
+{
+    var world = World.Create(false, 20, 15, false);
+    bool firing = true;
+    Entity? target = null;
+    var shooter = Unit(world, Hex.FromOffset(5, 6), design: new TestUnit
+    {
+        HeatPerShot = 30, CoolingPerTurn = 10, Range = 4,
+        Actions = _ => firing ? [new AttackAction(target!.Id)] : []
+    });
+    target = Unit(world, shooter.Position + new Hex(3, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+    shooter.Heat = 90;
+    world.Step();
+    Check(shooter.Heat == 110 && shooter.WeaponLocked && world.Effects.Count == 1, "One cooling update precedes the shot and the shot triggers lockout");
+    int healthAfterShot = target.Health;
+    world.Step();
+    Check(shooter.Heat == 100 && target.Health == healthAfterShot && world.Effects.Count == 0, "Locked weapon cannot fire even when its automaton requests a shot");
+    firing = false;
+    for (int i = 0; i < 5; i++) world.Step();
+    Check(shooter.Heat == 50 && shooter.WeaponLocked && !world.CanAttack(shooter, target), "Cooling below the lock threshold does not immediately unlock");
+    world.Step();
+    Check(shooter.Heat == 40 && !shooter.WeaponLocked && world.CanAttack(shooter, target), "Weapon becomes available at the recovery threshold");
+    var senses = new UnitSenses(world, shooter);
+    for (int i = 0; i < 10; i++) senses.Observe();
+    Check(shooter.Heat == 40, "Repeated sensing does not update physical heat");
+});
+Test("Terrain cooling and disabling heat are consistent across sensing and execution", () =>
+{
+    foreach (var (terrain, expectedCooling) in new[] { (Terrain.Plains, 10), (Terrain.Desert, 5), (Terrain.Wetlands, 15) })
+    {
+        var world = World.Create(false, 15, 15, false);
+        var actor = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { CoolingPerTurn = 10, Actions = _ => [] });
+        world.Terrain[actor.Position] = terrain;
+        actor.Heat = 70;
+        var senses = new UnitSenses(world, actor);
+        Check(senses.CoolingAt(actor.Position) == expectedCooling, "The automaton estimates the same cooling as the world");
+        world.Step();
+        Check(actor.Heat == 70 - expectedCooling, "Terrain changes cooling once per turn");
+    }
+    var baseline = World.Create(false, 15, 15, false);
+    baseline.Settings.HeatEnabled = false;
+    Entity? target = null;
+    var shooter = Unit(baseline, Hex.FromOffset(5, 5), design: new TestUnit { HeatPerShot = 80, Actions = _ => [new AttackAction(target!.Id)] });
+    target = Unit(baseline, shooter.Position + new Hex(2, 0), Faction.Prytu, new TestUnit { Actions = _ => [] });
+    shooter.Heat = 120; shooter.WeaponLocked = true;
+    baseline.Step();
+    Check(baseline.Effects.Count == 1 && shooter.Heat == 120, "Disabled heat preserves physical state but bypasses the weapon restriction");
+});
+Test("Evaded shots still consume the weapon's physical heat budget", () =>
+{
+    var world = World.Create(false, 15, 15, false, seed: 1);
+    Entity? target = null;
+    var shooter = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit { HeatPerShot = 45, Actions = _ => [new AttackAction(target!.Id)] });
+    target = Unit(world, shooter.Position + new Hex(2, 0), Faction.Prytu, new TestUnit { Evasion = 90, Actions = _ => [] });
+    world.Step();
+    Check(world.Effects.Count == 1 && !world.Effects[0].Hit && target.Health == target.MaximumHealth, "The seeded shot was evaded");
+    Check(shooter.Heat == 45, "A miss does not refund weapon heat");
+});
+Test("World saves preserve experiment switches, physical heat, and directed bonds", () =>
+{
+    var world = World.Create(false, 30, 20, false);
+    var actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
+    var ally = Unit(world, Hex.FromOffset(15, 8), design: new Bastion());
+    actor.Heat = 120; actor.WeaponLocked = true; actor.BondedUnitId = ally.Id;
+    world.Settings.LimitedPerception = false; world.Settings.HeatEnabled = false; world.Settings.BondsEnabled = false;
+    string saved = Storage.Encode(world);
+    var restored = Storage.Decode(saved);
+    Check(Storage.Encode(restored) == saved, "Experiment setup survives an exact round trip");
+    Check(restored.Entities[0].Heat == 120 && restored.Entities[0].WeaponLocked && restored.Entities[0].BondedUnitId == ally.Id, "Physical state and directed attachment are restored");
+    Check(!restored.Settings.LimitedPerception && !restored.Settings.HeatEnabled && !restored.Settings.BondsEnabled, "Mechanism comparisons use the saved switches");
+    restored.Settings.HeatEnabled = true;
+    Check(!world.Settings.HeatEnabled, "Restored world settings are independent");
+});
+Test("World loading rejects invalid experiment state before it reaches a simulation", () =>
+{
+    var world = World.Create(false, 20, 15, false);
+    Unit(world, Hex.FromOffset(6, 6), design: new SiegeWalker());
+    string saved = Storage.Encode(world);
+    foreach (int invalidHeat in new[] { -1, 201 })
+    {
+        var data = System.Text.Json.Nodes.JsonNode.Parse(saved)!;
+        data["Entities"]![0]!["Heat"] = invalidHeat;
+        Reject(() => Storage.Decode(data.ToJsonString()));
+    }
+    var invalidBond = System.Text.Json.Nodes.JsonNode.Parse(saved)!;
+    invalidBond["Entities"]![0]!["BondedUnitId"] = 0;
+    Reject(() => Storage.Decode(invalidBond.ToJsonString()));
+    var missingSettings = System.Text.Json.Nodes.JsonNode.Parse(saved)!;
+    missingSettings["Settings"] = null;
+    Reject(() => Storage.Decode(missingSettings.ToJsonString()));
+});
+Test("Lost contacts are pursued at their last sighting and expire without remote tracking", () =>
+{
+    var world = World.Create(false, 35, 20, false);
+    var actor = Unit(world, Hex.FromOffset(5, 8), design: new Bastion());
+    var target = Unit(world, actor.Position + new Hex(6, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+    world.Step();
+    var memory = actor.Unit.Brain.State;
+    Hex lastSighting = target.Position;
+    Check(memory.Contacts.Any(contact => contact.Id == target.Id && contact.Position == lastSighting && contact.LastSeenTurn == 1), "The visible target is recorded");
+    target.Position += new Hex(15, 0);
+    world.RebuildOccupancy();
+    Check(!world.CanObserve(actor, target), "The enemy has left perception");
+    world.Step();
+    Check(memory.Intention == "Investigate" && memory.Destination == lastSighting && actor.Unit.Brain.TargetId == target.Id, "Pursuit uses the stale location and identity");
+    Check(memory.Contacts.Single().Position == lastSighting && memory.Contacts.Single().LastSeenTurn == 1, "Hidden movement does not refresh the memory");
+    actor.Stationary = true;
+    while (world.Turn < 9) world.Step();
+    Check(memory.Contacts.Count == 1, "A contact remains available for eight turns after the sighting");
+    world.Step();
+    Check(memory.Contacts.Count == 0 && actor.Unit.Brain.TargetId is null, "Stale contacts expire and cease supplying a target");
+});
+Test("Contact and decision memory stay bounded and remembering can be disabled", () =>
+{
+    var world = World.Create(false, 35, 20, false);
+    world.Settings.LimitedPerception = false;
+    var actor = Unit(world, Hex.FromOffset(5, 8), design: new Bastion());
+    actor.Stationary = true;
+    for (int i = 0; i < 12; i++)
+        Unit(world, Hex.FromOffset(15 + i % 6 * 2, 4 + i / 6 * 8), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+    for (int i = 0; i < 16; i++) world.Step();
+    var brain = actor.Unit.Brain;
+    Check(brain.State.Contacts.Count == 8 && brain.State.Contacts.Select(contact => contact.Id).Distinct().Count() == 8, "Contact memory is capped without duplicates");
+    Check(brain.State.History.Count == 12 && brain.State.History[0].Turn == 5 && brain.State.History[^1].Turn == 16, "The decision trace retains the latest twelve turns");
+    brain.Settings.RememberContacts = false;
+    world.Step();
+    Check(brain.State.Contacts.Count == 0 && brain.State.Intention == "Engage", "Disabling memory clears contacts while retaining current observations");
+});
+Test("Directed bonds change a healthy escort's choice under pressure", () =>
+{
+    (World World, Entity Actor, Entity Ward) Encounter(bool bonds)
+    {
+        var world = World.Create(false, 30, 20, false);
+        world.Settings.BondsEnabled = bonds;
+        var actor = Unit(world, Hex.FromOffset(7, 8), design: new TravelerOutrider(), facing: 3);
+        var ward = Unit(world, actor.Position + new Hex(6, 0), design: new TestUnit { Health = 1000, Actions = _ => [] });
+        ward.Health = 100;
+        actor.BondedUnitId = ward.Id;
+        Unit(world, actor.Position - new Hex(2, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+        Unit(world, ward.Position + new Hex(2, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+        return (world, actor, ward);
+    }
+    var bonded = Encounter(true); var independent = Encounter(false);
+    int initialDistance = bonded.World.Separation(bonded.Actor, bonded.Ward);
+    bonded.World.Step(); independent.World.Step();
+    Check(bonded.Actor.Unit.Brain.State.Intention == "Escort" && bonded.Actor.Unit.Brain.TargetId == bonded.Ward.Id, "The explicit bond wins over the nearby attack");
+    Check(bonded.World.Separation(bonded.Actor, bonded.Ward) < initialDistance, "Escort decisions produce movement toward the ward");
+    Check(independent.Actor.Unit.Brain.State.Intention == "Engage" && independent.Actor.Unit.Brain.State.ShotsFired == 1, "Disabling bonds restores pressure against the nearby enemy");
+});
+Test("The same heat-limited machine develops distinct firing rhythms from its policy", () =>
+{
+    (World World, Entity Actor) Encounter(double aggression, int reserve)
+    {
+        var world = World.Create(false, 22, 16, false);
+        var actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
+        actor.Stationary = true;
+        actor.Unit.Brain.Settings.Aggression = aggression;
+        actor.Unit.Brain.Settings.HeatReserve = reserve;
+        actor.Unit.Brain.Settings.Commitment = 0;
+        Unit(world, actor.Position + new Hex(4, 0), Faction.Prytu, new TrainingTarget());
+        return (world, actor);
+    }
+    var bold = Encounter(1, 100); var measured = Encounter(.5, 70);
+    for (int i = 0; i < 3; i++) { bold.World.Step(); measured.World.Step(); }
+    Check(bold.Actor.Unit.Brain.State.ShotsFired == 3 && bold.Actor.WeaponLocked, "Aggressive policy takes three consecutive shots and accepts lockout");
+    Check(measured.Actor.Unit.Brain.State.ShotsFired == 2 && !measured.Actor.WeaponLocked, "Measured policy spaces shots to preserve availability");
+    Check(measured.Actor.Unit.Brain.State.History.Any(trace => trace.Intention == "Recover"), "The reason for the skipped shot is available in the decision trace");
+});
+Test("Commitment resists minor score changes but yields to emergency recovery", () =>
+{
+    var world = World.Create(false, 15, 15, false);
+    var actor = Unit(world, Hex.FromOffset(5, 5));
+    var brain = actor.Unit.Brain;
+    brain.Settings.Commitment = .2;
+    var observation = new UnitSenses(world, actor).Observe();
+    BehaviorPlanning.Choose(brain, observation with { Turn = 1 }, [new("Engage", .6, "Initial pressure", 2)]);
+    BehaviorPlanning.Choose(brain, observation with { Turn = 2 }, [new("Engage", .5, "Still possible", 2), new("Withdraw", .6, "Small advantage", 2)]);
+    Check(brain.State.Intention == "Engage" && brain.State.IntentionSince == 1, "A small advantage does not immediately replace the commitment");
+    BehaviorPlanning.Choose(brain, observation with { Turn = 3 }, [new("Engage", .9, "Keep pressure", 2), new("Recover", 1, "Weapon unavailable")]);
+    Check(brain.State.Intention == "Recover" && brain.State.IntentionSince == 3, "An emergency overrides commitment");
+});
+Test("A heat reserve smaller than one shot still permits firing from cold", () =>
+{
+    var world = World.Create(false, 22, 16, false);
+    var actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
+    actor.Stationary = true;
+    actor.Unit.Brain.Settings.Aggression = .5;
+    actor.Unit.Brain.Settings.HeatReserve = 40;
+    Unit(world, actor.Position + new Hex(4, 0), Faction.Prytu, new TrainingTarget());
+    world.Step();
+    Check(actor.Unit.Brain.State.ShotsFired == 1 && actor.Heat == actor.Unit.HeatPerShot, "The minimum slider value does not permanently strand a cold weapon in recovery");
+});
+Test("Focused experiments demonstrate their advertised behavioral differences", () =>
+{
+    var heat = ScenarioCatalog.All.Single(scenario => scenario.Name == "Heat and readiness").Create();
+    var walkers = heat.Entities.Where(entity => entity.Unit is SiegeWalker).OrderBy(entity => entity.Unit.Brain.Settings.Aggression).ToArray();
+    var measuredRhythm = new List<int>(); var aggressiveRhythm = new List<int>();
+    bool aggressiveLocked = false;
+    for (int i = 0; i < 12; i++)
+    {
+        heat.Step();
+        measuredRhythm.Add(walkers[0].Unit.Brain.State.ShotsFired);
+        aggressiveRhythm.Add(walkers[1].Unit.Brain.State.ShotsFired);
+        Check(!walkers[0].WeaponLocked, "The measured operator preserves weapon availability");
+        aggressiveLocked |= walkers[1].WeaponLocked;
+    }
+    Check(aggressiveLocked && !measuredRhythm.SequenceEqual(aggressiveRhythm), "The two heat policies show different firing rhythms and lockout behavior");
+    var forest = ScenarioCatalog.All.Single(scenario => scenario.Name == "Lost in the forest").Create();
+    var pursuer = forest.Entities.Single(entity => entity.Unit is CloneInfantry);
+    bool investigated = false;
+    for (int i = 0; i < 12; i++)
+    {
+        forest.Step();
+        investigated |= pursuer.Unit.Brain.State.Intention == "Investigate";
+    }
+    Check(investigated, "The forest scenario actually produces investigation of a lost contact");
+    var bonds = ScenarioCatalog.All.Single(scenario => scenario.Name == "Bonds under pressure");
+    var lowerWorld = bonds.Create(); var upperWorld = bonds.Create();
+    var lowerGuard = lowerWorld.Entities.Single(entity => entity.Unit is Bastion);
+    var upperGuard = upperWorld.Entities.Single(entity => entity.Unit is Bastion);
+    upperGuard.BondedUnitId = upperWorld.Entities.First(entity => entity.Unit is TrainingTarget && entity.Id != upperGuard.BondedUnitId).Id;
+    for (int i = 0; i < 3; i++) { lowerWorld.Step(); upperWorld.Step(); }
+    Check(lowerGuard.Position != upperGuard.Position, "Changing only the bond sends the guardian along a different route");
+    Check(lowerGuard.Unit.Brain.State.History.Any(trace => trace.Intention == "Escort") && upperGuard.Unit.Brain.State.History.Any(trace => trace.Intention == "Escort"), "Both routes are explained by escort decisions");
+});
+Test("Every focused experiment restores rich automaton state and continues exactly", () =>
+{
+    foreach (var scenario in ScenarioCatalog.All)
+    {
+        var world = scenario.Create();
+        for (int i = 0; i < 5; i++) world.Step();
+        Check(world.Entities.Any(entity => entity.Unit.Brain.State.History.Count > 0 && entity.Unit.Brain.State.Considerations.Count > 0), "The saved state includes real decisions");
+        string saved = Storage.Encode(world);
+        var restored = Storage.Decode(saved);
+        Check(Storage.Encode(restored) == saved, $"{scenario.Name}: full state round-trips exactly");
+        foreach (var actor in world.Entities)
+        {
+            var copy = restored.Entities.Single(entity => entity.Id == actor.Id);
+            Check(!ReferenceEquals(copy.Unit.Brain.Settings, actor.Unit.Brain.Settings) && !ReferenceEquals(copy.Unit.Brain.State, actor.Unit.Brain.State), "Restored preferences and runtime state are independent");
+        }
+        for (int i = 0; i < 12; i++)
+        {
+            world.Step(); restored.Step();
+            Check(Storage.Encode(world) == Storage.Encode(restored), $"{scenario.Name}: exact continuation at turn {world.Turn}");
+        }
+    }
+});
+Test("Invalid automaton preferences and contact records are rejected on load", () =>
+{
+    string saved = Storage.Encode(ScenarioCatalog.All[0].Create());
+    var invalidPreference = System.Text.Json.Nodes.JsonNode.Parse(saved)!;
+    invalidPreference["Entities"]![0]!["Unit"]!["Memory"]!["Settings"]!["Aggression"] = 1.1;
+    Reject(() => Storage.Decode(invalidPreference.ToJsonString()));
+    var missingState = System.Text.Json.Nodes.JsonNode.Parse(saved)!;
+    missingState["Entities"]![0]!["Unit"]!["Memory"]!["State"] = null;
+    Reject(() => Storage.Decode(missingState.ToJsonString()));
+    var invalidContact = System.Text.Json.Nodes.JsonNode.Parse(saved)!;
+    var contacts = invalidContact["Entities"]![0]!["Unit"]!["Memory"]!["State"]!["Contacts"]!.AsArray();
+    contacts.Add(System.Text.Json.Nodes.JsonNode.Parse("{\"Id\":2,\"Faction\":\"Prytu\",\"LastSeenTurn\":0,\"Health\":5,\"MaximumHealth\":5,\"SearchStep\":4}"));
+    Reject(() => Storage.Decode(invalidContact.ToJsonString()));
+});
+Test("Finishing the final search probe abandons the exhausted contact", () =>
+{
+    var world = World.Create(false, 20, 16, false);
+    var actor = Unit(world, Hex.FromOffset(6, 8), design: new Bastion());
+    var brain = actor.Unit.Brain;
+    brain.TargetId = 999;
+    brain.State.Intention = "Investigate";
+    brain.State.Destination = actor.Position;
+    brain.State.Contacts.Add(new ContactMemory
+    {
+        Id = 999, Faction = Faction.Prytu, Position = actor.Position, LastSeenTurn = 0,
+        Health = 100, MaximumHealth = 100, SearchStep = 2
+    });
+    world.Step();
+    Check(brain.State.Contacts.Count == 0 && brain.TargetId is null && brain.State.Intention != "Investigate", "Reaching the third search destination does not schedule a fourth probe");
+});
+Test("An escort turns toward and attacks a threat while already beside its ward", () =>
+{
+    var world = World.Create(false, 24, 18, false);
+    var guard = Unit(world, Hex.FromOffset(7, 8), design: new Bastion(), facing: 2);
+    var ward = Unit(world, guard.Position + new Hex(2, 0), design: new TestUnit { Health = 1000, Actions = _ => [] });
+    ward.Health = 100; guard.BondedUnitId = ward.Id;
+    var threat = Unit(world, guard.Position + new Hex(4, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+    Check(!world.CanAttack(guard, threat) && world.Separation(guard, ward) <= 2, "The guard is supporting its ward but the threat starts outside its attack arc");
+    world.Step();
+    Check(guard.Unit.Brain.State.Intention == "Escort" && guard.Facing != 2, "The escort rotates to protect the ward");
+    Check(threat.Health < 1000 && guard.Unit.Brain.State.ShotsFired == 1, "Turning and firing completes inside the action budget");
+});
+Test("Artillery distinguishes safe melee attacks from allied exposure to ranged blasts", () =>
+{
+    var world = World.Create(false, 24, 18, false);
+    var actor = Unit(world, Hex.FromOffset(5, 8), design: new LongbowArtillery());
+    var meleeTarget = Unit(world, actor.Position + new Hex(1, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+    var meleeAlly = Unit(world, actor.Position + new Hex(1, -1), design: new TestUnit { Actions = _ => [] });
+    var rangedTarget = Unit(world, actor.Position + new Hex(4, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
+    Unit(world, actor.Position + new Hex(5, 0), design: new TestUnit { Actions = _ => [] });
+    var observation = new UnitSenses(world, actor).Observe();
+    var close = observation.Entities.Single(entity => entity.Id == meleeTarget.Id);
+    var far = observation.Entities.Single(entity => entity.Id == rangedTarget.Id);
+    var brain = actor.Unit.Brain;
+    Check(BehaviorPlanning.Engage(brain, observation, close, considerBlast: true).Score == BehaviorPlanning.Engage(brain, observation, close).Score,
+        "Nearby allies do not reduce the score of a nonsplash melee attack");
+    Check(BehaviorPlanning.Engage(brain, observation, far, considerBlast: true).Score < BehaviorPlanning.Engage(brain, observation, far).Score,
+        "The same policy still accounts for real ranged blast exposure");
+    Check(BehaviorPlanning.Enemy(brain, observation, considerBlast: true)?.Id == meleeTarget.Id, "False splash exposure does not divert artillery from the close target");
+    world.Step();
+    Check(meleeTarget.Health < 1000 && meleeAlly.Health == meleeAlly.MaximumHealth, "The chosen melee strike damages the enemy without splashing its neighboring ally");
 });
 Console.WriteLine($"{passed} verification groups passed.");
 int outputIndex = Array.IndexOf(args, "--output");

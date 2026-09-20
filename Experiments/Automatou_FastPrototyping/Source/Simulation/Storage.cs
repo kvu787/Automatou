@@ -15,23 +15,24 @@ public static class Storage
         public int NextId { get; set; }
         public uint RandomState { get; set; }
         public int Casualties { get; set; }
+        public SimulationSettings Settings { get; set; } = new();
     }
     public static string Encode(World world) => JsonSerializer.Serialize(new WorldData
     {
         Cells = world.Terrain.Select(c => new CellData(c.Key, c.Value)).ToList(), Entities = world.Entities,
-        Turn = world.Turn, NextId = world.NextId, RandomState = world.RandomState, Casualties = world.Casualties
+        Turn = world.Turn, NextId = world.NextId, RandomState = world.RandomState, Casualties = world.Casualties, Settings = world.Settings
     }, Options);
     public static World Decode(string json)
     {
         var data = JsonSerializer.Deserialize<WorldData>(json, Options) ?? throw new InvalidDataException("Empty world file.");
-        if (data.Cells.Count is < 1 or > 20000 || data.Turn < 0 || data.RandomState == 0) throw new InvalidDataException("Invalid world metadata.");
-        var world = new World { Turn = data.Turn, NextId = data.NextId, RandomState = data.RandomState, Casualties = data.Casualties };
+        if (data.Cells is null || data.Entities is null || data.Settings is null || data.Cells.Count is < 1 or > 20000 || data.Turn < 0 || data.RandomState == 0) throw new InvalidDataException("Invalid world metadata.");
+        var world = new World { Turn = data.Turn, NextId = data.NextId, RandomState = data.RandomState, Casualties = data.Casualties, Settings = data.Settings };
         foreach (var cell in data.Cells)
             if (!Enum.IsDefined(cell.Terrain) || !world.Terrain.TryAdd(cell.Position, cell.Terrain)) throw new InvalidDataException("Invalid world cell.");
         var identifiers = new HashSet<int>();
         foreach (var entity in data.Entities)
         {
-            if (entity.Unit is null || entity.Facing is < 0 or > 5 || !Enum.IsDefined(entity.Faction) || entity.Id < 1 || !identifiers.Add(entity.Id)) throw new InvalidDataException("Invalid entity.");
+            if (entity.Unit is null || entity.Facing is < 0 or > 5 || entity.Heat is < 0 or > 200 || entity.BondedUnitId is < 1 || !Enum.IsDefined(entity.Faction) || entity.Id < 1 || !identifiers.Add(entity.Id)) throw new InvalidDataException("Invalid entity.");
             entity.Unit.Validate();
             if (entity.Health <= 0 || entity.Health > entity.MaximumHealth || !world.CanOccupy(entity, entity.Position, entity.Facing, out _)) throw new InvalidDataException("Invalid entity placement or health.");
             world.Entities.Add(entity); world.RebuildOccupancy();
