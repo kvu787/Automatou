@@ -1,11 +1,39 @@
-Godot 4.7.2 .NET C#
-.NET 10, C# version 14
-Turn-based strategy
-2D
-hex grid, pointy top
-combat-focused
+# Specification
 
-Spatial model
+## Overview
+
+- Godot 4.7.2 .NET C#
+- .NET 10, C# version 14
+- Turn-based strategy
+- 2D
+- hex grid, pointy top
+
+## The style of this game
+
+The genre of this game isn't well represented in the current landscape of games. Basically, it is
+for people like me who like to program, understand, create, experiment with, and watch worlds and
+their diverse inhabitants rise/fall, interaction with each other, etc. For example, I enjoy
+setting up large scale battles in strategy games such as Age of Empires and Homeworld and watching
+the armies fight without explicitly controlling any faction or unit. However, most strategy games
+are poorly suited to that style of creative sandbox play because they have poor tooling for
+creating your own factions, units, game systems, AI logic, etc., and they aren't open source. Also,
+they are built around an experience of a player managing their own faction and fighting other
+factions, instead of watching factions fight from an omniscient perspective.
+
+Although I want to gradually add increasing complex simulation mechanics and systems to this game,
+this game isn't like Dwarf Fortress, Rimworld, and Caves of Qud or other games that have complex
+simulation systems in that the player's focus isn't to control something and achieve certain
+objectives or favorable conditions for that thing. (A player *can* do that, but the game isn't
+specifically created to curate that experience.)
+
+The concept of "emergence" is key to this game, in that fun, interesting, and complex experiences
+can be found when relatively simple components interact with each other.
+
+The most succinct way I can describe this game is a "world-builder-and-runner" game.
+John Conway's "Game of Life" could be viewed as the fundamental progenitor of this style of game.
+
+## Spatial model
+
 - The world is a 2D hexagonal grid
 - All player-facing representations of the hex grid should use coordinates that are natural to people
   - This means that +x means right and +y means up
@@ -15,12 +43,14 @@ Spatial model
     - Cell (0, 1) is northeast of the cell (0, 0).
     - Cell (0, 2) is northwest of the cell (0, 1).
 
-World
+## World
+
 - Each cell has one terrain type
 - A cell can be occupied or unoccupied
 - Occupied cells may contain a unit cell or a buliding cell
 
-Units
+## Units
+
 - All units have a regular hexagonal shape.
 - The origin of a unit is its central cell.
 - A unit has a size. It defines its "radius".
@@ -31,7 +61,8 @@ Units
   - Etc...
 - 
 
-Buildings
+## Buildings
+
 - A building has an origin.
   - The positions of the building's cells are defined with respect to the origin.
   - The position and rotation of the building uses the building's origin.
@@ -41,7 +72,8 @@ Buildings
 - When a cell is occupied by a building, it's terrain is irrelevant.
 - When a buliding is destroyed, the terrain of the underlying cells returns.
 
-Position and rotation
+## Position and rotation
+
 - Position defines where something is in the world
 - Rotation defines what direction something is facing.
   - Rotation has 6 values: northwest, northeast, east, southeast, southwest, west
@@ -59,20 +91,23 @@ Position and rotation
   - Defense stats: Most units have strong defense when attacked from the front, medium at the front sides, and weak at the rear sides and rear.
   - Movement: Most units can only travel in the direction they are facing. Turning costs action points.
 
-World view
+## World view
+
 - This is the standard gameplay view
 - The player sees the grid map with terrain, units, and buildings
 - Player can pan by holding the middle mouse button and moving the mouse
 - Player can zoom in/out with the scroll wheel.
 
-World creator
+## World creator
+
 - When creating a new map, you can start with:
   - a hexagonal map and specify a positive integer for the size
   - a rectangular map and specify a positive integer for the width and a positive integer for the height
 - This is used by players to manually author maps.
 - These maps are an alternative to auto-generated maps.
 
-Building creator
+## Building creator
+
 - This is used to create buildings.
 - All buildings must be manually created
 - There are no "auto-generated" buildings.
@@ -84,14 +119,16 @@ when saving, the position of the building's origin on the grid is recorded
 when placing a building on the map, you may rotate it about its origin
 
 
-Unit creator
+## Unit creator
+
 - This is used to create units.
 - Unit size is defined as an integer 1 or greater
 
-Factions
+## Factions
 - 
 
-Terrain types
+## Terrain types
+
 - Water
 - Air
 - Space
