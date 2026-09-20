@@ -10,6 +10,8 @@ Requirements: Windows 11 x64, .NET SDK 10.0.400 or newer in the .NET 10 family, 
 
 All session logs are written under `MyLogOutput/yyyy-MM-dd_HH-mm-ss`. `Launcher.log` records the build, `Godot.log` records engine output, and `Session.log` records actions and combat. Opening the project directly in Godot also creates a timestamped application session log.
 
+Rendering uses Godot's Mobile renderer with 4× multisample anti-aliasing for smoother hexagon edges, unit arrows, and other 2D geometry. This requires a graphics driver supported by the Mobile renderer; the OpenGL Compatibility renderer does not support 2D MSAA. VSync is off and the frame rate is limited to 60 FPS.
+
 ## First experiment
 
 1. Choose **Load world**, then **Five-faction encounter**. Press **Step** to advance one turn, or **Run simulation** to watch continuously. Choose one to eight turns per second.
