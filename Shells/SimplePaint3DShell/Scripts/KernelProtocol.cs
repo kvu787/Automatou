@@ -3,8 +3,7 @@ using System.Text.Json;
 namespace SimplePaint3DShell;
 
 // Presentation DTOs for the JSON-lines boundary. Simulation stays in the Kernel process.
-internal static class KernelProtocol
-{
+internal static class KernelProtocol {
     internal static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 }
 

@@ -1,12 +1,11 @@
+using Godot;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
-using Godot;
 
 namespace SimplePaint3DShell;
 
-public partial class Main : Control
-{
+public partial class Main : Control {
     private static readonly Color Ink = new("#d8dbef");
     private static readonly Color Muted = new("#777f9e");
     private static readonly Color Void = new("#090b1d");
@@ -20,8 +19,7 @@ public partial class Main : Control
     private sealed record Symbol(string Glyph, string Label, Color Color);
 
     // Legend labels and colors are presentation only. Map glyphs come from the Kernel.
-    private static readonly Dictionary<string, Symbol> TerrainSymbols = new()
-    {
+    private static readonly Dictionary<string, Symbol> TerrainSymbols = new() {
         ["shatteredPlain"] = new("·", "SHATTERED", new Color("#a1adc4")),
         ["ashWaste"] = new(":", "ASH", new Color("#c7aaa0")),
         ["leyChannel"] = new("≈", "LEY", new Color("#9b99ff")),
@@ -29,8 +27,7 @@ public partial class Main : Control
         ["fortifiedReach"] = new("#", "FORTIFIED", new Color("#65d3cf")),
         ["broodMire"] = new("~", "BROOD", new Color("#d88bac"))
     };
-    private static readonly Dictionary<string, Symbol> ForceSymbols = new()
-    {
+    private static readonly Dictionary<string, Symbol> ForceSymbols = new() {
         ["bastion"] = new("B", "BASTION", Gold),
         ["soldier"] = new("S", "SOLDIER", Mint),
         ["ravener"] = new("r", "RAVENER", Rose),
@@ -38,23 +35,25 @@ public partial class Main : Control
         ["enclave"] = new("E", "ENCLAVE", Mint)
     };
 
-    private float _hexOutlineWidth = 2.0f;
-
     /// <summary>Total width of an interior hex outline in board pixels; zero hides outlines.</summary>
     [Export(PropertyHint.Range, "0,12,0.25")]
-    public float HexOutlineWidth
-    {
-        get => _hexOutlineWidth;
-        set
-        {
-            _hexOutlineWidth = Mathf.Clamp(value, 0, 12);
-            if (GodotObject.IsInstanceValid(OutlineWidthSlider))
-                OutlineWidthSlider.SetValueNoSignal(_hexOutlineWidth);
-            if (GodotObject.IsInstanceValid(OutlineWidthValue))
-                OutlineWidthValue.Text = OutlineText(_hexOutlineWidth);
-            foreach (var cell in CellButtons) cell.OutlineWidth = _hexOutlineWidth;
+    public float HexOutlineWidth {
+        get;
+        set {
+            field = Mathf.Clamp(value, 0, 12);
+            if (IsInstanceValid(this.OutlineWidthSlider)) {
+                this.OutlineWidthSlider.SetValueNoSignal(field);
+            }
+
+            if (IsInstanceValid(this.OutlineWidthValue)) {
+                this.OutlineWidthValue.Text = OutlineText(field);
+            }
+
+            foreach (HexCell cell in this.CellButtons) {
+                cell.OutlineWidth = field;
+            }
         }
-    }
+    } = 2.0f;
 
     private KernelConnection? _kernel;
     internal KernelSnapshot? Snapshot { get; private set; }
@@ -74,216 +73,201 @@ public partial class Main : Control
     private RichTextLabel _chronicle = null!;
     private Button _advanceButton = null!;
 
-    public override void _Ready()
-    {
+    public override void _Ready() {
         // Fractional hex centers must survive rendering without independent Control rounding.
-        GetViewport().GuiSnapControlsToPixels = false;
-        BuildInterface();
-        StartKernel();
-        GetWindow().MinSize = new Vector2I(1000, 680);
+        this.GetViewport().GuiSnapControlsToPixels = false;
+        this.BuildInterface();
+        this.StartKernel();
+        this.GetWindow().MinSize = new Vector2I(1000, 680);
     }
 
-    public override void _ExitTree()
-    {
-        _kernel?.Dispose();
-        _kernel = null;
+    public override void _ExitTree() {
+        this._kernel?.Dispose();
+        this._kernel = null;
     }
 
-    public override void _Process(double delta)
-    {
-        if (_kernel is null) return;
-        while (_kernel.TryRead(out var line)) Receive(line!);
-        while (_kernel.TryReadError(out var error)) SetStatus($"KERNEL: {error}", Rose);
-        if (_kernel.HasExited)
-        {
-            SetStatus("KERNEL STOPPED — run Run.cmd to rebuild and restart", Rose);
-            _advanceButton.Disabled = true;
-            _kernel.Dispose();
-            _kernel = null;
+    public override void _Process(double delta) {
+        if (this._kernel is null) {
+            return;
+        }
+
+        while (this._kernel.TryRead(out string? line)) {
+            this.Receive(line!);
+        }
+
+        while (this._kernel.TryReadError(out string? error)) {
+            this.SetStatus($"KERNEL: {error}", Rose);
+        }
+
+        if (this._kernel.HasExited) {
+            this.SetStatus("KERNEL STOPPED — run Run.cmd to rebuild and restart", Rose);
+            this._advanceButton.Disabled = true;
+            this._kernel.Dispose();
+            this._kernel = null;
         }
     }
 
-    public override void _UnhandledInput(InputEvent inputEvent)
-    {
-        if (inputEvent.IsActionPressed("advance_turn") && !SeedEdit.HasFocus())
-        {
-            Send(new { command = "advance" });
-            GetViewport().SetInputAsHandled();
+    public override void _UnhandledInput(InputEvent @event) {
+        if (@event.IsActionPressed("advance_turn") && !this.SeedEdit.HasFocus()) {
+            this.Send(new { command = "advance" });
+            this.GetViewport().SetInputAsHandled();
         }
     }
 
-    private void BuildInterface()
-    {
-        var backdrop = new ColorRect { Color = Void };
+    private void BuildInterface() {
+        ColorRect backdrop = new() { Color = Void };
         backdrop.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(backdrop);
-        var margin = Margin(20, 16, 20, 18);
+        this.AddChild(backdrop);
+        MarginContainer margin = Margin(20, 16, 20, 18);
         margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        AddChild(margin);
-        var root = new VBoxContainer();
+        this.AddChild(margin);
+        VBoxContainer root = new();
         root.AddThemeConstantOverride("separation", 12);
         margin.AddChild(root);
-        root.AddChild(BuildHeader());
-        var middle = new HSplitContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SplitOffsets = [820] };
+        root.AddChild(this.BuildHeader());
+        HSplitContainer middle = new() { SizeFlagsVertical = SizeFlags.ExpandFill, SplitOffsets = [820] };
         middle.AddThemeConstantOverride("separation", 14);
         root.AddChild(middle);
-        middle.AddChild(BuildWorldPanel());
-        middle.AddChild(BuildSidePanel());
-        root.AddChild(BuildFooter());
+        middle.AddChild(this.BuildWorldPanel());
+        middle.AddChild(this.BuildSidePanel());
+        root.AddChild(this.BuildFooter());
     }
 
-    private Control BuildHeader()
-    {
-        var panel = Panel(PanelColor, Violet, 10);
-        var margin = Margin(16, 10, 12, 10);
+    private PanelContainer BuildHeader() {
+        PanelContainer panel = Panel(PanelColor, Violet, 10);
+        MarginContainer margin = Margin(16, 10, 12, 10);
         panel.AddChild(margin);
-        var row = new HBoxContainer();
+        HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 10);
         margin.AddChild(row);
-        _titleLabel = Label("AUTOMATOU // THE BASTION FRONT", Ink, 24);
-        _titleLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(_titleLabel);
-        _turnLabel = Label("TURN 000", Gold, 18);
-        row.AddChild(_turnLabel);
-        SeedEdit = new LineEdit
-        {
+        this._titleLabel = Label("AUTOMATOU // THE BASTION FRONT", Ink, 24);
+        this._titleLabel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        row.AddChild(this._titleLabel);
+        this._turnLabel = Label("TURN 000", Gold, 18);
+        row.AddChild(this._turnLabel);
+        this.SeedEdit = new LineEdit {
             Text = "475023", PlaceholderText = "SEED", CustomMinimumSize = new Vector2(100, 0)
         };
-        SeedEdit.AddThemeColorOverride("font_color", Ink);
-        SeedEdit.AddThemeStyleboxOverride("normal", PanelStyle(PanelRaised, Muted, 1, 6));
-        row.AddChild(SeedEdit);
-        var forge = new Button
-        {
+        this.SeedEdit.AddThemeColorOverride("font_color", Ink);
+        this.SeedEdit.AddThemeStyleboxOverride("normal", PanelStyle(PanelRaised, Muted, 1, 6));
+        row.AddChild(this.SeedEdit);
+        Button forge = new() {
             Text = "OPEN FRONT", TooltipText = "Create a fresh deterministic war front from this seed."
         };
         StyleButton(forge, Mint);
-        forge.Pressed += NewWorld;
+        forge.Pressed += this.NewWorld;
         row.AddChild(forge);
         return panel;
     }
 
-    private Control BuildWorldPanel()
-    {
-        var panel = Panel(PanelColor, new Color("#282e55"), 10);
+    private PanelContainer BuildWorldPanel() {
+        PanelContainer panel = Panel(PanelColor, new Color("#282e55"), 10);
         panel.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        var column = new VBoxContainer();
+        VBoxContainer column = new();
         column.AddThemeConstantOverride("separation", 8);
         panel.AddChild(column);
         column.AddChild(BuildSymbolLegend());
-        column.AddChild(BuildOutlineControl());
-        var scroll = new ScrollContainer
-        {
+        column.AddChild(this.BuildOutlineControl());
+        ScrollContainer scroll = new() {
             SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Auto,
             VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
         column.AddChild(scroll);
-        var centering = new CenterContainer
-        {
+        CenterContainer centering = new() {
             SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill
         };
         scroll.AddChild(centering);
-        _grid = new Control();
-        centering.AddChild(_grid);
+        this._grid = new Control();
+        centering.AddChild(this._grid);
         return panel;
     }
 
-    private Control BuildOutlineControl()
-    {
-        var row = new HBoxContainer();
+    private HBoxContainer BuildOutlineControl() {
+        HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 12);
         row.AddChild(Label("OUTLINE WIDTH", Muted));
-        OutlineWidthSlider = new HSlider
-        {
-            MinValue = 0, MaxValue = 12, Step = 0.25, Value = HexOutlineWidth,
+        this.OutlineWidthSlider = new HSlider {
+            MinValue = 0, MaxValue = 12, Step = 0.25, Value = this.HexOutlineWidth,
             CustomMinimumSize = new Vector2(160, 0), SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             TooltipText = "Hex outline width. Set to zero to hide outlines."
         };
-        OutlineWidthSlider.ValueChanged += value => HexOutlineWidth = (float)value;
-        row.AddChild(OutlineWidthSlider);
-        OutlineWidthValue = Label(OutlineText(HexOutlineWidth), Ink);
-        OutlineWidthValue.CustomMinimumSize = new Vector2(72, 0);
-        OutlineWidthValue.HorizontalAlignment = HorizontalAlignment.Right;
-        row.AddChild(OutlineWidthValue);
+        this.OutlineWidthSlider.ValueChanged += value => this.HexOutlineWidth = (float)value;
+        row.AddChild(this.OutlineWidthSlider);
+        this.OutlineWidthValue = Label(OutlineText(this.HexOutlineWidth), Ink);
+        this.OutlineWidthValue.CustomMinimumSize = new Vector2(72, 0);
+        this.OutlineWidthValue.HorizontalAlignment = HorizontalAlignment.Right;
+        row.AddChild(this.OutlineWidthValue);
         return row;
     }
 
-    private Control BuildSidePanel()
-    {
-        var wrapper = new ScrollContainer
-        {
+    private ScrollContainer BuildSidePanel() {
+        ScrollContainer wrapper = new() {
             CustomMinimumSize = new Vector2(330, 0),
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
             VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
-        var side = new VBoxContainer
-        {
+        VBoxContainer side = new() {
             CustomMinimumSize = new Vector2(330, 0), SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ExpandFill
         };
         side.AddThemeConstantOverride("separation", 10);
         wrapper.AddChild(side);
-        Inspector = RichText(Ink, 14);
-        Inspector.FitContent = false;
-        Inspector.CustomMinimumSize = new Vector2(0, 220);
-        side.AddChild(Inspector);
-        CommandPanel = new VBoxContainer();
-        CommandPanel.AddThemeConstantOverride("separation", 6);
-        CommandPanel.AddChild(Label("FIELD COMMAND AUTHORITY", Rose));
-        AddCommandButton("CHANNEL +25 RESONANCE", "channel", Violet);
-        AddCommandButton("FORTIFY THE REACH", "fortify", Mint,
+        this.Inspector = RichText(Ink, 14);
+        this.Inspector.FitContent = false;
+        this.Inspector.CustomMinimumSize = new Vector2(0, 220);
+        side.AddChild(this.Inspector);
+        this.CommandPanel = new VBoxContainer();
+        this.CommandPanel.AddThemeConstantOverride("separation", 6);
+        this.CommandPanel.AddChild(Label("FIELD COMMAND AUTHORITY", Rose));
+        this.AddCommandButton("CHANNEL +25 RESONANCE", "channel", Violet);
+        this.AddCommandButton("FORTIFY THE REACH", "fortify", Mint,
             new() { ["terrain"] = "fortifiedReach" }, TerrainSymbols["fortifiedReach"].Glyph);
-        AddCommandButton("DEPLOY SOLDIER", "deploy", Gold,
+        this.AddCommandButton("DEPLOY SOLDIER", "deploy", Gold,
             new() { ["kind"] = "soldier" }, ForceSymbols["soldier"].Glyph);
-        AddCommandButton("COMMIT BASTION — IF LOST", "deploy", Gold,
+        this.AddCommandButton("COMMIT BASTION — IF LOST", "deploy", Gold,
             new() { ["kind"] = "bastion" }, ForceSymbols["bastion"].Glyph);
-        AddCommandButton("ESTABLISH VIGIL ANNEX", "establish", Mint,
+        this.AddCommandButton("ESTABLISH VIGIL ANNEX", "establish", Mint,
             new() { ["name"] = "Vigil Annex" }, ForceSymbols["enclave"].Glyph);
-        AddCommandButton("AUTHORIZE MAGITECH PURGE", "purge", Rose,
+        this.AddCommandButton("AUTHORIZE MAGITECH PURGE", "purge", Rose,
             new() { ["radius"] = 1 }, TerrainSymbols["ashWaste"].Glyph);
-        side.AddChild(CommandPanel);
+        side.AddChild(this.CommandPanel);
         side.AddChild(Label("FRONT DISPATCHES", Violet));
-        _chronicle = RichText(Muted, 13);
-        _chronicle.ScrollActive = true;
-        _chronicle.SizeFlagsVertical = SizeFlags.ExpandFill;
-        side.AddChild(_chronicle);
+        this._chronicle = RichText(Muted, 13);
+        this._chronicle.ScrollActive = true;
+        this._chronicle.SizeFlagsVertical = SizeFlags.ExpandFill;
+        side.AddChild(this._chronicle);
         return wrapper;
     }
 
-    private Control BuildFooter()
-    {
-        var row = new HBoxContainer();
+    private HBoxContainer BuildFooter() {
+        HBoxContainer row = new();
         row.AddThemeConstantOverride("separation", 10);
-        Status = Label("CONNECTING TO KERNEL.", Muted);
-        Status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(Status);
+        this.Status = Label("CONNECTING TO KERNEL.", Muted);
+        this.Status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        row.AddChild(this.Status);
         row.AddChild(Label("SPACE / ENTER", Muted));
-        _advanceButton = new Button { Text = "ADVANCE THE FRONT  →", CustomMinimumSize = new Vector2(230, 44) };
-        _advanceButton.AddThemeFontSizeOverride("font_size", 16);
-        StyleButton(_advanceButton, Gold);
-        _advanceButton.Pressed += () => Send(new { command = "advance" });
-        row.AddChild(_advanceButton);
+        this._advanceButton = new Button { Text = "ADVANCE THE FRONT  →", CustomMinimumSize = new Vector2(230, 44) };
+        this._advanceButton.AddThemeFontSizeOverride("font_size", 16);
+        StyleButton(this._advanceButton, Gold);
+        this._advanceButton.Pressed += () => this.Send(new { command = "advance" });
+        row.AddChild(this._advanceButton);
         return row;
     }
 
-    private static Control BuildSymbolLegend()
-    {
-        var legend = new VBoxContainer();
+    private static VBoxContainer BuildSymbolLegend() {
+        VBoxContainer legend = new();
         legend.AddThemeConstantOverride("separation", 4);
-        foreach (var symbols in new[] { TerrainSymbols, ForceSymbols })
-        {
-            var terrain = ReferenceEquals(symbols, TerrainSymbols);
-            var row = new HFlowContainer();
+        foreach (Dictionary<string, Symbol>? symbols in new[] { TerrainSymbols, ForceSymbols }) {
+            bool terrain = ReferenceEquals(symbols, TerrainSymbols);
+            HFlowContainer row = new();
             row.AddThemeConstantOverride("h_separation", 14);
             row.AddThemeConstantOverride("v_separation", 4);
-            foreach (var symbol in symbols.Values)
-            {
-                var item = new HBoxContainer();
-                if (terrain)
-                {
-                    item.AddChild(new ColorRect
-                    {
+            foreach (Symbol symbol in symbols.Values) {
+                HBoxContainer item = new();
+                if (terrain) {
+                    item.AddChild(new ColorRect {
                         CustomMinimumSize = new Vector2(14, 14), SizeFlagsVertical = SizeFlags.ShrinkCenter,
                         Color = PanelRaised.Lerp(symbol.Color, 0.35f)
                     });
@@ -297,170 +281,175 @@ public partial class Main : Control
     }
 
     private void AddCommandButton(string label, string command, Color accent,
-        Dictionary<string, object>? extras = null, string symbol = "")
-    {
-        var button = new Button
-        {
+        Dictionary<string, object>? extras = null, string symbol = "") {
+        Button button = new() {
             Text = symbol.Length == 0 ? label : $"{symbol}   {label}",
             Alignment = HorizontalAlignment.Left, CustomMinimumSize = new Vector2(0, 34)
         };
         StyleButton(button, accent);
-        button.Pressed += () =>
-        {
-            var payload = new Dictionary<string, object>
-            {
-                ["command"] = command, ["x"] = Selected.X, ["y"] = Selected.Y
+        button.Pressed += () => {
+            Dictionary<string, object> payload = new() {
+                ["command"] = command, ["x"] = this.Selected.X, ["y"] = this.Selected.Y
             };
-            if (extras is not null)
-                foreach (var entry in extras) payload[entry.Key] = entry.Value;
-            Send(payload);
+            if (extras is not null) {
+                foreach (KeyValuePair<string, object> entry in extras) {
+                    payload[entry.Key] = entry.Value;
+                }
+            }
+
+            this.Send(payload);
         };
-        CommandPanel.AddChild(button);
+        this.CommandPanel.AddChild(button);
     }
 
-    private void StartKernel()
-    {
-        var baseDirectory = OS.HasFeature("editor")
+    private void StartKernel() {
+        string baseDirectory = OS.HasFeature("editor")
             ? ProjectSettings.GlobalizePath("res://")
             : Path.GetDirectoryName(OS.GetExecutablePath())!;
-        try
-        {
-            _kernel = new KernelConnection(Path.Combine(baseDirectory, "KernelHost"));
-            SetStatus("WAR KERNEL ONLINE — awaiting front state", Muted);
-        }
-        catch (Exception exception) when (exception is IOException or System.ComponentModel.Win32Exception or InvalidOperationException)
-        {
-            SetStatus($"KERNEL UNAVAILABLE — {exception.Message}", Rose);
-            _advanceButton.Disabled = true;
+        try {
+            this._kernel = new KernelConnection(Path.Combine(baseDirectory, "KernelHost"));
+            this.SetStatus("WAR KERNEL ONLINE — awaiting front state", Muted);
+        } catch (Exception exception) when (exception is IOException or System.ComponentModel.Win32Exception or InvalidOperationException) {
+            this.SetStatus($"KERNEL UNAVAILABLE — {exception.Message}", Rose);
+            this._advanceButton.Disabled = true;
         }
     }
 
-    private void Receive(string line)
-    {
-        if (string.IsNullOrWhiteSpace(line)) return;
-        try
-        {
-            var response = JsonSerializer.Deserialize<KernelResponse>(line, KernelProtocol.JsonOptions);
-            if (response?.Snapshot is not { Tiles: not null, Forces: not null, Chronicle: not null } snapshot)
+    private void Receive(string line) {
+        if (string.IsNullOrWhiteSpace(line)) {
+            return;
+        }
+
+        try {
+            KernelResponse? response = JsonSerializer.Deserialize<KernelResponse>(line, KernelProtocol.JsonOptions);
+            if (response?.Snapshot is not { Tiles: not null, Forces: not null, Chronicle: not null } snapshot) {
                 throw new JsonException("Missing world snapshot.");
-            Snapshot = snapshot;
-            LastResponseAccepted = response.Ok;
-            ResponseCount++;
-            SetStatus(response.Message, response.Ok ? Mint : Rose);
-            RenderSnapshot();
-        }
-        catch (JsonException)
-        {
-            SetStatus("KERNEL PROTOCOL ERROR", Rose);
+            }
+
+            this.Snapshot = snapshot;
+            this.LastResponseAccepted = response.Ok;
+            this.ResponseCount++;
+            this.SetStatus(response.Message, response.Ok ? Mint : Rose);
+            this.RenderSnapshot();
+        } catch (JsonException) {
+            this.SetStatus("KERNEL PROTOCOL ERROR", Rose);
         }
     }
 
-    internal void Send(object payload)
-    {
-        if (_kernel is null) return;
-        try
-        {
-            _kernel.Send(payload);
+    internal void Send(object payload) {
+        if (this._kernel is null) {
+            return;
         }
-        catch (Exception exception) when (exception is IOException or InvalidOperationException)
-        {
-            SetStatus($"KERNEL UNAVAILABLE — {exception.Message}", Rose);
-            _advanceButton.Disabled = true;
+
+        try {
+            this._kernel.Send(payload);
+        } catch (Exception exception) when (exception is IOException or InvalidOperationException) {
+            this.SetStatus($"KERNEL UNAVAILABLE — {exception.Message}", Rose);
+            this._advanceButton.Disabled = true;
         }
     }
 
-    internal void NewWorld()
-    {
-        var seed = long.TryParse(SeedEdit.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+    internal void NewWorld() {
+        long seed = long.TryParse(this.SeedEdit.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out long value)
             ? value : 475023;
-        Send(new { command = "new", width = 16, height = 12, seed, name = "The Bastion Front" });
+        this.Send(new { command = "new", width = 16, height = 12, seed, name = "The Bastion Front" });
     }
 
-    private void RenderSnapshot()
-    {
-        if (Snapshot is not { } snapshot) return;
-        _titleLabel.Text = snapshot.Name.ToUpperInvariant();
-        _turnLabel.Text = $"TURN {snapshot.Turn:000}";
-        _grid.CustomMinimumSize = new Vector2((snapshot.Width + 0.5f) * HexCell.HexWidth,
-            (snapshot.Height - 1) * HexCell.RowStep + 2 * HexCell.Radius);
-        if (Selected.X >= snapshot.Width || Selected.Y >= snapshot.Height) Selected = Vector2I.Zero;
-        foreach (var child in _grid.GetChildren())
-        {
-            _grid.RemoveChild(child);
+    private void RenderSnapshot() {
+        if (this.Snapshot is not { } snapshot) {
+            return;
+        }
+
+        this._titleLabel.Text = snapshot.Name.ToUpperInvariant();
+        this._turnLabel.Text = $"TURN {snapshot.Turn:000}";
+        this._grid.CustomMinimumSize = new Vector2((snapshot.Width + 0.5f) * HexCell.HexWidth,
+            ((snapshot.Height - 1) * HexCell.RowStep) + (2 * HexCell.Radius));
+        if (this.Selected.X >= snapshot.Width || this.Selected.Y >= snapshot.Height) {
+            this.Selected = Vector2I.Zero;
+        }
+
+        foreach (Node? child in this._grid.GetChildren()) {
+            this._grid.RemoveChild(child);
             child.QueueFree();
         }
-        CellButtons.Clear();
-        var forcesByCell = snapshot.Forces.ToLookup(force => force.Position);
-        foreach (var tile in snapshot.Tiles.Take(snapshot.Width * snapshot.Height))
-        {
-            var occupants = forcesByCell[tile.Position].ToArray();
-            var force = occupants.MaxBy(ForcePriority);
-            var terrainColor = TerrainColor(tile.Terrain);
-            var point = new Vector2I(tile.Position.X, tile.Position.Y);
-            var button = new HexCell
-            {
+        this.CellButtons.Clear();
+        ILookup<CellPosition, ForceSnapshot> forcesByCell = snapshot.Forces.ToLookup(force => force.Position);
+        foreach (CellSnapshot? tile in snapshot.Tiles.Take(snapshot.Width * snapshot.Height)) {
+            ForceSnapshot[] occupants = forcesByCell[tile.Position].ToArray();
+            ForceSnapshot? force = occupants.MaxBy(ForcePriority);
+            Color terrainColor = TerrainColor(tile.Terrain);
+            Vector2I point = new(tile.Position.X, tile.Position.Y);
+            HexCell button = new() {
                 Text = force?.Glyph ?? "", TooltipText = CellTooltip(tile, occupants),
                 Size = new Vector2(HexCell.HexWidth, 2 * HexCell.Radius),
                 Position = HexCell.CellPosition(point.X, point.Y),
-                Background = PanelRaised.Lerp(terrainColor, 0.35f), OutlineWidth = HexOutlineWidth,
-                SymbolColor = force is null ? terrainColor : ForceColor(force.Kind), Selected = point == Selected
+                Background = PanelRaised.Lerp(terrainColor, 0.35f), OutlineWidth = this.HexOutlineWidth,
+                SymbolColor = force is null ? terrainColor : ForceColor(force.Kind), Selected = point == this.Selected
             };
-            if (occupants.Length > 1) AddCornerLabel(button, occupants.Length.ToString(CultureInfo.InvariantCulture));
-            button.Pressed += () => SelectCell(point);
-            _grid.AddChild(button);
-            CellButtons.Add(button);
+            if (occupants.Length > 1) {
+                AddCornerLabel(button, occupants.Length.ToString(CultureInfo.InvariantCulture));
+            }
+
+            button.Pressed += () => this.SelectCell(point);
+            this._grid.AddChild(button);
+            this.CellButtons.Add(button);
         }
-        RenderInspector();
-        RenderChronicle();
+        this.RenderInspector();
+        this.RenderChronicle();
     }
 
-    internal void SelectCell(Vector2I point)
-    {
-        Selected = point;
-        RenderSnapshot();
+    internal void SelectCell(Vector2I point) {
+        this.Selected = point;
+        this.RenderSnapshot();
     }
 
-    private void RenderInspector()
-    {
-        if (Snapshot is not { } snapshot) return;
-        var index = Selected.Y * snapshot.Width + Selected.X;
-        if (index < 0 || index >= snapshot.Tiles.Length) return;
-        var tile = snapshot.Tiles[index];
-        var text = new StringBuilder();
-        text.Append($"[color=#7e6bff][font_size=12]HEX // COLUMN {Selected.X:00}, ROW {Selected.Y:00}[/font_size][/color]\n");
-        text.Append($"[color=#{TerrainColor(tile.Terrain).ToHtml(false)}][font_size=22]{tile.Glyph}  {Words(tile.Terrain).ToUpperInvariant()}[/font_size][/color]\n");
-        text.Append($"[color=#777f9e]{EscapeMarkup(tile.Description)}[/color]\n");
-        var occupants = snapshot.Forces.Where(force => force.Position == tile.Position).ToArray();
-        if (occupants.Length == 0)
-            text.Append("\n[color=#777f9e]No detected forces occupy this sector.[/color]");
-        else
-        {
-            text.Append("\n[color=#4fe4c1]FORCES[/color]");
-            foreach (var force in occupants)
-                text.Append($"\n[color=#{ForceColor(force.Kind).ToHtml(false)}][b]{force.Glyph}  {EscapeMarkup(force.Name)}[/b][/color] · {EscapeMarkup(force.Intent)} · STR {force.Strength}");
-        }
-        Inspector.Text = text.ToString();
-    }
-
-    private void RenderChronicle()
-    {
-        if (Snapshot is not { } snapshot) return;
-        if (snapshot.Chronicle.Length == 0)
-        {
-            _chronicle.Text = "[color=#777f9e]No dispatches have reached command.[/color]";
+    private void RenderInspector() {
+        if (this.Snapshot is not { } snapshot) {
             return;
         }
-        _chronicle.Text = string.Concat(snapshot.Chronicle.Select((line, index) =>
+
+        int index = (this.Selected.Y * snapshot.Width) + this.Selected.X;
+        if (index < 0 || index >= snapshot.Tiles.Length) {
+            return;
+        }
+
+        CellSnapshot tile = snapshot.Tiles[index];
+        StringBuilder text = new();
+        _ = text.Append(CultureInfo.CurrentCulture, $"[color=#7e6bff][font_size=12]HEX // COLUMN {this.Selected.X:00}, ROW {this.Selected.Y:00}[/font_size][/color]\n");
+        _ = text.Append(CultureInfo.CurrentCulture, $"[color=#{TerrainColor(tile.Terrain).ToHtml(false)}][font_size=22]{tile.Glyph}  {Words(tile.Terrain).ToUpperInvariant()}[/font_size][/color]\n");
+        _ = text.Append(CultureInfo.CurrentCulture, $"[color=#777f9e]{EscapeMarkup(tile.Description)}[/color]\n");
+        ForceSnapshot[] occupants = snapshot.Forces.Where(force => force.Position == tile.Position).ToArray();
+        if (occupants.Length == 0) {
+            _ = text.Append("\n[color=#777f9e]No detected forces occupy this sector.[/color]");
+        } else {
+            _ = text.Append("\n[color=#4fe4c1]FORCES[/color]");
+            foreach (ForceSnapshot? force in occupants) {
+                _ = text.Append(CultureInfo.CurrentCulture, $"\n[color=#{ForceColor(force.Kind).ToHtml(false)}][b]{force.Glyph}  {EscapeMarkup(force.Name)}[/b][/color] · {EscapeMarkup(force.Intent)} · STR {force.Strength}");
+            }
+        }
+        this.Inspector.Text = text.ToString();
+    }
+
+    private void RenderChronicle() {
+        if (this.Snapshot is not { } snapshot) {
+            return;
+        }
+
+        if (snapshot.Chronicle.Length == 0) {
+            this._chronicle.Text = "[color=#777f9e]No dispatches have reached command.[/color]";
+            return;
+        }
+        this._chronicle.Text = string.Concat(snapshot.Chronicle.Select((line, index) =>
             $"[color={(index == 0 ? "#d8dbef" : "#777f9e")}]{EscapeMarkup(line)}[/color]\n\n"));
     }
 
-    private static string CellTooltip(CellSnapshot tile, ForceSnapshot[] occupants) =>
-        $"{tile.Glyph}  {Words(tile.Terrain)}\n{tile.Description}" + string.Concat(occupants.Select(force =>
+    private static string CellTooltip(CellSnapshot tile, ForceSnapshot[] occupants) {
+        return $"{tile.Glyph}  {Words(tile.Terrain)}\n{tile.Description}" + string.Concat(occupants.Select(force =>
             $"\n{force.Glyph}  {force.Name} · {force.Intent} · strength {force.Strength}"));
+    }
 
-    private static void AddCornerLabel(BaseButton button, string text)
-    {
-        var label = Label(text, Ink, 11);
+    private static void AddCornerLabel(BaseButton button, string text) {
+        Label label = Label(text, Ink, 11);
         label.MouseFilter = MouseFilterEnum.Ignore;
         label.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         label.OffsetLeft = 7;
@@ -472,34 +461,55 @@ public partial class Main : Control
         button.AddChild(label);
     }
 
-    private static Color TerrainColor(string terrain) => TerrainSymbols.GetValueOrDefault(terrain)?.Color ?? Muted;
-    private static Color ForceColor(string kind) => ForceSymbols.GetValueOrDefault(kind)?.Color ?? Ink;
-    private static int ForcePriority(ForceSnapshot force) => force.Kind switch
-    {
-        "bastion" => 5, "broodNode" => 4, "enclave" => 3, "ravener" => 2, "soldier" => 1, _ => 0
-    };
-    private static string Words(string camel) => string.Concat(camel.Select((character, index) =>
-        index > 0 && char.IsUpper(character) ? $" {character}" : character.ToString()));
-    private static string EscapeMarkup(string text) => text.Replace("[", "[lb]", StringComparison.Ordinal);
-    private static string OutlineText(float width) => width.ToString("F2", CultureInfo.InvariantCulture) + " px";
-
-    private void SetStatus(string text, Color color)
-    {
-        Status.Text = text;
-        Status.AddThemeColorOverride("font_color", color);
+    private static Color TerrainColor(string terrain) {
+        return TerrainSymbols.GetValueOrDefault(terrain)?.Color ?? Muted;
     }
 
-    private static Label Label(string text, Color color, int fontSize = 0)
-    {
-        var label = new Label { Text = text };
+    private static Color ForceColor(string kind) {
+        return ForceSymbols.GetValueOrDefault(kind)?.Color ?? Ink;
+    }
+
+    private static int ForcePriority(ForceSnapshot force) {
+        return force.Kind switch {
+            "bastion" => 5,
+            "broodNode" => 4,
+            "enclave" => 3,
+            "ravener" => 2,
+            "soldier" => 1,
+            _ => 0
+        };
+    }
+
+    private static string Words(string camel) {
+        return string.Concat(camel.Select((character, index) =>
+            index > 0 && char.IsUpper(character) ? $" {character}" : character.ToString()));
+    }
+
+    private static string EscapeMarkup(string text) {
+        return text.Replace("[", "[lb]", StringComparison.Ordinal);
+    }
+
+    private static string OutlineText(float width) {
+        return width.ToString("F2", CultureInfo.InvariantCulture) + " px";
+    }
+
+    private void SetStatus(string text, Color color) {
+        this.Status.Text = text;
+        this.Status.AddThemeColorOverride("font_color", color);
+    }
+
+    private static Label Label(string text, Color color, int fontSize = 0) {
+        Label label = new() { Text = text };
         label.AddThemeColorOverride("font_color", color);
-        if (fontSize > 0) label.AddThemeFontSizeOverride("font_size", fontSize);
+        if (fontSize > 0) {
+            label.AddThemeFontSizeOverride("font_size", fontSize);
+        }
+
         return label;
     }
 
-    private static MarginContainer Margin(int left, int top, int right, int bottom)
-    {
-        var margin = new MarginContainer();
+    private static MarginContainer Margin(int left, int top, int right, int bottom) {
+        MarginContainer margin = new();
         margin.AddThemeConstantOverride("margin_left", left);
         margin.AddThemeConstantOverride("margin_top", top);
         margin.AddThemeConstantOverride("margin_right", right);
@@ -507,24 +517,21 @@ public partial class Main : Control
         return margin;
     }
 
-    private static PanelContainer Panel(Color background, Color border, int radius)
-    {
-        var panel = new PanelContainer();
+    private static PanelContainer Panel(Color background, Color border, int radius) {
+        PanelContainer panel = new();
         panel.AddThemeStyleboxOverride("panel", PanelStyle(background, border, 1, radius));
         return panel;
     }
 
-    private static RichTextLabel RichText(Color color, int fontSize)
-    {
-        var label = new RichTextLabel { BbcodeEnabled = true };
+    private static RichTextLabel RichText(Color color, int fontSize) {
+        RichTextLabel label = new() { BbcodeEnabled = true };
         label.AddThemeFontSizeOverride("normal_font_size", fontSize);
         label.AddThemeColorOverride("default_color", color);
         label.AddThemeStyleboxOverride("normal", PanelStyle(PanelColor, new Color("#282e55"), 1, 8));
         return label;
     }
 
-    private static void StyleButton(BaseButton button, Color accent)
-    {
+    private static void StyleButton(BaseButton button, Color accent) {
         button.AddThemeColorOverride("font_color", Ink);
         button.AddThemeColorOverride("font_hover_color", Colors.White);
         button.AddThemeStyleboxOverride("normal", PanelStyle(PanelRaised, accent.Darkened(0.45f), 1, 6));
@@ -532,10 +539,8 @@ public partial class Main : Control
         button.AddThemeStyleboxOverride("pressed", PanelStyle(PanelRaised.Darkened(0.12f), accent, 2, 6));
     }
 
-    private static StyleBoxFlat PanelStyle(Color background, Color border, int width, int radius)
-    {
-        var style = new StyleBoxFlat
-        {
+    private static StyleBoxFlat PanelStyle(Color background, Color border, int width, int radius) {
+        StyleBoxFlat style = new() {
             BgColor = background, BorderColor = border, ContentMarginLeft = 10, ContentMarginRight = 10,
             ContentMarginTop = 7, ContentMarginBottom = 7
         };
