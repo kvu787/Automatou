@@ -207,12 +207,15 @@ public partial class HexBoard : Control {
             color = new("f27676");
         }
 
-        foreach (Hex cell in entity.OccupiedCells()) {
-            Color fill = color.Darkened(.5f); if (preview) {
-                fill.A = .55f;
+        HashSet<Hex> occupied = entity.OccupiedCells().ToHashSet();
+        foreach (Hex cell in occupied) {
+            Vector2[] points = Polygon(this.Screen(cell), Radius * this.Zoom);
+            for (int edge = 0; edge < 6; edge++) {
+                // Polygon vertices run clockwise on screen; axial directions run counterclockwise.
+                if (!occupied.Contains(cell + Hex.Directions[5 - edge])) {
+                    this.DrawLine(points[edge], points[(edge + 1) % 6], color, entity == this.Selected ? 2.5f : 1.3f, true);
+                }
             }
-
-            this.Hexagon(cell, 2 * this.Zoom, fill, color, entity == this.Selected ? 2.5f : 1.3f);
         }
         Vector2 center = this.Screen(entity.Position);
         Vector2 forward = Center(Hex.Directions[entity.Facing]).Normalized();
