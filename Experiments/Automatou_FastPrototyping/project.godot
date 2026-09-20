@@ -1,0 +1,22 @@
+; Native, self-contained Godot .NET experiment.
+config_version=5
+
+[application]
+config/name="Automatou - World laboratory"
+run/main_scene="res://Main.tscn"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1440
+window/size/viewport_height=900
+window/size/window_width_override=1440
+window/size/window_height_override=900
+window/stretch/mode="canvas_items"
+
+[dotnet]
+project/assembly_name="Automatou"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.031, 0.047, 0.071, 1)
