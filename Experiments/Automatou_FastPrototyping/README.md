@@ -1,10 +1,10 @@
 # Automatou — World laboratory
 
-A self-contained, native Godot prototype of the world-builder-and-runner described in [Specification.md](Specification.md). Create worlds, author unit and building blueprints, populate factions, and observe their automata. There is no player faction, score, or victory screen.
+A self-contained, native Godot prototype of the world-builder-and-runner described in [Specification.md](Specification.md). Create worlds, author building blueprints and place source-defined units, populate factions, and observe their automata. There is no player faction, score, or victory screen.
 
 ## Run
 
-Double-click **Run.cmd**. It restores the bundled Godot packages, builds the C# project, and launches the game. The game starts at a main menu with **Load world**, **World creator**, **Unit creator**, and **Building creator**. Load world lists the built-in five-faction encounter and every saved player world. Worlds open paused.
+Double-click **Run.cmd**. It restores the bundled Godot packages, builds the C# project, and launches the game. The game starts at a main menu with **Load world**, **World creator**, and **Building creator**. Load world lists the built-in five-faction encounter and every saved player world. Worlds open paused.
 
 Requirements: Windows 11 x64, .NET SDK 10.0.400 or newer in the .NET 10 family, and Godot **4.7.2 .NET x64**. The default Godot location is `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64`. Set `GODOT_EXE` to the .NET console executable to use another installation. The launcher uses that installation's local NuGet packages; no additional game assets, external repositories, export templates, or network services are required.
 
@@ -15,7 +15,7 @@ All session logs are written under `MyLogOutput/yyyy-MM-dd_HH-mm-ss`. `Launcher.
 1. Choose **Load world**, then **Five-faction encounter**. Press **Step** to advance one turn, or **Run automata** to watch continuously. Choose one to eight turns per second.
 2. Select an entity with **Inspect**. Its arrow shows its facing; the gold region shows its forward attack region. The inspector reports health, weapons, armor, and automaton.
 3. Open **Edit in World creator**. Use **Paint terrain**, **Place unit**, **Place building**, or **Erase entity** to modify the world. Editing pauses the simulation. Placement previews become red where a footprint cannot fit.
-4. Open Unit creator or Building creator, change a design, and use **Save & place in world**. Choose the faction independently of the blueprint.
+4. Choose a built-in unit in World creator, or open Building creator to author a building and use **Save & place in world**. Choose its faction when placing.
 5. Save a named world before replacing it with a blank map, generated map, or the demonstration encounter.
 
 The starting world has two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation, plus one explicitly authored watch station.
@@ -28,10 +28,10 @@ The starting world has two Bastions, five Traveler outriders and a mobile H.O.M.
 | Right click       | Inspect in world; remove cell in building editor |
 | Space             | Run / pause                                      |
 | N                 | Pause and advance one turn                       |
-| R                 | Rotate selection, placement, or unit preview     |
+| R                 | Rotate selection or placement                    |
 | F                 | Fit the current world or creator grid            |
 | Delete            | Remove the selected entity                       |
-| Escape            | Return to main menu                       |
+| Escape            | Return to main menu                              |
 
 Shortcuts are suspended while typing in a text or number field. Sidebars scroll independently. The window can be resized down to 1100 × 700.
 
@@ -43,17 +43,24 @@ The lower section of the World creator toolbar creates either a rectangle from w
 
 **Checkpoint** stores the current state in memory; **Rewind** restores it. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved overwrite that file. **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map and creator drafts.
 
-- `UserContent/Worlds`: map terrain, living entities, faction, facing, health, turn, casualty count, embedded blueprints, and deterministic random state.
-- `UserContent/Units`: reusable unit blueprints, loaded automatically at startup.
+- `UserContent/Worlds`: map terrain, living entities, faction, facing, health, turn, casualty count, unit type identifiers, automaton memory, building blueprints, and deterministic random state.
 - `UserContent/Buildings`: reusable manually authored building blueprints, including the editor pivot and patch settings.
 
 Saving writes a temporary file before replacing the destination. Loading validates the world before replacing the active simulation. Saves are paused on load. User content and logs are ignored by Git. Content formats have no compatibility or migration layer between repository revisions.
 
-## Unit creator
+## Source-defined units and automata
 
-Create a design by editing a blueprint and giving it a new name. Saving an existing name updates that blueprint; existing placed entities keep their own copies. Unsaved fields survive navigating between screens; choosing another blueprint replaces the draft.
+Each unit type has a class in `Source/Simulation/Units`: Bastion, TravelerOutrider, Home, SiegeWalker, CloneInfantry, LongbowArtillery, PrytuHunter, and PrytuManifestation. Its immutable `UnitStatistics` defines its body and combat properties. There is no unit creator or unit blueprint loading.
 
-The central view shows the live footprint, origin, facing, and attack region. Sizes 1, 2, 3, and 4 occupy 1, 7, 19, and 37 cells respectively. The prototype supports sizes 1–12. Set health, armor, ranged and melee damage, attack range, action points, evasion, splash radius, automaton, and mobility.
+Each unit class contains its own nested `Automaton` class. Each placed unit owns a separate instance, exposed through `Brain` and saved through its concrete `Memory` property. `CreateFresh()` creates a new unit with empty memory for placement. The initial brains remember their target (retaining it on equal target scores) and how many turns they have observed. Add serializable properties to a unit's automaton for longer-term goals and other memory.
+
+On each turn, `World.Step()` invokes the living unit's `Brain.Act(UnitSenses)` once. The brain yields typed requests (`TurnAction`, `MoveForwardAction`, `AttackAction`). The world validates and applies each request before resuming the brain. The brain can take a fresh observation after each action, so it can react to a destroyed target or a changed position during the same turn. Ending the iterator ends the turn; rejected requests also end the turn. Every successful action consumes points, and destroyed actors stop immediately.
+
+`UnitSenses.Observe()` returns detached, read-only entity observations and immutable statistics, with no entity or brain references. Terrain, occupancy, and route queries are read-only. Sensing currently covers the whole world. `TacticalPlanning` supplies optional target selection and engagement helpers; each unit's automaton chooses its tactics and can implement completely different logic. The world contains action rules, not a switch selecting unit behavior.
+
+Saves store a unit type identifier and the concrete brain's memory. Stats and executable logic come from source. Checkpoint/rewind and save/load restore independent brains and deterministic continuation. Suspended iterators are not saved; turns finish synchronously before a checkpoint can be taken. Old blueprint-based saves are not supported.
+
+To add a unit, derive from `Unit`, define immutable statistics, implement a nested `UnitAutomaton`, expose its concrete memory, implement `CreateFresh()`, and register the class in `Catalog.Units()` and the JSON derived-type declarations in `Unit.cs`. Brain memory must consist of serializable data rather than live world references.
 
 Movement domains:
 
@@ -72,7 +79,7 @@ A saved building must contain one connected island of 1–2,000 distinct cells. 
 
 ## Simulation rules
 
-These are explicit prototype defaults for the combat mechanics left open by the specification. They can be changed in the C# simulation and through blueprint fields.
+These are explicit prototype defaults for the combat mechanics left open by the specification. They can be changed in the C# simulation and unit classes.
 
 - Every turn replenishes each unit's action points. Unused points expire.
 - A 60-degree turn costs one point. Units move only forward, spending one point per cell, or two on forest, wetlands, and tundra for ground units.
@@ -80,7 +87,7 @@ These are explicit prototype defaults for the combat mechanics left open by the 
 - An attack costs two points, with at most one attack per unit per turn. Adjacent targets take melee damage; more distant targets take ranged damage. Range is measured between occupied footprints.
 - Attacks cover the facing direction and its two neighboring directions. Front armor is full strength, front-side armor is two-thirds strength, and rear-side/rear armor is one-quarter strength. Hits always deal at least one damage.
 - Evasion is a deterministic seeded chance to avoid a hit. Ranged blast attacks damage every entity in the impact radius, including allies and potentially the attacker. Melee attacks do not splash.
-- **Advance** closes with the nearest opponent; **Skirmish** attacks and withdraws; **Hold** stays in place until an enemy enters range; **Artillery** prefers greater separation; **Swarm** gives additional priority to weakened opponents.
+- Bastions and siege walkers close with nearby opponents. Travelers and artillery attack and withdraw when too close. Clones and Prytu prioritize weakened opponents. Each unit class owns these decisions.
 - Automata search routes around blocked terrain and occupied footprints. Searches are bounded to 3,000 expanded positions per decision. A route too complex for this bound causes the unit to wait and retry next turn.
 - The first acting unit rotates each turn. Factions are mutually hostile. Buildings are passive targets. The simulation keeps running after only one faction remains.
 - **Deploy / hold position** anchors a selected unit and removes its evasion until **Mobilize unit** is pressed. This provides the H.O.M.E. mobile/stationary toggle without changing its footprint.
@@ -98,6 +105,6 @@ From this folder in PowerShell:
 
 The first command builds and runs dependency-free simulation checks. The second also launches the real Godot renderer, exercises the interface, captures views under the session log folder, and exits. Its authored test content is isolated inside that log folder.
 
-Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, building connectivity and pivot persistence, attack arcs and armor, action points, splash damage, obstacle routing, automaton movement, remote building pivots, blueprint files, deterministic world restoration, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, live unit sizes, unit saving/placement, building expansion/pivot/save/reopening/placement, terrain painting, world saving/loading, and the minimum window size.
+Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, building connectivity and pivot persistence, attack arcs and armor, action points, splash damage, obstacle routing, automaton movement, remote building pivots, building files, independent brain memory, read-only sensing, validated actions, deterministic world restoration, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, source-defined unit placement, building expansion/pivot/save/reopening/placement, terrain painting, world saving/loading, and the minimum window size.
 
 `Source/Simulation` contains the engine-independent model and rules. `Source/Interface` contains the Godot renderer and creators. `Tests` compiles the simulation directly without Godot or an external test framework. The experiment has its own build settings and does not reference the main repository application.

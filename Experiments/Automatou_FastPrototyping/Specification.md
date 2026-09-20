@@ -135,10 +135,16 @@ a setting controls the grid patch size
 when saving, the position of the building's origin on the grid is recorded
 when placing a building on the map, you may rotate it about its origin
 
-## Unit creator
+## Unit definitions and automata
 
-- This is used to create units.
-- Unit size is defined as an integer 1 or greater
+- Units are defined directly in C# source; there is no unit creator.
+- Each unit type has its own C# class defining its properties.
+- Each unit class defines a nested automaton class, the unit's brain.
+- Each placed unit owns an independent automaton instance.
+- Each turn, the automaton senses the world, executes its logic, and outputs requested actions.
+- The world validates and applies actions. Automata can sense again after each action within the turn.
+- The automaton holds memory that persists across turns, including longer-term goals, and is restored with saved worlds.
+- Unit size is defined as an integer 1 or greater.
 
 ## Terrain types
 
