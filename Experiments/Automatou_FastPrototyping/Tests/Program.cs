@@ -132,7 +132,11 @@ Test("World saves preserve health, rotations, units and deterministic continuati
 Test("Five-faction encounter remains consistent for 120 turns", () => {
     World world = World.Demonstration();
     Check(world.Entities.Select(e => e.Faction).Distinct().Count() == 5, "All factions present");
-    Check(world.Terrain.Values.All(terrain => terrain == Terrain.Plains), "Encounter starts on plains");
+    Check(world.Terrain.Count == 34 * 24 && world.Entities.Count == 28, "Original encounter dimensions and population");
+    // Fingerprint captured from the encounter before terrain generation was removed.
+    string terrainRows = string.Concat(Enumerable.Range(0, 24).SelectMany(y => Enumerable.Range(0, 34).Select(x => "FPMWE"[(int)world.Terrain[Hex.FromOffset(x, y)]])));
+    string terrainHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(terrainRows)));
+    Check(terrainHash == "6129905157C57A02559D1D1500D4A2C128FDBF089C1B9BDF23933EC97A43FE59", "Exact original encounter terrain, including starting clearings");
     for (int i = 0; i < 120; i++) {
         world.Step();
         Hex[] cells = world.Entities.SelectMany(e => e.OccupiedCells()).ToArray();

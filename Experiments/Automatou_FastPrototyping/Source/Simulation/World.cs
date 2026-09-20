@@ -231,7 +231,46 @@ public sealed partial class World {
         }
     }
     public static World Demonstration() {
-        World world = Create(false, 34, 24);
+        // Fixed encounter terrain, including the original starting units' clearings.
+        // Rows run from bottom (Y = 0) to top; columns run left to right.
+        string[] rows = [
+            "PPPPPPPWWPPPPPPPPPPPPPPWWWPPPPPPPP",
+            "PPPPPWWWWWPPPPPPPPPPPPPWWWWPPPPPPP",
+            "PPPPPWWWWWWPPPPPPPPPPPWWWWWPPPPPPP",
+            "PPPPPWPPPWWPPPPPPPPPPPPWWWWPPPPPPP",
+            "PPPPPPPPPPPPPPPPPPPPPPPWWWPPPPPPPP",
+            "FPPPPPPPPPPPPPFFPFPPPPPPPPPPPPPFFF",
+            "FFFPPPPPPPPPPFFFFFFFPPPPPPPPPFFFFF",
+            "MFFFPPPPPPPPFFFMMMFFFPPPPPPPFFFMMM",
+            "MMFFFPPPPPPFFFMMMMMFFPPPPPPPFPPMMM",
+            "MMFFPPPPPPPFPMMMMMMFFFPPPPPFPPPMMM",
+            "MMFFFPPPPPPFFFMMMMFFFPPPPPPPFPPMMM",
+            "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+            "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+            "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP",
+            "PPPPPPWWWWPPPPPPPPPPPPWWWWWPPPPPPP",
+            "PPPPPWWWWWWPPPPPPPPPPPWPWWWPPPPPPP",
+            "PPPPPPPWWWWPPPPPPPPPPPWWWPWPPPPPPP",
+            "PPPPPPPWWWPPPPPPPPPPPPWWPPPPPPPPPP",
+            "FPPPPPPPPPPPPPPFFPPPPPPPPPPPPPPPFF",
+            "FFPPPPPPPPPPPFFFFFFPPPPPPPPPPPFFFF",
+            "FFFFPPPPPPPPFFFFMFFFPPPPPPPPPFFFMF",
+            "MMFFFPPPPPPFFFMMMMFFFPPPPPPPFFMMMM",
+            "MMFFFPPPPPPFFMMMMMMFFFPPPPPFFFMMMM",
+            "MMFFFPPPPPPFFFMMMMMFFPPPPPPPFFMMMM"
+        ];
+        World world = new();
+        for (int y = 0; y < rows.Length; y++) {
+            for (int x = 0; x < rows[y].Length; x++) {
+                world.Terrain.Add(Hex.FromOffset(x, y), rows[y][x] switch {
+                    'P' => Simulation.Terrain.Plains,
+                    'F' => Simulation.Terrain.Forest,
+                    'M' => Simulation.Terrain.Mountain,
+                    'W' => Simulation.Terrain.Water,
+                    _ => throw new InvalidOperationException("Unknown encounter terrain.")
+                });
+            }
+        }
         List<Unit> designs = Catalog.Units();
         void Place(int index, Faction faction, int x, int y, int facing) {
             Entity entity = new() { Unit = designs[index].CreateFresh(), Faction = faction, Position = Hex.FromOffset(x, y), Facing = facing };

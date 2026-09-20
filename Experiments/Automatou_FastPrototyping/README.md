@@ -28,7 +28,7 @@ The **Limited perception**, **Weapon heat**, and **Protective bonds** switches i
 | Lost in the forest   | A pursuer investigates the last sighting of a fast, injured Traveler.        |
 | Bonds under pressure | Changing a Bastion's directed bond changes which vulnerable ally it assists. |
 
-The five-faction encounter starts on plains with two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation.
+The five-faction encounter uses a fixed, source-defined map of plains, forest, mountains, and water, preserving its original terrain and starting clearings. It has two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation.
 
 | Control           | Action                                           |
 | ----------------- | ------------------------------------------------ |
