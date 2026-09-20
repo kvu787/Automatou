@@ -4,9 +4,9 @@
 
 - Godot 4.7.2 .NET C#
 - .NET 10, C# version 14
-- Turn-based strategy
 - 2D
-- hex grid, pointy top
+- Hex grid
+- Turn based
 
 ## The style of this game
 
@@ -31,6 +31,11 @@ can be found when relatively simple components interact with each other.
 
 The most succinct way I can describe this game is a "world-builder-and-runner" game.
 John Conway's "Game of Life" could be viewed as the fundamental progenitor of this style of game.
+
+## Visual style
+
+Everything is represented simply using colors, shapes, and symbols.
+There is no 2D or 3D "art".
 
 ## Spatial model
 
@@ -118,14 +123,10 @@ a setting controls the grid patch size
 when saving, the position of the building's origin on the grid is recorded
 when placing a building on the map, you may rotate it about its origin
 
-
 ## Unit creator
 
 - This is used to create units.
 - Unit size is defined as an integer 1 or greater
-
-## Factions
-- 
 
 ## Terrain types
 
@@ -140,3 +141,59 @@ when placing a building on the map, you may rotate it about its origin
 - Desert
 - Tundra
 - Exclusion zone
+
+## Theme
+
+Takes place in a universe that has both futuristic/sci-fi technology and fantasy magic systems.
+
+## Factions
+
+### Prytu
+
+Led Prytus, a super-powerful, super-intelligent entity obsessed with destroying all sentient life which it deems "lesser", which is all sentient life except Prytus
+Similar to ridley scott's Alien, Zerg, Tyranids
+Several "manifestations" of Prytus as extremely powerful Prytu creatures have been seen
+No one knows the "true form" of Prytus
+Prytus controls all Prytu units directly. There are no Prytu intelligences which are independent from Prytus.
+
+### Travelers
+
+Human-like beings
+Will get sick and die if they roam for too long or stay in the same place for too long.
+Have a large mobile town called the H.O.M.E.: Habitation, Operation, Mobility, Environment
+Can switch between mobile and stationary base very quickly
+High mobility is a key part of defense and offense
+Big on evasion as opposed to high health or armor
+Strong on kiting, fast in-and-out strikes, surprise attacks, stealth, as opposed to direct assaults
+Naturally strong in trading since they travel to many places (like the Bentusi)
+Weak on long/medium ranged combat because that armament requires slower move speed for accurate targeting
+
+### Mech and tank faction
+
+Culture
+The Tanks are a utopia-like faction. They highly value all their citizens. Their goals and values are focused on leading fulfilling lives and advancing the development of their people.
+
+They have a very advanced and complex society in all ways. In peacetime, they are actually composed of many individual factions with different styles of governance and economy. In wartime, they unite under a single council and leader to fight the threat.
+Technology
+The Siegers use the pinnacle of human scientific advancement. All buildings and units are mobile with anti-grav engines. All weapons are energy based rather than using conventional ballistics. Tanks use direct-fire energy projectiles while artillery uses indirect-fire energy projectiles. They have very strong shields in addition to very strong armor.
+Tactics
+The Tanks are highly defensive and averse to casualties. They gain an inspiration bonus by minimizing human and environmental casualties throughout combat.
+
+They favor gradual sieges at long distances with their artillery. They use heavily armored tanks to defend their artillery. They also use tanks to conduct smaller assault sieges that do not require heavy artillery. Still, these assaults are much slower and more cautious than raids conducted by most other factions.
+
+All buildings and units are mobile. The mobility from highest to lowest is tanks, artillery, and buildings. Their mobile bases support their siege tactics by repairing and reinforcing units and gradually moving the frontline towards the enemy.
+
+### Infantry and artillery faction
+
+#### Culture
+
+- Massive cloning facilities to produce huge numbers of soldiers
+- Infertile by default so that they cannot have children
+- All reproduction is done through cloning
+- This makes it so that soldiers do not have familial attachments so they more easily die for the war cause
+
+#### Units
+
+- Primary unit is infantry soldier
+- The most distinctive feature of the soldier is their stimulant respirator. This is a mask that covers lower face, in particular the mouth and nose. Tubes attach from the respirator to 1 to 4 different canisters of stimulants mounted to to the mask.
+
