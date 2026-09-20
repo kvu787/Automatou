@@ -6,7 +6,7 @@ namespace Automatou.UserInterface;
 public partial class Laboratory {
     private static readonly string[] InspectorTabNames = ["Behavior", "Tuning", "Unit"];
     private string experimentName = "Five-faction encounter";
-    private string experimentDescription = "A larger encounter for observing interactions. Select a unit, inspect its reasons, then tune and replay.";
+    private string experimentDescription = "";
     private Label? comparisonLabel;
     private ExperimentResult? referenceResult;
     private int experimentShots, experimentChanges, checkpointShots, checkpointChanges;

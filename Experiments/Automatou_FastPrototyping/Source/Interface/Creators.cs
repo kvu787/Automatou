@@ -8,7 +8,6 @@ public partial class Laboratory {
 
     private void BuildWorldTools() {
         _ = Label(this.toolsPanel, "WORLD CREATOR", 12, this.accent);
-        _ = Label(this.toolsPanel, "Set the conditions.", 21);
         this.toolChoice = this.Choice(this.toolsPanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => {
             this.Tool = ToolNames[index];
             this.Status($"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
@@ -44,7 +43,7 @@ public partial class Laboratory {
     }
     private void CreateWorkingWorld(World replacement) {
         this.experimentName = "Custom world";
-        this.experimentDescription = "Your starting conditions. Place units, tune their behavior, then checkpoint and compare.";
+        this.experimentDescription = "";
         this.referenceResult = null;
         this.ReplaceWorld(replacement);
     }

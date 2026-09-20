@@ -266,7 +266,6 @@ public sealed partial class World {
             Place(6, Faction.Prytu, 19 + (i * 2), 15 + (i % 2), 3);
         }
 
-        world.Note("Five factions. One shared world. Start the simulation or make it your own.");
         return world;
     }
 }

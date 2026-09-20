@@ -178,7 +178,6 @@ public partial class HexBoard : Control {
         }
 
         this.DrawRect(new Rect2(0, 0, this.Size.X, 48), new Color(.043f, .078f, .11f, .95f));
-        this.Text(new Vector2(20, 29), "THE OBSERVATORY", 14, new Color("9bc0c9"));
         this.Text(new Vector2(this.Size.X - 158, 29), $"{this.Zoom * 100:0}%   ·   +Y ↑  +X →", 12, Ink);
         this.Text(new Vector2(18, this.Size.Y - 18), "Middle drag: pan · Wheel: zoom · F: frame", 12, Ink);
     }

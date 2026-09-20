@@ -176,7 +176,7 @@ public partial class Laboratory : Control {
         HBoxContainer metrics = Row(foot);
         this.populationLabel = Label(metrics, "", 12, this.accent);
         this.hoverLabel = Label(metrics, "Hover a cell to inspect its coordinates", 12, this.muted); this.hoverLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        this.statusLabel = Label(foot, "Ready. Shape the world, then start the simulation.", 13, new Color("dce7de"));
+        this.statusLabel = Label(foot, "Simulation paused.", 13, new Color("dce7de"));
         this.eventLabel = Label(foot, "", 12, this.muted); this.eventLabel.CustomMinimumSize = new Vector2(0, 34);
     }
     private void Guard(Action action) {
@@ -190,7 +190,7 @@ public partial class Laboratory : Control {
         }
 
         this.running = !this.running; this.elapsed = 0; this.playButton.Text = this.running ? "Ⅱ  Pause" : "▶  Run simulation";
-        this.Status(this.running ? "Simulation running. Every faction acts independently." : "Paused. You can edit the world.");
+        this.Status(this.running ? "Simulation running." : "Simulation paused.");
         this.BuildInspector();
     }
     private void Step() {
@@ -660,6 +660,7 @@ public partial class Laboratory : Control {
         this.turnLabel.Text = $"TURN {this.world.Turn:0000}";
         this.populationLabel.Text = $"{this.world.Terrain.Count:N0} CELLS     {this.world.Entities.Count} UNITS     {this.world.Casualties} LOST";
         this.eventLabel.Text = string.Join("\n", this.world.Events.TakeLast(2));
+        this.eventLabel.Visible = this.eventLabel.Text.Length > 0;
         this.RefreshComparison();
         this.BuildInspector();
     }
@@ -734,14 +735,13 @@ public partial class Laboratory : Control {
             this.checkpoint = Storage.Encode(this.world);
             this.checkpointShots = this.experimentShots; this.checkpointChanges = this.experimentChanges;
         }
-        this.Refresh(); this.board.Fit(); this.Status("World ready. Simulation paused.");
+        this.Refresh(); this.board.Fit(); this.Status("Simulation paused.");
     }
     private void BuildInspector() {
         Clear(this.inspectorPanel);
         _ = Label(this.inspectorPanel, "WORLD TELEMETRY", 12, this.accent);
         if (this.selected is null) {
-            _ = Label(this.inspectorPanel, "Watch a world unfold.", 21);
-            _ = Label(this.inspectorPanel, "Choose Inspect and select any unit. You are the observer of every faction.", 13, this.muted);
+            _ = Label(this.inspectorPanel, "Choose Inspect and select a unit.", 13, this.muted);
         } else {
             _ = Label(this.inspectorPanel, this.selected.Name, 21, new Color(Catalog.FactionColors[(int)this.selected.Faction]));
             _ = Label(this.inspectorPanel, Catalog.FactionNames[(int)this.selected.Faction], 13, this.muted);

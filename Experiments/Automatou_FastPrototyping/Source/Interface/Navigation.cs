@@ -63,9 +63,7 @@ public partial class Laboratory {
         World replacement = path is null ? World.Demonstration() : Storage.LoadWorld(path);
         this.worldSlotName = path is null ? "My world" : Path.GetFileNameWithoutExtension(path);
         this.experimentName = path is null ? "Five-faction encounter" : this.worldSlotName;
-        this.experimentDescription = path is null
-            ? "A larger encounter for observing interactions. Select a unit, inspect its reasons, then tune and replay."
-            : "A saved world. Select a unit to inspect its intentions and adjust its behavior.";
+        this.experimentDescription = "";
         this.referenceResult = null;
         this.ReplaceWorld(replacement);
         this.SwitchMode(destination);
@@ -80,13 +78,15 @@ public partial class Laboratory {
         this.selected = this.world.Entities.FirstOrDefault();
         this.Refresh();
         this.LogResult("SCENARIO", this.Result());
-        this.Status("Experiment paused at its starting point. Step, inspect, tune, and replay.");
+        this.Status("Simulation paused.");
     }
 
     private void BuildPlaybackTools() {
         _ = Label(this.toolsPanel, "EXPERIMENT", 12, this.accent);
         _ = Label(this.toolsPanel, this.experimentName, 21);
-        _ = Label(this.toolsPanel, this.experimentDescription, 13, this.muted);
+        if (!string.IsNullOrWhiteSpace(this.experimentDescription)) {
+            _ = Label(this.toolsPanel, this.experimentDescription, 13, this.muted);
+        }
         _ = this.Button(this.toolsPanel, "Load another world", () => this.ShowWorldBrowser());
         this.BuildExperimentTools();
         _ = this.Heading(this.toolsPanel, "WORLD AUTHORING");
