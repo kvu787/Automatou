@@ -50,18 +50,6 @@ Test("Footprints respect borders, occupied cells and movement domains", () =>
     Check(World.Traversable(new TestUnit() { Mobility = Mobility.Flight }, Terrain.Mountain), "Flight");
     Check(!World.Traversable(new TestUnit() { Mobility = Mobility.Spaceflight }, Terrain.ExclusionZone), "Exclusion");
 });
-Test("Authored buildings rotate around saved pivot and reveal underlying terrain", () =>
-{
-    var world = World.Create(false, 20, 20, false);
-    var design = new BuildingDesign { Cells = [new(1, 0), new(2, 0)], EditorOrigin = Hex.FromOffset(13, 7) };
-    design.Validate();
-    var building = new Entity { Building = design, Position = Hex.FromOffset(8, 8), Facing = 1 };
-    var cell = building.Position + new Hex(0, 1);
-    world.Terrain[cell] = Terrain.Water;
-    Check(world.Add(building, out _), "Building on water"); Check(world.At(cell) == building, "Rotated occupancy");
-    world.Remove(building); Check(world.At(cell) is null && world.Terrain[cell] == Terrain.Water, "Terrain preserved");
-    Reject(() => new BuildingDesign { Cells = [new(), new(5, 0)] }.Validate());
-});
 Test("Forward attacks, rear armor and action points affect combat", () =>
 {
     var world = World.Create(false, 20, 10, false);
@@ -73,15 +61,15 @@ Test("Forward attacks, rear armor and action points affect combat", () =>
     Check(world.ArmorAgainst(defender, defender.Position - new Hex(1, 0)) == 5, "Rear armor");
     world.Step(); Check(attacker.Health == 80 && defender.Health == 80, "No attack without two points");
 });
-Test("Blast damage includes allies and removes a building's whole health pool", () =>
+Test("Blast damage includes allies and clears destroyed unit footprints", () =>
 {
     var world = World.Create(false, 20, 20, false);
     var attacker = Unit(world, Hex.FromOffset(3, 8), design: new TestUnit() { Damage = 100, Range = 10, BlastRadius = 1 });
-    var enemy = new Entity { Building = new() { Health = 20 }, Faction = Faction.Prytu, Position = attacker.Position + new Hex(4, 0) };
-    Check(world.Add(enemy, out _), "Building added");
+    var enemy = Unit(world, attacker.Position + new Hex(4, 0), Faction.Prytu, new TestUnit { Health = 20 });
     var ally = Unit(world, enemy.Position + new Hex(1, 0), design: new TestUnit() { Health = 20 });
     world.Attack(attacker, enemy);
     Check(!world.Entities.Contains(enemy) && !world.Entities.Contains(ally), "Friendly splash and destruction");
+    Check(world.At(enemy.Position) is null && world.At(ally.Position) is null && world.Casualties == 2, "Destroyed footprints cleared");
 });
 Test("Automata route around impassable terrain and engage", () =>
 {
@@ -93,14 +81,22 @@ Test("Automata route around impassable terrain and engage", () =>
     Check(defender.Health < 1000, "Reached enemy past wall");
     Check(attacker.OccupiedCells().All(c => world.Terrain[c] != Terrain.Water), "Never entered water");
 });
-Test("Combat targets building cells even when the pivot is outside the footprint", () =>
+Test("Combat measures range to a large unit's occupied edge", () =>
 {
-    var world = World.Create(false, 25, 15, false);
-    var attacker = Unit(world, Hex.FromOffset(4, 5), design: new TestUnit() { Range = 1, ActionPoints = 5 });
-    var building = new Entity { Building = new() { Cells = [new(-10, 0), new(-11, 0)], Health = 500 }, Position = Hex.FromOffset(20, 5), Faction = Faction.Prytu };
-    Check(world.Add(building, out _), "Remote-pivot building added");
-    for (int i = 0; i < 12; i++) world.Step();
-    Check(building.Health < 500, "Attack occupied cells instead of empty origin");
+    var world = World.Create(false, 20, 15, false);
+    var attacker = Unit(world, Hex.FromOffset(4, 5), design: new TestUnit { Range = 1 });
+    var defender = Unit(world, attacker.Position + new Hex(3, 0), Faction.Prytu, new TestUnit { Size = 3, Health = 500 });
+    Check(world.Separation(attacker, defender) == 1 && world.CanAttack(attacker, defender), "Adjacent footprint is in range");
+    world.Attack(attacker, defender);
+    Check(defender.Health < 500, "Attack reaches occupied edge");
+});
+Test("Worlds reject entities without a unit", () =>
+{
+    var world = World.Demonstration();
+    string json = Storage.Encode(world);
+    var data = System.Text.Json.Nodes.JsonNode.Parse(json)!;
+    data["Entities"]![0]!["Unit"] = null;
+    Reject(() => Storage.Decode(data.ToJsonString()));
 });
 Test("Skirmish, hold and deployed automata obey their movement rules", () =>
 {
@@ -113,17 +109,7 @@ Test("Skirmish, hold and deployed automata obey their movement rules", () =>
     Check(skirmisher.Position.Distance(origin) > 2, "Skirmisher retreats after strike");
     Check(holder.Position == origin && deployed.Position == deployedOrigin, "Hold and deploy stay put");
 });
-Test("Building files preserve off-center pivots", () =>
-{
-    string folder = Path.Combine(Path.GetTempPath(), "AutomatouVerification", Guid.NewGuid().ToString("N"));
-    var design = new BuildingDesign { Cells = [new(0, 0), new(1, 0)], EditorOrigin = Hex.FromOffset(-20, 32), PatchWidth = 14, PatchHeight = 8 };
-    string path = Path.Combine(folder, "Building.json");
-    Storage.SaveDesign(path, design);
-    var restored = Storage.LoadDesign<BuildingDesign>(path); restored.Validate();
-    Check(restored.EditorOrigin == design.EditorOrigin && restored.Cells.SequenceEqual(design.Cells) && restored.PatchWidth == 14, "Building round trip");
-    File.Delete(path); Directory.Delete(folder);
-});
-Test("World saves preserve health, rotations, blueprints and deterministic continuation", () =>
+Test("World saves preserve health, rotations, units and deterministic continuation", () =>
 {
     var original = World.Demonstration();
     for (int i = 0; i < 8; i++) original.Step();
@@ -154,20 +140,20 @@ Test("Every source unit owns a distinct nested automaton and saves its memory", 
         var world = World.Create(false, 30, 20, false);
         var actor = Unit(world, Hex.FromOffset(7, 10), design: prototype.CreateFresh());
         var other = Unit(world, Hex.FromOffset(20, 10), design: prototype.CreateFresh());
-        Check(actor.Unit!.Brain.GetType().DeclaringType == actor.Unit.GetType(), "Brain defined by its unit class");
-        Check(!ReferenceEquals(actor.Unit.Brain, other.Unit!.Brain), "Independent brains");
+        Check(actor.Unit.Brain.GetType().DeclaringType == actor.Unit.GetType(), "Brain defined by its unit class");
+        Check(!ReferenceEquals(actor.Unit.Brain, other.Unit.Brain), "Independent brains");
         var memoryType = actor.Unit.Brain.GetType();
         memoryType.GetProperty("TurnsObserved")!.SetValue(actor.Unit.Brain, 41);
         memoryType.GetProperty("TargetId")!.SetValue(actor.Unit.Brain, 123);
         string json = Storage.Encode(world);
         Check(!json.Contains("Statistics") && !json.Contains("ActionPoints"), "Stats live in source, not saves");
         var restored = Storage.Decode(json);
-        var brain = restored.Entities[0].Unit!.Brain;
+        var brain = restored.Entities[0].Unit.Brain;
         Check(brain.GetType() == memoryType && (int)memoryType.GetProperty("TurnsObserved")!.GetValue(brain)! == 41, "Concrete brain and memory restored");
         Check((int)memoryType.GetProperty("TargetId")!.GetValue(brain)! == 123, "Goal memory restored");
         restored.Step();
         Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(brain)! == 42, "One brain invocation each turn");
-        Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(restored.Entities[1].Unit!.Brain)! == 1, "Other memory independent");
+        Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(restored.Entities[1].Unit.Brain)! == 1, "Other memory independent");
     }
 });
 Test("Sensing is detached and refreshes after each accepted action", () =>

@@ -8,7 +8,6 @@ public partial class Laboratory
     private VBoxContainer OpenMenu(string title)
     {
         Pause();
-        RememberDraft();
         menuVisible = true;
         workspaceRoot.Hide();
         if (menuRoot is not null) { RemoveChild(menuRoot); menuRoot.QueueFree(); }
@@ -31,7 +30,6 @@ public partial class Laboratory
         var column = OpenMenu("Main menu");
         Button(column, "Load world", () => ShowWorldBrowser());
         Button(column, "World creator", () => SwitchMode("World creator"));
-        Button(column, "Building creator", () => SwitchMode("Building creator"));
     }
 
     private void ShowWorldBrowser(string destination = "World")
@@ -73,7 +71,7 @@ public partial class Laboratory
     {
         Label(toolsPanel, "WORLD", 12, accent);
         Label(toolsPanel, "Five factions. One world.", 21);
-        Label(toolsPanel, "Run the automata or advance a single turn. Select a unit or building to inspect it.", 14, muted);
+        Label(toolsPanel, "Run the automata or advance a single turn. Select a unit to inspect it.", 14, muted);
         Button(toolsPanel, "Edit in World creator", () => SwitchMode("World creator"));
         Button(toolsPanel, "Load another world", () => ShowWorldBrowser());
         Button(toolsPanel, "Main menu", ShowMainMenu);

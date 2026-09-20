@@ -12,7 +12,6 @@ public partial class Laboratory : Control
     private Label turnLabel = null!, statusLabel = null!, eventLabel = null!, populationLabel = null!;
     private Button playButton = null!;
     private readonly List<Unit> unitDesigns = Catalog.Units();
-    private readonly List<BuildingDesign> buildingDesigns = [Catalog.Outpost()];
     private string mode = "World";
     private string currentTool = "Inspect";
     private OptionButton? toolChoice;
@@ -25,12 +24,12 @@ public partial class Laboratory : Control
             if (toolChoice is not null && IsInstanceValid(toolChoice)) toolChoice.Select(Array.IndexOf(ToolNames, value));
         }
     }
-    private static readonly string[] ToolNames = ["Inspect", "Paint terrain", "Place unit", "Place building", "Erase entity"];
+    private static readonly string[] ToolNames = ["Inspect", "Paint terrain", "Place unit", "Erase entity"];
     private bool running;
     private double elapsed;
     private double turnsPerSecond = 2;
     private int facing;
-    private int unitIndex, buildingIndex;
+    private int unitIndex;
     private Faction faction = Faction.Bastions;
     private Terrain terrain = Terrain.Forest;
     private Entity? selected;
@@ -39,7 +38,7 @@ public partial class Laboratory : Control
     private string sessionRoot = "";
     private Label? hoverLabel;
     private LineEdit worldName = null!;
-    private OptionButton unitChoice = null!, buildingChoice = null!;
+    private OptionButton unitChoice = null!;
     private Control workspaceRoot = null!, menuRoot = null!;
     private HBoxContainer transport = null!;
     private Label screenTitle = null!;
@@ -58,7 +57,6 @@ public partial class Laboratory : Control
         Log("Application started. Godot 4.7.2 / .NET 10.");
         world.EventRecorded = Log;
         foreach (string entry in world.Events) Log(entry);
-        LoadLibrary();
         Theme = CreateTheme();
         BuildInterface();
         checkpoint = Storage.Encode(world);
@@ -68,19 +66,6 @@ public partial class Laboratory : Control
         if (OS.GetCmdlineUserArgs().Contains("--verify-interface")) Callable.From(RunInterfaceVerification).CallDeferred();
     }
     private void Log(string message) => System.IO.File.AppendAllText(System.IO.Path.Combine(sessionRoot, "Session.log"), $"{DateTime.Now:HH:mm:ss.fff} {message}{System.Environment.NewLine}");
-    private void LoadLibrary()
-    {
-        string directory = System.IO.Path.Combine(contentRoot, "Buildings");
-        System.IO.Directory.CreateDirectory(directory);
-        foreach (string file in System.IO.Directory.EnumerateFiles(directory, "*.json"))
-            try
-            {
-                var design = Storage.LoadDesign<BuildingDesign>(file); design.Validate();
-                int index = buildingDesigns.FindIndex(d => d.Name == design.Name);
-                if (index < 0) buildingDesigns.Add(design); else buildingDesigns[index] = design;
-            }
-            catch (Exception exception) { Log($"Skipped invalid blueprint {file}: {exception.Message}"); }
-    }
     private static StyleBoxFlat Box(string background, string border = "263b48", int radius = 6)
     {
         var box = new StyleBoxFlat { BgColor = new Color(background), BorderColor = new Color(border) };
@@ -244,8 +229,7 @@ public partial class Laboratory : Control
     private void SwitchMode(string value)
     {
         Pause();
-        if (value != mode) RememberDraft();
-        mode = value; board.BuildingMode = mode == "Building creator";
+        mode = value;
         menuVisible = false;
         if (menuRoot is not null) menuRoot.Hide();
         workspaceRoot.Show();
@@ -255,7 +239,6 @@ public partial class Laboratory : Control
         Clear(toolsPanel);
         if (mode == "World creator") BuildWorldTools();
         else if (mode == "World") BuildPlaybackTools();
-        else BuildBuildingCreator();
         BuildInspector(); board.Fit(); board.QueueRedraw();
         Callable.From(() => board.Fit()).CallDeferred();
     }
@@ -263,18 +246,17 @@ public partial class Laboratory : Control
     {
         board.World = world; board.Selected = selected; board.QueueRedraw();
         turnLabel.Text = $"TURN {world.Turn:0000}";
-        populationLabel.Text = $"{world.Terrain.Count:N0} CELLS     {world.Entities.Count(e => e.Unit is not null)} UNITS     {world.Entities.Count(e => e.Building is not null)} BUILDINGS     {world.Casualties} LOST";
+        populationLabel.Text = $"{world.Terrain.Count:N0} CELLS     {world.Entities.Count} UNITS     {world.Casualties} LOST";
         eventLabel.Text = string.Join("\n", world.Events.TakeLast(2));
         BuildInspector();
     }
-    private Entity? PlacementPreview(Hex cell) => mode == "World creator" && tool is "Place unit" or "Place building"
-        ? new() { Position = cell, Facing = facing, Faction = faction, Unit = tool == "Place unit" ? unitDesigns[unitIndex] : null, Building = tool == "Place building" ? buildingDesigns[buildingIndex] : null }
+    private Entity? PlacementPreview(Hex cell) => mode == "World creator" && tool == "Place unit"
+        ? new() { Position = cell, Facing = facing, Faction = faction, Unit = unitDesigns[unitIndex] }
         : null;
     private void OnCell(Hex cell, MouseButton button)
     {
         Guard(() =>
         {
-            if (mode == "Building creator") { EditBuilding(cell, button); return; }
             if (menuVisible || mode is not ("World" or "World creator")) return;
             if (button == MouseButton.Right) { tool = "Inspect"; selected = world.At(cell); Refresh(); return; }
             if (tool == "Inspect") { selected = world.At(cell); Refresh(); return; }
@@ -289,7 +271,7 @@ public partial class Laboratory : Control
             }
             else if (PlacementPreview(cell) is { } entity)
             {
-                entity.Unit = entity.Unit?.CreateFresh(); entity.Building = entity.Building?.Copy();
+                entity.Unit = entity.Unit.CreateFresh();
                 if (!world.Add(entity, out string reason)) Status(reason);
                 else { selected = entity; Status($"Placed {entity.Name} at {cell}."); }
             }
@@ -325,21 +307,11 @@ public partial class Laboratory : Control
     private void BuildInspector()
     {
         Clear(inspectorPanel);
-        Label(inspectorPanel, mode == "Building creator" ? "DESIGN NOTES" : "WORLD TELEMETRY", 12, accent);
-        if (mode == "Building creator")
-        {
-            Label(inspectorPanel, "A place to take shape.", 21);
-            Label(inspectorPanel, "Paint a connected footprint. Right-click to remove cells. The gold cross is the origin used for placement and rotation.", 13, muted);
-            Heading(inspectorPanel, "EXPANDING THE WORKSPACE");
-            Label(inspectorPanel, "Click a border cell to add a patch on that side. Patch width and height are adjustable below the health field. Opening a design expands the workspace until every cell and its saved pivot fit.", 13, muted);
-            Heading(inspectorPanel, "ONE SHARED HEALTH POOL");
-            Label(inspectorPanel, "Buildings cover the underlying terrain. Destruction removes the whole footprint and reveals that terrain again.", 13, muted);
-            return;
-        }
+        Label(inspectorPanel, "WORLD TELEMETRY", 12, accent);
         if (selected is null)
         {
             Label(inspectorPanel, "Watch a world unfold.", 21);
-            Label(inspectorPanel, "Choose Inspect and select any unit or building. You are the observer of every faction.", 13, muted);
+            Label(inspectorPanel, "Choose Inspect and select any unit. You are the observer of every faction.", 13, muted);
         }
         else
         {
@@ -347,12 +319,10 @@ public partial class Laboratory : Control
             Label(inspectorPanel, Catalog.FactionNames[(int)selected.Faction], 13, muted);
             Heading(inspectorPanel, "ENTITY");
             Label(inspectorPanel, $"Origin     {selected.Position}\nFacing    {Hex.DirectionNames[selected.Facing]}\nHealth    {selected.Health} / {selected.MaximumHealth}\nFootprint {selected.OccupiedCells().Count()} cells", 14);
-            if (selected.Unit is { } unit)
-            {
-                Label(inspectorPanel, $"{unit.Name} automaton\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
-                Label(inspectorPanel, "Gold cells show the forward attack region. Rear attacks bypass most armor.", 12, muted);
-                Button(inspectorPanel, selected.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { Pause(); selected.Stationary = !selected.Stationary; Refresh(); });
-            }
+            var unit = selected.Unit;
+            Label(inspectorPanel, $"{unit.Name} automaton\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
+            Label(inspectorPanel, "Gold cells show the forward attack region. Rear attacks bypass most armor.", 12, muted);
+            Button(inspectorPanel, selected.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { Pause(); selected.Stationary = !selected.Stationary; Refresh(); });
             if (mode == "World creator")
             {
                 Button(inspectorPanel, "Rotate 60°   [R]", RotateSelection);
@@ -362,7 +332,7 @@ public partial class Laboratory : Control
         Heading(inspectorPanel, "FACTIONS / LIVE POPULATION");
         for (int i = 0; i < Catalog.FactionNames.Length; i++)
         {
-            int count = world.Entities.Count(e => (int)e.Faction == i && e.Unit is not null);
+            int count = world.Entities.Count(e => (int)e.Faction == i);
             Label(inspectorPanel, $"●  {Catalog.FactionNames[i]}   {count}", 13, new Color(Catalog.FactionColors[i]));
         }
         Heading(inspectorPanel, "LABORATORY CONTROLS");

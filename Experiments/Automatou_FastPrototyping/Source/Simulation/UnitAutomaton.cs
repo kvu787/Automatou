@@ -13,7 +13,7 @@ public sealed record MoveForwardAction : UnitAction;
 public sealed record AttackAction(int TargetId) : UnitAction;
 
 public sealed record EntityObservation(int Id, Faction Faction, Hex Position, int Facing,
-    int Health, int MaximumHealth, bool Stationary, UnitStatistics? Unit, IReadOnlyList<Hex> Cells);
+    int Health, int MaximumHealth, bool Stationary, UnitStatistics Unit, IReadOnlyList<Hex> Cells);
 public sealed record WorldObservation(int Turn, EntityObservation Self, IReadOnlyList<EntityObservation> Entities);
 
 // No mutable world/entity/brain references escape this read-only sensing interface.
@@ -23,11 +23,11 @@ public sealed class UnitSenses
 {
     private readonly World world;
     private readonly Entity actor;
-    internal UnitSenses(World world, Entity actor) { this.world = world; this.actor = actor; RemainingPoints = actor.Unit!.ActionPoints; }
+    internal UnitSenses(World world, Entity actor) { this.world = world; this.actor = actor; RemainingPoints = actor.Unit.ActionPoints; }
     public int RemainingPoints { get; internal set; }
     public bool HasAttacked { get; internal set; }
     private static EntityObservation Copy(Entity entity) => new(entity.Id, entity.Faction, entity.Position, entity.Facing,
-        entity.Health, entity.MaximumHealth, entity.Stationary, entity.Unit?.Statistics, Array.AsReadOnly(entity.OccupiedCells().ToArray()));
+        entity.Health, entity.MaximumHealth, entity.Stationary, entity.Unit.Statistics, Array.AsReadOnly(entity.OccupiedCells().ToArray()));
     public WorldObservation Observe() => new(world.Turn, Copy(actor), Array.AsReadOnly(world.Entities.Select(Copy).ToArray()));
     public Terrain? TerrainAt(Hex cell) => world.Terrain.TryGetValue(cell, out var terrain) ? terrain : null;
     public bool CanOccupy(Hex position, int facing) => world.CanOccupy(actor, position, facing, out _);
@@ -46,7 +46,7 @@ public static class TacticalPlanning
     public static UnitAction? Engage(UnitSenses senses, WorldObservation observation, EntityObservation target, bool keepDistance)
     {
         var actor = observation.Self;
-        var unit = actor.Unit!;
+        var unit = actor.Unit;
         int distance = actor.Cells.Min(c => target.Cells.Min(c.Distance));
         Hex aim = target.Cells.MinBy(c => c.Distance(actor.Position));
         bool inArc = Hex.TurnDistance(actor.Facing, actor.Position.DirectionTo(aim)) <= 1;

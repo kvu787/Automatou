@@ -10,11 +10,7 @@ public partial class HexBoard : Control
     public Func<Hex, Entity?>? Preview { get; set; }
     public Action<Hex, MouseButton>? CellPressed { get; set; }
     public Action<Hex>? HoverChanged { get; set; }
-    public bool BuildingMode { get; set; }
     public bool Coordinates { get; set; }
-    public HashSet<Hex> BuildingCells { get; set; } = [];
-    public Hex BuildingOrigin { get; set; } = Hex.FromOffset(10, 5);
-    public Rect2I EditorBounds { get; set; } = new(0, 0, 20, 10);
     public Hex? Hovered { get; private set; }
     public float Zoom { get; private set; } = 1;
     private Vector2 pan;
@@ -42,9 +38,7 @@ public partial class HexBoard : Control
         if (dq > dr && dq > ds) rq = -rr - rs; else if (dr > ds) rr = -rq - rs;
         return new(rq, rr);
     }
-    private IEnumerable<Hex> DisplayCells() => BuildingMode
-        ? Enumerable.Range(EditorBounds.Position.Y, EditorBounds.Size.Y).SelectMany(y => Enumerable.Range(EditorBounds.Position.X, EditorBounds.Size.X).Select(x => Hex.FromOffset(x, y)))
-        : World.Terrain.Keys;
+    private IEnumerable<Hex> DisplayCells() => World.Terrain.Keys;
     public void Fit()
     {
         if (World is null || Size.X < 1 || Size.Y < 1) return;
@@ -111,45 +105,30 @@ public partial class HexBoard : Control
         {
             var position = Screen(cell);
             if (position.X < -50 || position.Y < -50 || position.X > Size.X + 50 || position.Y > Size.Y + 50) continue;
-            Color fill = BuildingMode ? new("172733") : new(Catalog.TerrainColors[(int)World.Terrain[cell]]);
+            Color fill = new(Catalog.TerrainColors[(int)World.Terrain[cell]]);
             Hexagon(cell, .7f, fill);
-            if (BuildingMode)
-            {
-                if (cell.X == EditorBounds.Position.X || cell.Y == EditorBounds.Position.Y || cell.X == EditorBounds.End.X - 1 || cell.Y == EditorBounds.End.Y - 1)
-                    Hexagon(cell, 1, new Color("213946"), new Color("45606d"));
-                if (BuildingCells.Contains(cell)) Hexagon(cell, 2, new Color("548b96"), new Color("8cdfda"));
-            }
-            else if (Zoom > .65f) TerrainMark(cell, World.Terrain[cell]);
+            if (Zoom > .65f) TerrainMark(cell, World.Terrain[cell]);
             if (Coordinates && Zoom > .85f) Text(position + new Vector2(-14, 4), $"{cell.X},{cell.Y}", 10, new Color("9eb2ab"));
         }
-        if (BuildingMode)
-        {
-            Vector2 origin = Screen(BuildingOrigin);
-            DrawCircle(origin, 7, new Color("f3c66b"), false, 2, true);
-            DrawLine(origin - new Vector2(12, 0), origin + new Vector2(12, 0), new Color("f3c66b"), 2);
-            DrawLine(origin - new Vector2(0, 12), origin + new Vector2(0, 12), new Color("f3c66b"), 2);
-        }
-        else
-        {
-            if (Selected?.Unit is { } design)
-                foreach (var cell in Hex.Disk(design.Range + design.Size).Select(c => c + Selected.Position))
-                    if (World.Terrain.ContainsKey(cell) && Hex.TurnDistance(Selected.Facing, Selected.Position.DirectionTo(cell)) <= 1)
-                        Hexagon(cell, 1, new Color(.96f, .78f, .42f, .1f));
-            foreach (var entity in World.Entities) DrawEntity(entity, false);
-            if (Hovered is { } hovered && Preview?.Invoke(hovered) is { } preview) DrawEntity(preview, true);
-            if (effectTime > 0)
-                foreach (var effect in World.Effects)
-                {
-                    Color color = effect.Hit ? new("f3c66b") : new("c0dae5"); color.A = Math.Clamp(effectTime * 2, 0, 1);
-                    DrawLine(Screen(effect.From), Screen(effect.To), color, 2, true);
-                    DrawCircle(Screen(effect.To), 9 + (1 - effectTime) * 13, color, false, 2, true);
-                }
-        }
+
+        if (Selected?.Unit is { } design)
+            foreach (var cell in Hex.Disk(design.Range + design.Size).Select(c => c + Selected.Position))
+                if (World.Terrain.ContainsKey(cell) && Hex.TurnDistance(Selected.Facing, Selected.Position.DirectionTo(cell)) <= 1)
+                    Hexagon(cell, 1, new Color(.96f, .78f, .42f, .1f));
+        foreach (var entity in World.Entities) DrawEntity(entity, false);
+        if (Hovered is { } hovered && Preview?.Invoke(hovered) is { } preview) DrawEntity(preview, true);
+        if (effectTime > 0)
+            foreach (var effect in World.Effects)
+            {
+                Color color = effect.Hit ? new("f3c66b") : new("c0dae5"); color.A = Math.Clamp(effectTime * 2, 0, 1);
+                DrawLine(Screen(effect.From), Screen(effect.To), color, 2, true);
+                DrawCircle(Screen(effect.To), 9 + (1 - effectTime) * 13, color, false, 2, true);
+            }
         if (Hovered is { } hover) Hexagon(hover, 1, new Color(1, 1, 1, .04f), new Color("d6eceb"), 1.5f);
         DrawRect(new Rect2(0, 0, Size.X, 48), new Color(.043f, .078f, .11f, .95f));
-        Text(new Vector2(20, 29), BuildingMode ? "FOOTPRINT WORKSHOP" : "THE OBSERVATORY", 14, new Color("9bc0c9"));
+        Text(new Vector2(20, 29), "THE OBSERVATORY", 14, new Color("9bc0c9"));
         Text(new Vector2(Size.X - 158, 29), $"{Zoom * 100:0}%   ·   +Y ↑  +X →", 12, Ink);
-        Text(new Vector2(18, Size.Y - 18), BuildingMode ? "Gold cross = pivot   ·   Click a border cell to expand" : "Middle drag to pan   ·   Wheel to zoom   ·   F to frame world", 12, Ink);
+        Text(new Vector2(18, Size.Y - 18), "Middle drag to pan   ·   Wheel to zoom   ·   F to frame world", 12, Ink);
     }
     private void TerrainMark(Hex cell, Terrain terrain)
     {
@@ -175,20 +154,16 @@ public partial class HexBoard : Control
             Hexagon(cell, 2 * Zoom, fill, color, entity == Selected ? 2.5f : 1.3f);
         }
         Vector2 center = Screen(entity.Position);
-        if (entity.Unit is not null)
-        {
-            Vector2 forward = (Center(Hex.Directions[entity.Facing])).Normalized();
-            Vector2 side = forward.Orthogonal(); float s = Math.Clamp(8 * Zoom, 3, 11);
-            DrawColoredPolygon([center + forward * s, center - forward * s * .7f + side * s * .7f, center - forward * s * .7f - side * s * .7f], color);
-            if (entity.Stationary) DrawCircle(center, s * 1.5f, color, false, 2);
-        }
-        else DrawRect(new Rect2(center - Vector2.One * 5 * Zoom, Vector2.One * 10 * Zoom), color, false, 2);
+        Vector2 forward = (Center(Hex.Directions[entity.Facing])).Normalized();
+        Vector2 side = forward.Orthogonal(); float s = Math.Clamp(8 * Zoom, 3, 11);
+        DrawColoredPolygon([center + forward * s, center - forward * s * .7f + side * s * .7f, center - forward * s * .7f - side * s * .7f], color);
+        if (entity.Stationary) DrawCircle(center, s * 1.5f, color, false, 2);
         if (!preview && entity.Health < entity.MaximumHealth)
         {
             Vector2 start = center + new Vector2(-12, 14) * Zoom;
             DrawLine(start, start + new Vector2(24 * Zoom, 0), new Color("101b23"), 3);
             DrawLine(start, start + new Vector2(24 * Zoom * entity.Health / entity.MaximumHealth, 0), color, 3);
         }
-        if (entity == Selected) DrawArc(center, Radius * Zoom * (entity.Unit?.Size ?? 1) + 4, 0, Mathf.Tau, 48, new Color("ffffff"), 1, true);
+        if (entity == Selected) DrawArc(center, Radius * Zoom * entity.Unit.Size + 4, 0, Mathf.Tau, 48, new Color("ffffff"), 1, true);
     }
 }

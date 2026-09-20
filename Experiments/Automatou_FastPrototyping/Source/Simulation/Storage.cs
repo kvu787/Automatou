@@ -31,8 +31,8 @@ public static class Storage
         var identifiers = new HashSet<int>();
         foreach (var entity in data.Entities)
         {
-            if ((entity.Unit is null) == (entity.Building is null) || entity.Facing is < 0 or > 5 || !Enum.IsDefined(entity.Faction) || entity.Id < 1 || !identifiers.Add(entity.Id)) throw new InvalidDataException("Invalid entity.");
-            entity.Unit?.Validate(); entity.Building?.Validate();
+            if (entity.Unit is null || entity.Facing is < 0 or > 5 || !Enum.IsDefined(entity.Faction) || entity.Id < 1 || !identifiers.Add(entity.Id)) throw new InvalidDataException("Invalid entity.");
+            entity.Unit.Validate();
             if (entity.Health <= 0 || entity.Health > entity.MaximumHealth || !world.CanOccupy(entity, entity.Position, entity.Facing, out _)) throw new InvalidDataException("Invalid entity placement or health.");
             world.Entities.Add(entity); world.RebuildOccupancy();
         }
@@ -41,8 +41,6 @@ public static class Storage
     }
     public static void SaveWorld(string path, World world) => Write(path, Encode(world));
     public static World LoadWorld(string path) => Decode(File.ReadAllText(path));
-    public static void SaveDesign<T>(string path, T design) => Write(path, JsonSerializer.Serialize(design, Options));
-    public static T LoadDesign<T>(string path) => JsonSerializer.Deserialize<T>(File.ReadAllText(path), Options) ?? throw new InvalidDataException("Empty design file.");
     private static void Write(string path, string text)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

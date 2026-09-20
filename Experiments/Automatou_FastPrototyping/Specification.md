@@ -64,7 +64,7 @@ There is no 2D or 3D "art".
 
 - Each cell has one terrain type
 - A cell can be occupied or unoccupied
-- Occupied cells may contain a unit cell or a buliding cell
+- Occupied cells contain a unit cell
 
 ## Units
 
@@ -76,18 +76,6 @@ There is no 2D or 3D "art".
   - Size 3 = 19 occupied cells
   - Size 4 = 37 occupied cells
   - Etc...
-- 
-
-## Buildings
-
-- A building has an origin.
-  - The positions of the building's cells are defined with respect to the origin.
-  - The position and rotation of the building uses the building's origin.
-- A building is something that occupies cells and doesn't move.
-- A building has a single health pool.
-- A single building consists of one island of connected cells.
-- When a cell is occupied by a building, it's terrain is irrelevant.
-- When a buliding is destroyed, the terrain of the underlying cells returns.
 
 ## Position and rotation
 
@@ -96,13 +84,10 @@ There is no 2D or 3D "art".
   - Rotation has 6 values: northwest, northeast, east, southeast, southwest, west
 - Terrain has a position but no rotation.
   - However, we don't really treat each terrain as a separate "thing". It's better represented as an attribute of a cell.
-- Units and buildings have positions and rotations.
-- The position of a unit/building is the position of its origin in the world.
-- Building rotation
-  - This is used to determine where to place its cells with respect to the origin.
-  - Unlike unit rotation, it doesn't matter for other stuff.
+- Units have positions and rotations.
+- The position of a unit is the position of its origin in the world.
 - Unit rotation
-  - Unlike building rotation, it doesn't matter spatially because units are always regular hexagons.
+  - Rotation does not change the footprint because units are always regular hexagons.
   - However, unit rotation is used to for many other things.
   - Attack region: Most units can only attack in the direction they are facing.
   - Defense stats: Most units have strong defense when attacked from the front, medium at the front sides, and weak at the rear sides and rear.
@@ -111,7 +96,7 @@ There is no 2D or 3D "art".
 ## World view
 
 - This is the standard gameplay view
-- The player sees the grid map with terrain, units, and buildings
+- The player sees the grid map with terrain and units
 - Player can pan by holding the middle mouse button and moving the mouse
 - Player can zoom in/out with the scroll wheel.
 
@@ -122,18 +107,6 @@ There is no 2D or 3D "art".
   - a rectangular map and specify a positive integer for the width and a positive integer for the height
 - This is used by players to manually author maps.
 - These maps are an alternative to auto-generated maps.
-
-## Building creator
-
-- This is used to create buildings.
-- All buildings must be manually created
-- There are no "auto-generated" buildings.
-you can change the origin (pivot) point of the building
-start with a 20x10 grid. user can click the edge of the current grid to add a section
-when opening a building, grid patches are created until building fits.
-a setting controls the grid patch size
-when saving, the position of the building's origin on the grid is recorded
-when placing a building on the map, you may rotate it about its origin
 
 ## Unit definitions and automata
 
