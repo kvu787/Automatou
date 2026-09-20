@@ -4,7 +4,7 @@ using System.Globalization;
 
 namespace Automatou.UserInterface;
 
-public partial class Laboratory : Control {
+public partial class MainInterface : Control {
     private World world = World.Demonstration();
     private HexBoard board = null!;
     private VBoxContainer toolsPanel = null!;

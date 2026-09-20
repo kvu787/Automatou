@@ -3,7 +3,7 @@ using Godot;
 
 namespace Automatou.UserInterface;
 
-public partial class Laboratory {
+public partial class MainInterface {
     private string worldSlotName = "My world";
     private VBoxContainer? terrainTools;
     private VBoxContainer? populationTools;

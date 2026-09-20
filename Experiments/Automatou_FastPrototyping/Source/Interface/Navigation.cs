@@ -3,7 +3,7 @@ using Godot;
 
 namespace Automatou.UserInterface;
 
-public partial class Laboratory {
+public partial class MainInterface {
     private VBoxContainer OpenMenu(string title) {
         this.Pause();
         this.menuVisible = true;

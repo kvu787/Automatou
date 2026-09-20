@@ -1,4 +1,4 @@
-# Automatou — World laboratory
+# Automatou
 
 A self-contained, native Godot prototype of the world-builder-and-runner described in [Specification.md](Specification.md). Create worlds, place source-defined units, populate factions, and observe their behavior. There is no player faction, score, or victory screen.
 

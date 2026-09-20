@@ -3,7 +3,7 @@ using Godot;
 
 namespace Automatou.UserInterface;
 
-public partial class Laboratory {
+public partial class MainInterface {
     private static readonly string[] InspectorTabNames = ["Behavior", "Tuning", "Unit"];
     private string experimentName = "Five-faction encounter";
     private string experimentDescription = "";

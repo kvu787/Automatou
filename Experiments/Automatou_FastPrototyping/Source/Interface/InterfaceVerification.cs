@@ -3,7 +3,7 @@ using Godot;
 
 namespace Automatou.UserInterface;
 
-public partial class Laboratory {
+public partial class MainInterface {
     private async void RunInterfaceVerification() {
         try {
             // Exercise the same handlers as the controls, then capture the rendered views.
