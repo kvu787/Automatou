@@ -1,57 +1,54 @@
-using Godot;
 using Automatou.Simulation;
+using Godot;
 
-namespace Automatou.Interface;
+namespace Automatou.UserInterface;
 
-public partial class Laboratory
-{
+public partial class Laboratory {
     private string worldSlotName = "My world";
 
-    private void BuildWorldTools()
-    {
-        Label(toolsPanel, "WORLD CREATOR", 12, accent);
-        Label(toolsPanel, "Set the conditions.", 21);
-        toolChoice = Choice(toolsPanel, ToolNames, Array.IndexOf(ToolNames, tool), index =>
-        {
-            tool = ToolNames[index];
-            Status($"{tool} tool selected. Click the world to use it."); board.QueueRedraw();
+    private void BuildWorldTools() {
+        _ = Label(this.toolsPanel, "WORLD CREATOR", 12, this.accent);
+        _ = Label(this.toolsPanel, "Set the conditions.", 21);
+        this.toolChoice = this.Choice(this.toolsPanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => {
+            this.Tool = ToolNames[index];
+            this.Status($"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
         });
-        Heading(toolsPanel, "TERRAIN BRUSH");
-        Choice(toolsPanel, Catalog.TerrainNames, (int)terrain, index => { terrain = (Terrain)index; tool = "Paint terrain"; Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
-        Heading(toolsPanel, "POPULATE THE WORLD");
-        Choice(toolsPanel, Catalog.FactionNames, (int)faction, index => { faction = (Faction)index; board.QueueRedraw(); });
-        unitChoice = Choice(toolsPanel, unitDesigns.Select(u => u.Name), unitIndex, index => { unitIndex = index; tool = "Place unit"; board.QueueRedraw(); });
-        Button(toolsPanel, "Place selected unit", () => { tool = "Place unit"; Status("Click the world to place units. Red footprints cannot be placed."); });
-        Button(toolsPanel, "Rotate placement   [R]", RotateSelection);
-        var coordinates = new CheckButton { Text = "Show cell coordinates", ButtonPressed = board.Coordinates };
-        coordinates.Toggled += value => { board.Coordinates = value; board.QueueRedraw(); }; toolsPanel.AddChild(coordinates);
-        Heading(toolsPanel, "WORLD FILE");
-        worldName = TextField(toolsPanel, worldSlotName, "World name");
-        worldName.TextChanged += value => worldSlotName = value;
-        var persistence = Row(toolsPanel);
-        Button(persistence, "Save", () =>
-        {
-            string path = WorldPath(); Storage.SaveWorld(path, world); Status($"Saved world: {worldName.Text}. Stored in UserContent / Worlds.");
+        _ = this.Heading(this.toolsPanel, "TERRAIN BRUSH");
+        _ = this.Choice(this.toolsPanel, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.Tool = "Paint terrain"; this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
+        _ = this.Heading(this.toolsPanel, "POPULATE THE WORLD");
+        _ = this.Choice(this.toolsPanel, Catalog.FactionNames, (int)this.faction, index => { this.faction = (Faction)index; this.board.QueueRedraw(); });
+        this.unitChoice = this.Choice(this.toolsPanel, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.Tool = "Place unit"; this.board.QueueRedraw(); });
+        _ = this.Button(this.toolsPanel, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
+        _ = this.Button(this.toolsPanel, "Rotate placement   [R]", this.RotateSelection);
+        CheckButton coordinates = new() { Text = "Show cell coordinates", ButtonPressed = this.board.Coordinates };
+        coordinates.Toggled += value => { this.board.Coordinates = value; this.board.QueueRedraw(); }; this.toolsPanel.AddChild(coordinates);
+        _ = this.Heading(this.toolsPanel, "WORLD FILE");
+        this.worldName = TextField(this.toolsPanel, this.worldSlotName, "World name");
+        this.worldName.TextChanged += value => this.worldSlotName = value;
+        HBoxContainer persistence = Row(this.toolsPanel);
+        _ = this.Button(persistence, "Save", () => {
+            string path = this.WorldPath(); Storage.SaveWorld(path, this.world); this.Status($"Saved world: {this.worldName.Text}. Stored in UserContent / Worlds.");
         });
-        Button(persistence, "Load", () => ShowWorldBrowser("World creator"));
-        Button(toolsPanel, "Play this world", () => SwitchMode("World"));
-        Heading(toolsPanel, "NEW WORLD");
-        var shape = Choice(toolsPanel, ["Rectangle", "Hexagon"], 0, _ => { });
-        var width = Number(toolsPanel, "Width / size", 34, 1, 200);
-        var height = Number(toolsPanel, "Height", 24, 1, 200);
+        _ = this.Button(persistence, "Load", () => this.ShowWorldBrowser("World creator"));
+        _ = this.Button(this.toolsPanel, "Play this world", () => this.SwitchMode("World"));
+        _ = this.Heading(this.toolsPanel, "NEW WORLD");
+        OptionButton shape = this.Choice(this.toolsPanel, ["Rectangle", "Hexagon"], 0, _ => { });
+        SpinBox width = this.Number(this.toolsPanel, "Width / size", 34, 1, 200);
+        SpinBox height = this.Number(this.toolsPanel, "Height", 24, 1, 200);
         shape.ItemSelected += index => height.Editable = index == 0;
-        var seed = Number(toolsPanel, "Terrain seed", 72491, 1, 999999);
-        var newWorld = Row(toolsPanel);
-        Button(newWorld, "Blank", () => CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, false, (int)seed.Value)));
-        Button(newWorld, "Generate", () => CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, true, (int)seed.Value)));
-        Label(toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, muted);
+        SpinBox seed = this.Number(this.toolsPanel, "Terrain seed", 72491, 1, 999999);
+        HBoxContainer newWorld = Row(this.toolsPanel);
+        _ = this.Button(newWorld, "Blank", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, false, (int)seed.Value)));
+        _ = this.Button(newWorld, "Generate", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value, true, (int)seed.Value)));
+        _ = Label(this.toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, this.muted);
     }
-    private void CreateWorkingWorld(World replacement)
-    {
-        experimentName = "Custom world";
-        experimentDescription = "Your starting conditions. Place units, tune their behavior, then checkpoint and compare.";
-        referenceResult = null;
-        ReplaceWorld(replacement);
+    private void CreateWorkingWorld(World replacement) {
+        this.experimentName = "Custom world";
+        this.experimentDescription = "Your starting conditions. Place units, tune their behavior, then checkpoint and compare.";
+        this.referenceResult = null;
+        this.ReplaceWorld(replacement);
     }
-    private string WorldPath() => System.IO.Path.Combine(contentRoot, "Worlds", Storage.FileName(worldName.Text) + ".json");
+    private string WorldPath() {
+        return Path.Combine(this.contentRoot, "Worlds", Storage.FileName(this.worldName.Text) + ".json");
+    }
 }
