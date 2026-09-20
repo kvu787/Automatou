@@ -71,7 +71,7 @@ public partial class Laboratory
     {
         Label(toolsPanel, "WORLD", 12, accent);
         Label(toolsPanel, "Five factions. One world.", 21);
-        Label(toolsPanel, "Run the automata or advance a single turn. Select a unit to inspect it.", 14, muted);
+        Label(toolsPanel, "Run the simulation or advance a single turn. Select a unit to inspect it.", 14, muted);
         Button(toolsPanel, "Edit in World creator", () => SwitchMode("World creator"));
         Button(toolsPanel, "Load another world", () => ShowWorldBrowser());
         Button(toolsPanel, "Main menu", ShowMainMenu);

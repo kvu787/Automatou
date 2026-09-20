@@ -71,7 +71,7 @@ Test("Blast damage includes allies and clears destroyed unit footprints", () =>
     Check(!world.Entities.Contains(enemy) && !world.Entities.Contains(ally), "Friendly splash and destruction");
     Check(world.At(enemy.Position) is null && world.At(ally.Position) is null && world.Casualties == 2, "Destroyed footprints cleared");
 });
-Test("Automata route around impassable terrain and engage", () =>
+Test("Units route around impassable terrain and engage", () =>
 {
     var world = World.Create(false, 18, 14, false);
     var attacker = Unit(world, Hex.FromOffset(3, 6), design: new TestUnit() { ActionPoints = 5, Range = 1, Damage = 10 });
@@ -98,7 +98,7 @@ Test("Worlds reject entities without a unit", () =>
     data["Entities"]![0]!["Unit"] = null;
     Reject(() => Storage.Decode(data.ToJsonString()));
 });
-Test("Skirmish, hold and deployed automata obey their movement rules", () =>
+Test("Skirmish, hold and deployed units obey their movement rules", () =>
 {
     var world = World.Create(false, 30, 20, false);
     var skirmisher = Unit(world, Hex.FromOffset(5, 5), design: new TestUnit() { Behavior = TestBehavior.Skirmish, Range = 4, ActionPoints = 6 });

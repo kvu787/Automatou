@@ -210,7 +210,7 @@ public sealed class World
         Place(5, Faction.InfantryAndArtillery, 16, 1, 1); Place(5, Faction.InfantryAndArtillery, 22, 1, 1);
         Place(7, Faction.Prytu, 25, 19, 4);
         for (int i = 0; i < 7; i++) Place(6, Faction.Prytu, 19 + i * 2, 15 + i % 2, 3);
-        world.Note("Five factions. One shared world. Start the automata or make it your own.");
+        world.Note("Five factions. One shared world. Start the simulation or make it your own.");
         return world;
     }
 }

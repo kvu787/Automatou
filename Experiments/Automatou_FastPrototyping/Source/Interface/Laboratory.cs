@@ -157,7 +157,7 @@ public partial class Laboratory : Control
         screenTitle = Label(brand, "", 11, muted);
         Button(header, "Main menu", ShowMainMenu).SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         transport = Row(layout);
-        playButton = Button(transport, "▶  Run automata", ToggleRun); playButton.CustomMinimumSize = new Vector2(175, 42);
+        playButton = Button(transport, "▶  Run simulation", ToggleRun); playButton.CustomMinimumSize = new Vector2(175, 42);
         Button(transport, "Step  →", Step, "Advance exactly one complete turn. Shortcut: N");
         Choice(transport, ["1 turn / sec", "2 turns / sec", "4 turns / sec", "8 turns / sec"], 1, index => turnsPerSecond = Math.Pow(2, index));
         Button(transport, "Checkpoint", () => { checkpoint = Storage.Encode(world); Status("Checkpoint captured. Rewind will return here."); });
@@ -176,7 +176,7 @@ public partial class Laboratory : Control
         var metrics = Row(foot);
         populationLabel = Label(metrics, "", 12, accent);
         hoverLabel = Label(metrics, "Hover a cell to inspect its coordinates", 12, muted); hoverLabel.HorizontalAlignment = HorizontalAlignment.Right;
-        statusLabel = Label(foot, "Ready. Shape the world, then start the automata.", 13, new Color("dce7de"));
+        statusLabel = Label(foot, "Ready. Shape the world, then start the simulation.", 13, new Color("dce7de"));
         eventLabel = Label(foot, "", 12, muted); eventLabel.CustomMinimumSize = new Vector2(0, 34);
     }
     private void Guard(Action action)
@@ -185,12 +185,12 @@ public partial class Laboratory : Control
         catch (Exception exception) { Pause(); Status(exception.Message); Log(exception.ToString()); GD.PushWarning(exception.Message); }
     }
     private void Status(string message) { statusLabel.Text = message; if (menuStatus is not null && IsInstanceValid(menuStatus)) menuStatus.Text = message; Log(message); }
-    private void Pause() { running = false; playButton.Text = "▶  Run automata"; }
+    private void Pause() { running = false; playButton.Text = "▶  Run simulation"; }
     private void ToggleRun()
     {
         if (mode != "World") SwitchMode("World");
-        running = !running; elapsed = 0; playButton.Text = running ? "Ⅱ  Pause" : "▶  Run automata";
-        Status(running ? "Automata running. Every faction acts independently." : "Paused. You can edit the world.");
+        running = !running; elapsed = 0; playButton.Text = running ? "Ⅱ  Pause" : "▶  Run simulation";
+        Status(running ? "Simulation running. Every faction acts independently." : "Paused. You can edit the world.");
     }
     private void Step()
     {
@@ -302,7 +302,7 @@ public partial class Laboratory : Control
         world.EventRecorded = Log;
         foreach (string entry in world.Events) Log(entry);
         if (capture) checkpoint = Storage.Encode(world);
-        Refresh(); board.Fit(); Status("World ready. Automata paused.");
+        Refresh(); board.Fit(); Status("World ready. Simulation paused.");
     }
     private void BuildInspector()
     {
@@ -320,7 +320,7 @@ public partial class Laboratory : Control
             Heading(inspectorPanel, "ENTITY");
             Label(inspectorPanel, $"Origin     {selected.Position}\nFacing    {Hex.DirectionNames[selected.Facing]}\nHealth    {selected.Health} / {selected.MaximumHealth}\nFootprint {selected.OccupiedCells().Count()} cells", 14);
             var unit = selected.Unit;
-            Label(inspectorPanel, $"{unit.Name} automaton\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
+            Label(inspectorPanel, $"{unit.Name} unit statistics\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, muted);
             Label(inspectorPanel, "Gold cells show the forward attack region. Rear attacks bypass most armor.", 12, muted);
             Button(inspectorPanel, selected.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { Pause(); selected.Stationary = !selected.Stationary; Refresh(); });
             if (mode == "World creator")
@@ -337,7 +337,7 @@ public partial class Laboratory : Control
         }
         Heading(inspectorPanel, "LABORATORY CONTROLS");
         Label(inspectorPanel, "Space   Run / pause\nN          Single turn\nR          Rotate selection / placement\nF          Frame world\nEsc       Main menu\nRight click   Inspect a cell", 12, muted);
-        Heading(inspectorPanel, "AUTOMATA");
+        Heading(inspectorPanel, "UNIT BEHAVIOR");
         Label(inspectorPanel, "Bastions advance under heavy armor. Travelers strike and retreat. Walkers close to medium range. Clones rush through rough ground at a cost; artillery can hit allies. Prytu swarm weakened targets.", 12, muted);
     }
 }

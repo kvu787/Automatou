@@ -35,14 +35,14 @@ John Conway's "Game of Life" could be viewed as the fundamental progenitor of th
 
 ## Automata
 
-What most games refer to as "artificial intelligence (AI)", this game refers to as "automata (AT)"
-Basically this is the logic for how agents in the world act without explicit player input.
+An automaton is the memory and logic used by an individual unit to decide what to do each turn. The plural is automata.
+These terms refer exclusively to this decision-making system. The world advances through the simulation; units act in that world and have physical and combat statistics. Neither the simulation, the units themselves, nor their statistics are automata.
 
 For now, this game is focused on combat, similar to games like Starcraft and Age of Empires.
 Other mechanics will be added later to make this a proper world simulator instead of just a battle
 simulator.
 
-The ATs for factions should focus on "thematic" gameplay instead of "optimal" gameplay.
+Each unit's automaton should choose actions that support its faction's "thematic" gameplay instead of "optimal" gameplay.
 
 ## Visual style
 

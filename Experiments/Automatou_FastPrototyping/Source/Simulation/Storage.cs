@@ -37,7 +37,7 @@ public static class Storage
             world.Entities.Add(entity); world.RebuildOccupancy();
         }
         world.NextId = Math.Max(world.NextId, identifiers.DefaultIfEmpty(0).Max() + 1);
-        world.Note("World restored. Automata paused."); return world;
+        world.Note("World restored. Simulation paused."); return world;
     }
     public static void SaveWorld(string path, World world) => Write(path, Encode(world));
     public static World LoadWorld(string path) => Decode(File.ReadAllText(path));

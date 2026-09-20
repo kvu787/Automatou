@@ -1,6 +1,6 @@
 # Automatou — World laboratory
 
-A self-contained, native Godot prototype of the world-builder-and-runner described in [Specification.md](Specification.md). Create worlds, place source-defined units, populate factions, and observe their automata. There is no player faction, score, or victory screen.
+A self-contained, native Godot prototype of the world-builder-and-runner described in [Specification.md](Specification.md). Create worlds, place source-defined units, populate factions, and observe their behavior. There is no player faction, score, or victory screen.
 
 ## Run
 
@@ -12,8 +12,8 @@ All session logs are written under `MyLogOutput/yyyy-MM-dd_HH-mm-ss`. `Launcher.
 
 ## First experiment
 
-1. Choose **Load world**, then **Five-faction encounter**. Press **Step** to advance one turn, or **Run automata** to watch continuously. Choose one to eight turns per second.
-2. Select an entity with **Inspect**. Its arrow shows its facing; the gold region shows its forward attack region. The inspector reports health, weapons, armor, and automaton.
+1. Choose **Load world**, then **Five-faction encounter**. Press **Step** to advance one turn, or **Run simulation** to watch continuously. Choose one to eight turns per second.
+2. Select an entity with **Inspect**. Its arrow shows its facing; the gold region shows its forward attack region. The inspector reports health, weapons, armor, and other unit statistics.
 3. Open **Edit in World creator**. Use **Paint terrain**, **Place unit**, or **Erase entity** to modify the world. Editing pauses the simulation. Placement previews become red where a footprint cannot fit.
 4. Choose a built-in unit in World creator. Choose its faction when placing.
 5. Save a named world before replacing it with a blank map, generated map, or the demonstration encounter.
@@ -51,7 +51,7 @@ Saving writes a temporary file before replacing the destination. Loading validat
 
 Each unit type has a class in `Source/Simulation/Units`: Bastion, TravelerOutrider, Home, SiegeWalker, CloneInfantry, LongbowArtillery, PrytuHunter, and PrytuManifestation. Its immutable `UnitStatistics` defines its body and combat properties. There is no unit creator or unit blueprint loading.
 
-Each unit class contains its own nested `Automaton` class. Each placed unit owns a separate instance, exposed through `Brain` and saved through its concrete `Memory` property. `CreateFresh()` creates a new unit with empty memory for placement. The initial brains remember their target (retaining it on equal target scores) and how many turns they have observed. Add serializable properties to a unit's automaton for longer-term goals and other memory.
+An automaton is the memory and logic a unit uses to decide what to do each turn. The plural is automata; these terms refer only to unit decision-making, never to units, their statistics, or the simulation as a whole. Each unit class contains its own nested `Automaton` class. Each placed unit owns a separate instance, exposed through `Brain` and saved through its concrete `Memory` property. `CreateFresh()` creates a new unit with empty memory for placement. The initial brains remember their target (retaining it on equal target scores) and how many turns they have observed. Add serializable properties to a unit's automaton for longer-term goals and other memory.
 
 On each turn, `World.Step()` invokes the living unit's `Brain.Act(UnitSenses)` once. The brain yields typed requests (`TurnAction`, `MoveForwardAction`, `AttackAction`). The world validates and applies each request before resuming the brain. The brain can take a fresh observation after each action, so it can react to a destroyed target or a changed position during the same turn. Ending the iterator ends the turn; rejected requests also end the turn. Every successful action consumes points, and destroyed actors stop immediately.
 
@@ -96,6 +96,6 @@ From this folder in PowerShell:
 
 The first command builds and runs dependency-free simulation checks. The second also launches the real Godot renderer, exercises the interface, captures views under the session log folder, and exits. Its authored test content is isolated inside that log folder.
 
-Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, attack arcs and armor, action points, splash damage, obstacle routing, automaton movement, independent brain memory, read-only sensing, validated actions, deterministic world restoration, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, source-defined unit placement, terrain painting, world saving/loading, and the minimum window size.
+Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, attack arcs and armor, action points, splash damage, obstacle routing, unit movement, independent brain memory, read-only sensing, validated actions, deterministic world restoration, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, source-defined unit placement, terrain painting, world saving/loading, and the minimum window size.
 
 `Source/Simulation` contains the engine-independent model and rules. `Source/Interface` contains the Godot renderer and world creator. `Tests` compiles the simulation directly without Godot or an external test framework. The experiment has its own build settings and does not reference the main repository application.
