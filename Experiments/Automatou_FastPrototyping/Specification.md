@@ -148,13 +148,21 @@ Takes place in a universe that has both futuristic/sci-fi technology and fantasy
 
 ## Factions
 
-### Prytu
+### Bastions
 
-Led Prytus, a super-powerful, super-intelligent entity obsessed with destroying all sentient life which it deems "lesser", which is all sentient life except Prytus
-Similar to ridley scott's Alien, Zerg, Tyranids
-Several "manifestations" of Prytus as extremely powerful Prytu creatures have been seen
-No one knows the "true form" of Prytus
-Prytus controls all Prytu units directly. There are no Prytu intelligences which are independent from Prytus.
+- Human souls that embody extremely technologically and magically advanced humanoid bodies.
+- Ultra-heavy one-man-army super-soldier infantry.
+- Imbued with a human soul, but contains zero human body or biological parts.
+- Armed with one ranged weapon and one melee weapon.
+- Hulking, bulky, extremely heavily armored figure.
+
+#### Culture
+
+- Reproduction is done through a 
+- There are very few Bastions in the universe 
+- Although the form and characteristics of Bastions are extremely distinct and instantly recognizable,
+  Bastions themselves are highly individualistic. They have a much stronger tendency to live alone
+  or in much smaller groups than other factions.
 
 ### Travelers
 
@@ -170,18 +178,9 @@ Weak on long/medium ranged combat because that armament requires slower move spe
 
 ### Mech and tank faction
 
-Culture
-The Tanks are a utopia-like faction. They highly value all their citizens. Their goals and values are focused on leading fulfilling lives and advancing the development of their people.
-
-They have a very advanced and complex society in all ways. In peacetime, they are actually composed of many individual factions with different styles of governance and economy. In wartime, they unite under a single council and leader to fight the threat.
-Technology
-The Siegers use the pinnacle of human scientific advancement. All buildings and units are mobile with anti-grav engines. All weapons are energy based rather than using conventional ballistics. Tanks use direct-fire energy projectiles while artillery uses indirect-fire energy projectiles. They have very strong shields in addition to very strong armor.
-Tactics
-The Tanks are highly defensive and averse to casualties. They gain an inspiration bonus by minimizing human and environmental casualties throughout combat.
-
-They favor gradual sieges at long distances with their artillery. They use heavily armored tanks to defend their artillery. They also use tanks to conduct smaller assault sieges that do not require heavy artillery. Still, these assaults are much slower and more cautious than raids conducted by most other factions.
-
-All buildings and units are mobile. The mobility from highest to lowest is tanks, artillery, and buildings. Their mobile bases support their siege tactics by repairing and reinforcing units and gradually moving the frontline towards the enemy.
+- Major focus on vehicles such as wheeled vehicles, tanks, aircraft, mechs (vehicles that use some arrangement of legs to move)
+- Strong close and medium range capabilities
+- No long range capability so they remain distinct from the infantry+artillery faction (lore reason tbd)
 
 ### Infantry and artillery faction
 
@@ -191,9 +190,19 @@ All buildings and units are mobile. The mobility from highest to lowest is tanks
 - Infertile by default so that they cannot have children
 - All reproduction is done through cloning
 - This makes it so that soldiers do not have familial attachments so they more easily die for the war cause
+- Leadership is currently a mystery
 
-#### Units
+#### Strategy and tactics
 
-- Primary unit is infantry soldier
-- The most distinctive feature of the soldier is their stimulant respirator. This is a mask that covers lower face, in particular the mouth and nose. Tubes attach from the respirator to 1 to 4 different canisters of stimulants mounted to to the mask.
+- Little concern for infantry casualties, which forms the basis of their artillery+infantry strategy
+- Absurdly powerful long-range artillery that causes massive damage to everything at impact site
+- Massive numbers of weak infantry are used as fodder to scout enemies and keep them busy until artillery can target them and fire
+- Infantry are adept at moving quickly through dangerous terrain at the cost of taking damage
 
+### Prytu
+
+Led Prytus, a super-powerful, super-intelligent entity obsessed with destroying all sentient life which it deems "lesser", which is all sentient life except Prytus
+Similar to ridley scott's Alien, Zerg, Tyranids
+Several "manifestations" of Prytus as extremely powerful Prytu creatures have been seen
+No one knows the "true form" of Prytus
+Prytus controls all Prytu units directly. There are no Prytu intelligences which are independent from Prytus.
