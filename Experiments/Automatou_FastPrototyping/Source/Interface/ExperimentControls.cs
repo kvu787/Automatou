@@ -150,7 +150,7 @@ public partial class MainInterface {
 
     private void BuildTuningControls(Entity entity) {
         UnitAutomaton brain = entity.Unit.Brain;
-        _ = this.Heading(this.inspectorPanel, "TUNE THIS UNIT");
+        _ = this.Heading(this.inspectorPanel, "BEHAVIOR TUNING");
         if (entity.Unit is TrainingTarget) {
             _ = Label(this.inspectorPanel, "This inert training target holds position. Its policy does not use behavior tuning.", 13, this.muted);
             return;

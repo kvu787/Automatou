@@ -85,7 +85,7 @@ public partial class MainInterface {
         }
         _ = this.Button(this.toolsPanel, "Load another world", () => this.ShowWorldBrowser());
         this.BuildExperimentTools();
-        _ = this.Heading(this.toolsPanel, "WORLD AUTHORING");
+        _ = this.Heading(this.toolsPanel, "WORLD EDITING");
         _ = this.Button(this.toolsPanel, "Edit in World creator", () => this.SwitchMode("World creator"));
     }
 }

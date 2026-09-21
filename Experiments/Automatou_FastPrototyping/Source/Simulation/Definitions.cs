@@ -37,6 +37,17 @@ public sealed class Entity {
 }
 
 public static class Catalog {
+    public static bool CanPlace(Faction faction, Unit unit) {
+        return faction switch {
+            Faction.Bastions => unit is Bastion,
+            Faction.Travelers => unit is TravelerOutrider or Home,
+            Faction.MechAndTank => unit is SiegeWalker,
+            Faction.InfantryAndArtillery => unit is CloneInfantry or LongbowArtillery,
+            Faction.Prytu => unit is PrytuHunter or PrytuManifestation,
+            _ => false
+        };
+    }
+
     public static readonly string[] FactionNames = ["Bastions", "Travelers", "Mech & tank", "Infantry & artillery", "Prytu"];
     public static readonly string[] FactionColors = ["f3c66b", "66d9df", "84b4fb", "f39379", "bd95e9"];
     public static readonly string[] TerrainNames = ["Forest", "Plains", "Mountains", "Water", "Exclusion zone"];

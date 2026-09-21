@@ -42,12 +42,21 @@ public partial class MainInterface {
         _ = Label(this.modePanel, "MODE", 12, this.accent);
         this.toolChoice = this.Choice(this.modePanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => this.SelectTool(ToolNames[index]));
         this.terrainTools = Column(this.toolsPanel);
-        _ = Label(this.terrainTools, "TERRAIN BRUSH", 12, this.accent);
+        _ = Label(this.terrainTools, "Terrain", 12, this.accent);
         _ = this.Choice(this.terrainTools, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.SelectTool("Paint terrain"); this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
         this.populationTools = Column(this.toolsPanel);
-        _ = Label(this.populationTools, "POPULATE THE WORLD", 12, this.accent);
-        _ = this.Choice(this.populationTools, Catalog.FactionNames, (int)this.faction, index => { this.faction = (Faction)index; this.board.QueueRedraw(); });
-        this.unitChoice = this.Choice(this.populationTools, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.SelectTool("Place unit"); });
+        _ = Label(this.populationTools, "Faction", 12, this.accent);
+        this.Choice(this.populationTools, Catalog.FactionNames, (int)this.faction, index => {
+            this.faction = (Faction)index;
+            this.RefreshUnitChoices();
+            this.board.QueueRedraw();
+        }).Name = "FactionChoice";
+        _ = Label(this.populationTools, "Unit", 12, this.accent);
+        this.unitChoice = this.Choice(this.populationTools, [], -1, index => {
+            this.unitIndex = this.unitChoice.GetItemId(index);
+            this.SelectTool("Place unit");
+        });
+        this.RefreshUnitChoices();
         _ = this.Button(this.populationTools, "Place selected unit", () => this.SelectTool("Place unit"));
         _ = this.Button(this.populationTools, "Rotate placement   [R]", this.RotateSelection);
         this.fileTools = Column(this.toolsPanel);
@@ -69,6 +78,17 @@ public partial class MainInterface {
         _ = this.Button(this.fileTools, "Create world", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value)));
         _ = Label(this.fileTools, "New worlds replace this workspace and its checkpoint. Save first to keep this world. Hexagon size 1 is one cell.", 12, this.muted);
         this.UpdateWorldToolVisibility();
+    }
+    private void RefreshUnitChoices() {
+        this.unitChoice.Clear();
+        for (int index = 0; index < this.unitDesigns.Count; index++) {
+            if (Catalog.CanPlace(this.faction, this.unitDesigns[index])) {
+                this.unitChoice.AddItem(this.unitDesigns[index].Name, index);
+            }
+        }
+        int selectedIndex = this.unitChoice.GetItemIndex(this.unitIndex);
+        this.unitChoice.Select(selectedIndex >= 0 ? selectedIndex : 0);
+        this.unitIndex = this.unitChoice.GetSelectedId();
     }
     private void CreateWorkingWorld(World replacement) {
         this.experimentName = "Custom world";

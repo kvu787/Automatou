@@ -249,10 +249,52 @@ public partial class MainInterface {
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await this.Capture("MinimumWindow.png");
             this.ReplaceWorld(this.checkpoint.Copy());
+            await this.VerifyFactionPlacement();
             await this.VerifyEditorState();
             this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, world creation, unit placement, terrain paint, in-memory world round trip, and minimum window.");
             this.GetTree().Quit();
         } catch (Exception exception) { this.Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); this.GetTree().Quit(1); }
+    }
+    private async Task VerifyFactionPlacement() {
+        (Faction Faction, Type[] Units)[] rosters = [
+            (Faction.Bastions, [typeof(Bastion)]),
+            (Faction.Travelers, [typeof(TravelerOutrider), typeof(Home)]),
+            (Faction.MechAndTank, [typeof(SiegeWalker)]),
+            (Faction.InfantryAndArtillery, [typeof(CloneInfantry), typeof(LongbowArtillery)]),
+            (Faction.Prytu, [typeof(PrytuHunter), typeof(PrytuManifestation)])
+        ];
+        foreach ((Faction Faction, Type[] Units) roster in rosters) {
+            this.SwitchMode("World creator");
+            this.SelectTool("Place unit");
+            OptionButton factions = this.populationTools!.GetNode<OptionButton>("FactionChoice");
+            factions.Select((int)roster.Faction);
+            _ = factions.EmitSignal(OptionButton.SignalName.ItemSelected, (int)roster.Faction);
+            Type[] choices = Enumerable.Range(0, this.unitChoice.ItemCount)
+                .Select(index => this.unitDesigns[this.unitChoice.GetItemId(index)].GetType()).ToArray();
+            if (!choices.SequenceEqual(roster.Units) || this.PlacementPreview(default)!.Unit.GetType() != roster.Units[0]) {
+                throw new InvalidOperationException("Faction change left incorrect choices or preview: " + roster.Faction);
+            }
+            for (int index = 0; index < roster.Units.Length; index++) {
+                this.CreateWorkingWorld(World.Create(false, 20, 15));
+                this.unitChoice.Select(index);
+                _ = this.unitChoice.EmitSignal(OptionButton.SignalName.ItemSelected, index);
+                Hex origin = Hex.FromOffset(6, 6);
+                Entity preview = this.PlacementPreview(origin)!;
+                this.OnCell(origin, MouseButton.Left);
+                Entity placed = this.world.Entities.Single();
+                if (placed.Faction != roster.Faction || placed.Unit.GetType() != roster.Units[index] || preview.Unit.GetType() != placed.Unit.GetType()) {
+                    throw new InvalidOperationException("Filtered selection placed the wrong faction or unit.");
+                }
+            }
+            this.SwitchMode("World"); this.SwitchMode("World creator");
+            if (this.unitDesigns[this.unitChoice.GetSelectedId()].GetType() != roster.Units[^1]) {
+                throw new InvalidOperationException("Reopening creator lost the selected unit.");
+            }
+            await this.Capture("CreatorFaction" + roster.Faction + ".png");
+        }
+        this.faction = Faction.Bastions;
+        this.RefreshUnitChoices();
+        this.Log("PASS: faction rosters, selection changes, placement previews, actual placement, and creator reopening.");
     }
     private async Task VerifyEditorState() {
         static void Check(bool condition, string message) {
