@@ -195,7 +195,10 @@ public partial class MainInterface {
         _ = this.Heading(this.inspectorPanel, "UNIT STATISTICS");
         Unit unit = entity.Unit;
         _ = Label(this.inspectorPanel, $"Origin {entity.Position} · {Hex.DirectionNames[entity.Facing]}\n{entity.OccupiedCells().Count()} occupied cells\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, this.muted);
-        _ = this.Button(this.inspectorPanel, entity.Stationary ? "Mobilize unit" : "Deploy / hold position", () => { this.Pause(); entity.Stationary = !entity.Stationary; this.Refresh(); });
+        _ = this.Button(this.inspectorPanel, entity.Stationary ? "Mobilize unit" : "Deploy / hold position", () => {
+            this.Pause(); entity.Stationary = !entity.Stationary;
+            if (this.mode == "World creator") { this.RecordWorldEdit(); } else { this.Refresh(); }
+        });
         if (this.mode == "World creator") {
             _ = this.Button(this.inspectorPanel, "Rotate 60°   [R]", this.RotateSelection);
             _ = this.Button(this.inspectorPanel, "Remove entity   [Delete]", this.DeleteSelection);

@@ -249,9 +249,106 @@ public partial class MainInterface {
             DisplayServer.WindowSetSize(new Vector2I(1100, 700));
             await this.Capture("MinimumWindow.png");
             this.ReplaceWorld(this.checkpoint.Copy());
+            await this.VerifyEditorState();
             this.Log("PASS: interface, scenarios, decision inspector, tuning, bonds, mechanics, tuned/exact rewind, batch turns, overlays, inspect, pan, zoom, rotate, world creation, unit placement, terrain paint, in-memory world round trip, and minimum window.");
             this.GetTree().Quit();
         } catch (Exception exception) { this.Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); this.GetTree().Quit(1); }
+    }
+    private async Task VerifyEditorState() {
+        static void Check(bool condition, string message) {
+            if (!condition) { throw new InvalidOperationException(message); }
+        }
+        void KeyPress(Key key) {
+            this._UnhandledKeyInput(new InputEventKey { Keycode = key, Pressed = true });
+        }
+        string Help() {
+            return this.inspectorPanel.FindChildren("ShortcutHelp", "Label", true, false).OfType<Label>().Single().Text;
+        }
+        void Inspect(Hex cell) { this.OnCell(cell, MouseButton.Right); }
+        void Rewind() { this.SwitchMode("World"); this.RewindExperiment(false); }
+
+        this.SwitchMode("World creator");
+        this.CreateWorkingWorld(World.Create(false, 20, 15));
+        this.unitIndex = 0; this.facing = 0;
+        Hex origin = Hex.FromOffset(6, 6), empty = Hex.FromOffset(12, 10);
+        this.SelectTool("Place unit"); this.OnCell(origin, MouseButton.Left);
+        this.SelectTool("File");
+        Check(!Help().Contains("Space") && !Help().Contains("Rotate") && !this.populationLabel.Text.Contains("LOST"), "Creator advertises unrelated simulation or editing controls.");
+        Check(!this.inspectorPanel.FindChildren("*", "Label", true, false).OfType<Label>().Any(label => label.Text == "UNIT INSPECTOR"), "File mode shows an unrelated unit inspector.");
+        KeyPress(Key.R); KeyPress(Key.Delete); KeyPress(Key.N); KeyPress(Key.Space);
+        Check(this.facing == 0 && this.world.Entities.Count == 1 && this.world.Turn == 0 && !this.running, "File mode permits hidden editing or playback shortcuts.");
+        this.worldName.GrabFocus();
+        KeyPress(Key.Escape);
+        Check(!this.menuVisible, "Escape leaves the creator while typing a world name.");
+        this.worldName.ReleaseFocus();
+
+        Inspect(origin);
+        Check(this.statusLabel.Text.StartsWith("Inspecting #", StringComparison.Ordinal) && Help().Contains("Rotate selected unit"), "Right-click leaves stale tool instructions.");
+        KeyPress(Key.R);
+        Check(this.selected!.Facing == 1 && this.facing == 0 && this.statusLabel.Text.Contains("Northeast"), "Selection rotation changes placement facing or reports the wrong facing.");
+        this.inspectorTab = 2; this.BuildInspector();
+        _ = this.inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Deploy / hold position").EmitSignal(BaseButton.SignalName.Pressed);
+        this.SwitchMode("World"); this.Step(); this.RewindExperiment(false);
+        Check(this.world.Entities.Single().Facing == 1 && this.world.Entities.Single().Stationary, "Exact rewind loses initial rotation or deployment edits.");
+        Check(Help().Contains("Space") && !Help().Contains("Rotate") && this.populationLabel.Text.Contains("LOST"), "Playback shortcut help or population readout is stale.");
+        foreach (int tab in new[] { 0, 1, 2 }) {
+            this.inspectorTab = tab; this.BuildInspector();
+            Check(this.inspectorPanel.FindChildren("*", "Label", true, false).OfType<Label>().Any(label => label.Text == "FACTIONS / LIVE POPULATION"), "Inspector tab hides the population legend.");
+            Check(Help().Contains("Space"), "Inspector tab hides playback shortcuts.");
+        }
+
+        this.SwitchMode("World creator"); Inspect(origin); KeyPress(Key.Delete);
+        Rewind();
+        Check(this.world.Entities.Count == 0, "Exact rewind resurrects a unit deleted at turn zero.");
+
+        this.SwitchMode("World creator");
+        this.SelectTool("Place unit"); this.OnCell(origin, MouseButton.Left);
+        double aggression = this.world.Entities.Single().Unit.Brain.Settings.Aggression;
+        this.world.Entities.Single().Unit.Brain.Settings.Aggression = aggression == 0 ? 1 : 0;
+        this.SelectTool("File"); this.OnCell(empty, MouseButton.Left);
+        this.SelectTool("Place unit"); KeyPress(Key.R); this.OnCell(origin, MouseButton.Left);
+        this.SelectTool("Paint terrain"); this.terrain = Terrain.Water; this.OnCell(origin, MouseButton.Left);
+        this.terrain = Terrain.Plains; this.OnCell(empty, MouseButton.Left);
+        this.SelectTool("Erase entity"); this.OnCell(empty, MouseButton.Left);
+        Rewind();
+        Check(this.world.Entities.Single().Unit.Brain.Settings.Aggression == aggression, "A rejected or unchanged editor action silently replaces the checkpoint.");
+
+        this.Step(); this.CaptureCheckpoint();
+        Entity checkpointEntity = this.world.Entities.Single().Copy();
+        this.SwitchMode("World creator"); Inspect(checkpointEntity.Position); KeyPress(Key.R); KeyPress(Key.Delete);
+        Rewind();
+        Check(this.world.Turn == 1 && this.world.Entities.Single().Facing == checkpointEntity.Facing, "Editing after turn zero replaces an explicit checkpoint.");
+
+        this.SwitchMode("World creator"); this.SelectTool("Paint terrain");
+        _ = await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);
+        this.board.Fit();
+        Vector2 point = this.board.Screen(empty);
+        this.board._GuiInput(new InputEventMouseMotion { Position = point });
+        Check(this.board.Hovered == empty && this.hoverLabel!.Text.Contains("Plains"), "Hover does not identify the cell under the pointer.");
+        this.terrain = Terrain.Forest;
+        this.board._GuiInput(new InputEventMouseButton { Position = point, ButtonIndex = MouseButton.Left, Pressed = true });
+        this.board._GuiInput(new InputEventMouseButton { Position = point, ButtonIndex = MouseButton.Left, Pressed = false });
+        Check(this.hoverLabel!.Text.Contains("Forest"), "Painting leaves the hover terrain stale until the pointer moves.");
+        this.board._GuiInput(new InputEventMouseButton { Position = point, ButtonIndex = MouseButton.WheelUp, Pressed = true });
+        Check(this.board.Hovered == empty, "Zoom around the pointer changes the hovered cell.");
+        this.board._GuiInput(new InputEventMouseButton { Position = point, ButtonIndex = MouseButton.Middle, Pressed = true });
+        this.board._GuiInput(new InputEventMouseMotion { Position = point, Relative = new Vector2(100, 30), ButtonMask = MouseButtonMask.Middle });
+        this.board._GuiInput(new InputEventMouseButton { Position = point, ButtonIndex = MouseButton.Middle, Pressed = false });
+        this.board.Fit();
+        Check(this.board.Hovered == empty && this.hoverLabel.Text.Contains("Forest"), "Framing the board leaves a stale hover cell.");
+        World replacement = this.world.Copy(); replacement.Terrain[empty] = Terrain.Water;
+        this.ReplaceWorld(replacement);
+        Check(this.hoverLabel.Text.Contains("Water"), "Replacing the world leaves stale hover terrain.");
+        await this.Capture("CreatorHoverFeedback.png");
+        this.board._GuiInput(new InputEventMouseButton { Position = point, ButtonIndex = MouseButton.Left, Pressed = true });
+        _ = this.board.EmitSignal(Control.SignalName.MouseExited);
+        Check(this.board.Hovered is null && this.hoverLabel.Text.StartsWith("Hover a cell", StringComparison.Ordinal), "Leaving the board retains hover or placement preview.");
+        Hex untouched = Hex.FromOffset(14, 10);
+        this.board._GuiInput(new InputEventMouseMotion { Position = this.board.Screen(untouched), ButtonMask = MouseButtonMask.Left });
+        Check(this.world.Terrain[untouched] == Terrain.Plains, "Leaving the board does not cancel the paint drag.");
+        this.ShowMainMenu();
+        Check(this.board.Hovered is null, "Hiding the board retains hover state.");
+        this.Log("PASS: editor shortcuts, focused text entry, status, initial edit checkpoints, rejected edits, hover refresh, and drag cancellation.");
     }
     private async Task Capture(string name) {
         _ = await this.ToSignal(this.GetTree(), SceneTree.SignalName.ProcessFrame);

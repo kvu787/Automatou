@@ -9,6 +9,23 @@ public partial class MainInterface {
     private VBoxContainer? terrainTools;
     private VBoxContainer? populationTools;
 
+    private string ToolInstruction() {
+        return this.Tool switch {
+            "File" => "Manage session worlds or create a new world.",
+            "Inspect" => "Select a unit on the board to inspect it.",
+            "Paint terrain" => "Click or drag across cells to paint terrain.",
+            "Place unit" => "Click the world to place units. Red footprints cannot be placed.",
+            "Erase entity" => "Click or drag across units to remove them.",
+            _ => ""
+        };
+    }
+    private void SelectTool(string value) {
+        this.Tool = value;
+        this.Status(this.ToolInstruction());
+        this.BuildInspector();
+        this.board.QueueRedraw();
+    }
+
     private void UpdateWorldToolVisibility() {
         if (this.fileTools is not null && IsInstanceValid(this.fileTools)) {
             this.fileTools.Visible = this.Tool == "File";
@@ -23,18 +40,15 @@ public partial class MainInterface {
 
     private void BuildWorldTools() {
         _ = Label(this.modePanel, "MODE", 12, this.accent);
-        this.toolChoice = this.Choice(this.modePanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => {
-            this.Tool = ToolNames[index];
-            this.Status(this.Tool == "File" ? "Manage session worlds or create a new world." : $"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
-        });
+        this.toolChoice = this.Choice(this.modePanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => this.SelectTool(ToolNames[index]));
         this.terrainTools = Column(this.toolsPanel);
         _ = Label(this.terrainTools, "TERRAIN BRUSH", 12, this.accent);
-        _ = this.Choice(this.terrainTools, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.Tool = "Paint terrain"; this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
+        _ = this.Choice(this.terrainTools, Catalog.TerrainNames, (int)this.terrain, index => { this.terrain = (Terrain)index; this.SelectTool("Paint terrain"); this.Status($"Painting {Catalog.TerrainNames[index].ToLowerInvariant()}. Drag across cells."); });
         this.populationTools = Column(this.toolsPanel);
         _ = Label(this.populationTools, "POPULATE THE WORLD", 12, this.accent);
         _ = this.Choice(this.populationTools, Catalog.FactionNames, (int)this.faction, index => { this.faction = (Faction)index; this.board.QueueRedraw(); });
-        this.unitChoice = this.Choice(this.populationTools, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.Tool = "Place unit"; this.board.QueueRedraw(); });
-        _ = this.Button(this.populationTools, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
+        this.unitChoice = this.Choice(this.populationTools, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.SelectTool("Place unit"); });
+        _ = this.Button(this.populationTools, "Place selected unit", () => this.SelectTool("Place unit"));
         _ = this.Button(this.populationTools, "Rotate placement   [R]", this.RotateSelection);
         this.fileTools = Column(this.toolsPanel);
         _ = Label(this.fileTools, "SESSION WORLDS", 12, this.accent);
@@ -53,7 +67,7 @@ public partial class MainInterface {
         SpinBox height = this.Number(this.fileTools, "Height", 24, 1, 200);
         shape.ItemSelected += index => height.Editable = index == 0;
         _ = this.Button(this.fileTools, "Create world", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value)));
-        _ = Label(this.fileTools, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, this.muted);
+        _ = Label(this.fileTools, "New worlds replace this workspace and its checkpoint. Save first to keep this world. Hexagon size 1 is one cell.", 12, this.muted);
         this.UpdateWorldToolVisibility();
     }
     private void CreateWorkingWorld(World replacement) {

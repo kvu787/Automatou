@@ -8,12 +8,13 @@ public partial class HexBoard : Control {
     public Entity? Selected { get; set; }
     public Func<Hex, Entity?>? Preview { get; set; }
     public Action<Hex, MouseButton>? CellPressed { get; set; }
-    public Action<Hex>? HoverChanged { get; set; }
+    public Action<Hex?>? HoverChanged { get; set; }
     public bool DecisionOverlay { get; set; } = true;
     public bool DimUnseenEnemies { get; set; }
     public Hex? Hovered { get; private set; }
     public float Zoom { get; private set; } = 1;
     private Vector2 pan;
+    private Vector2? pointerPosition;
     private bool panning;
     private bool painting;
     private Hex? lastPainted;
@@ -24,6 +25,9 @@ public partial class HexBoard : Control {
         this.MouseFilter = MouseFilterEnum.Stop;
         this.ClipContents = true;
         Resized += () => { if (this.Size.X > 0) { this.Fit(); } };
+        MouseEntered += () => { this.pointerPosition = this.GetLocalMousePosition(); this.RefreshHover(); };
+        MouseExited += this.ClearPointer;
+        VisibilityChanged += () => { if (!this.IsVisibleInTree()) { this.ClearPointer(); } };
     }
     public static Vector2 Center(Hex cell) {
         return new((float)(Math.Sqrt(3) * Radius * (cell.Q + (cell.R * .5))), -Radius * 1.5f * cell.R);
@@ -65,16 +69,34 @@ public partial class HexBoard : Control {
         Vector2 high = new(points.Max(p => p.X) + Radius, points.Max(p => p.Y) + Radius);
         this.Zoom = Math.Clamp(Math.Min((this.Size.X - 75) / (high.X - low.X), (this.Size.Y - 100) / (high.Y - low.Y)), .12f, 2.8f);
         this.pan = (this.Size / 2) - ((low + high) / 2 * this.Zoom) + new Vector2(0, 12);
+        this.RefreshHover();
+        this.QueueRedraw();
+    }
+    private void ClearPointer() {
+        this.pointerPosition = null;
+        this.panning = false; this.painting = false; this.lastPainted = null;
+        this.RefreshHover();
+    }
+    private void RefreshHover() {
+        Hex? hovered = this.pointerPosition is { } point && this.IsVisibleInTree() && new Rect2(Vector2.Zero, this.Size).HasPoint(point)
+            ? this.Hit(point) : null;
+        if (this.Hovered == hovered) {
+            return;
+        }
+        this.Hovered = hovered;
+        this.HoverChanged?.Invoke(hovered);
         this.QueueRedraw();
     }
     public override void _GuiInput(InputEvent @event) {
         if (@event is InputEventMouseButton mouse) {
+            this.pointerPosition = mouse.Position;
+            this.RefreshHover();
             if (mouse.ButtonIndex == MouseButton.Middle) {
                 this.panning = mouse.Pressed;
             }
 
             if (mouse.ButtonIndex == MouseButton.Left) { this.painting = mouse.Pressed; this.lastPainted = null; }
-            if (!mouse.Pressed) {
+            if (!mouse.Pressed || this.Hovered is null) {
                 return;
             }
 
@@ -82,20 +104,27 @@ public partial class HexBoard : Control {
                 float old = this.Zoom;
                 this.Zoom = Math.Clamp(this.Zoom * (mouse.ButtonIndex == MouseButton.WheelUp ? 1.13f : 1 / 1.13f), .12f, 4);
                 this.pan = mouse.Position - ((mouse.Position - this.pan) * (this.Zoom / old));
+                this.RefreshHover();
                 this.QueueRedraw();
             } else if (mouse.ButtonIndex is MouseButton.Left or MouseButton.Right) {
                 this.lastPainted = this.Hit(mouse.Position); this.CellPressed?.Invoke(this.lastPainted.Value, mouse.ButtonIndex); this.QueueRedraw();
             }
         } else if (@event is InputEventMouseMotion motion) {
+            if (!new Rect2(Vector2.Zero, this.Size).HasPoint(motion.Position)) {
+                this.ClearPointer();
+                return;
+            }
             if (this.panning && (motion.ButtonMask & MouseButtonMask.Middle) != 0) {
                 this.pan += motion.Relative;
             } else {
                 this.panning = false;
             }
 
+            this.pointerPosition = motion.Position;
+            this.RefreshHover();
             Hex cell = this.Hit(motion.Position);
-            this.Hovered = cell; this.HoverChanged?.Invoke(cell);
-            if (this.painting && (motion.ButtonMask & MouseButtonMask.Left) != 0 && this.lastPainted != cell) {
+            this.painting &= (motion.ButtonMask & MouseButtonMask.Left) != 0;
+            if (!this.panning && this.painting && this.lastPainted != cell) {
                 this.lastPainted = cell; this.CellPressed?.Invoke(cell, MouseButton.Left);
             }
             this.QueueRedraw();

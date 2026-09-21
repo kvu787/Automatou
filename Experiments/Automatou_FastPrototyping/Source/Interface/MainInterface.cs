@@ -177,7 +177,7 @@ public partial class MainInterface : Control {
         this.board = new HexBoard { World = this.world, SizeFlagsHorizontal = SizeFlags.ExpandFill, SizeFlagsVertical = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(340, 300) };
         workspace.AddChild(this.board);
         this.board.CellPressed = this.OnCell; this.board.Preview = this.PlacementPreview;
-        this.board.HoverChanged = cell => { this.hoverLabel?.Text = $"CELL {cell}  ·  {(this.world.Terrain.TryGetValue(cell, out Terrain type) ? Catalog.TerrainNames[(int)type] : "Outside world")}"; };
+        this.board.HoverChanged = _ => this.RefreshHoverLabel();
         this.inspectorPanel = Sidebar(workspace, 282);
         PanelContainer footer = new(); footer.AddThemeStyleboxOverride("panel", Box("101e28")); layout.AddChild(footer);
         VBoxContainer foot = Column(footer, 4);
@@ -229,7 +229,10 @@ public partial class MainInterface : Control {
         if (this.elapsed >= 1 / this.turnsPerSecond) { this.elapsed = 0; this.Guard(this.Step); }
     }
     public override void _UnhandledKeyInput(InputEvent @event) {
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }) {
+        if (@event is not InputEventKey { Pressed: true, Echo: false } key || this.GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit) {
+            return;
+        }
+        if (key.Keycode == Key.Escape) {
             this.ShowMainMenu();
             return;
         }
@@ -237,404 +240,14 @@ public partial class MainInterface : Control {
             return;
         }
 
-        if (this.GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit) {
-            return;
-        }
-
-        if (@event is not InputEventKey { Pressed: true, Echo: false } key) {
-            return;
-        }
-
         this.Guard(() => {
-            switch (key.Keycode) {
-            case Key.Space when this.mode == "World": this.ToggleRun(); break;
-            case Key.N when this.mode == "World": this.Pause(); this.Step(); break;
-            case Key.B when this.mode == "World": this.AdvanceTurns(10); break;
-            case Key.F: this.board.Fit(); break;
-            case Key.R: this.RotateSelection(); break;
-            case Key.Delete when this.mode == "World creator": this.DeleteSelection(); break;
-            case Key.None:
-                break;
-            case Key.Special:
-                break;
-            case Key.Escape:
-                break;
-            case Key.Tab:
-                break;
-            case Key.Backtab:
-                break;
-            case Key.Backspace:
-                break;
-            case Key.Enter:
-                break;
-            case Key.KpEnter:
-                break;
-            case Key.Insert:
-                break;
-            case Key.Delete:
-                break;
-            case Key.Pause:
-                break;
-            case Key.Print:
-                break;
-            case Key.Sysreq:
-                break;
-            case Key.Clear:
-                break;
-            case Key.Home:
-                break;
-            case Key.End:
-                break;
-            case Key.Left:
-                break;
-            case Key.Up:
-                break;
-            case Key.Right:
-                break;
-            case Key.Down:
-                break;
-            case Key.Pageup:
-                break;
-            case Key.Pagedown:
-                break;
-            case Key.Shift:
-                break;
-            case Key.Ctrl:
-                break;
-            case Key.Meta:
-                break;
-            case Key.Alt:
-                break;
-            case Key.Capslock:
-                break;
-            case Key.Numlock:
-                break;
-            case Key.Scrolllock:
-                break;
-            case Key.F1:
-                break;
-            case Key.F2:
-                break;
-            case Key.F3:
-                break;
-            case Key.F4:
-                break;
-            case Key.F5:
-                break;
-            case Key.F6:
-                break;
-            case Key.F7:
-                break;
-            case Key.F8:
-                break;
-            case Key.F9:
-                break;
-            case Key.F10:
-                break;
-            case Key.F11:
-                break;
-            case Key.F12:
-                break;
-            case Key.F13:
-                break;
-            case Key.F14:
-                break;
-            case Key.F15:
-                break;
-            case Key.F16:
-                break;
-            case Key.F17:
-                break;
-            case Key.F18:
-                break;
-            case Key.F19:
-                break;
-            case Key.F20:
-                break;
-            case Key.F21:
-                break;
-            case Key.F22:
-                break;
-            case Key.F23:
-                break;
-            case Key.F24:
-                break;
-            case Key.F25:
-                break;
-            case Key.F26:
-                break;
-            case Key.F27:
-                break;
-            case Key.F28:
-                break;
-            case Key.F29:
-                break;
-            case Key.F30:
-                break;
-            case Key.F31:
-                break;
-            case Key.F32:
-                break;
-            case Key.F33:
-                break;
-            case Key.F34:
-                break;
-            case Key.F35:
-                break;
-            case Key.KpMultiply:
-                break;
-            case Key.KpDivide:
-                break;
-            case Key.KpSubtract:
-                break;
-            case Key.KpPeriod:
-                break;
-            case Key.KpAdd:
-                break;
-            case Key.Kp0:
-                break;
-            case Key.Kp1:
-                break;
-            case Key.Kp2:
-                break;
-            case Key.Kp3:
-                break;
-            case Key.Kp4:
-                break;
-            case Key.Kp5:
-                break;
-            case Key.Kp6:
-                break;
-            case Key.Kp7:
-                break;
-            case Key.Kp8:
-                break;
-            case Key.Kp9:
-                break;
-            case Key.Menu:
-                break;
-            case Key.Hyper:
-                break;
-            case Key.Help:
-                break;
-            case Key.Back:
-                break;
-            case Key.Forward:
-                break;
-            case Key.Stop:
-                break;
-            case Key.Refresh:
-                break;
-            case Key.Volumedown:
-                break;
-            case Key.Volumemute:
-                break;
-            case Key.Volumeup:
-                break;
-            case Key.Mediaplay:
-                break;
-            case Key.Mediastop:
-                break;
-            case Key.Mediaprevious:
-                break;
-            case Key.Medianext:
-                break;
-            case Key.Mediarecord:
-                break;
-            case Key.Homepage:
-                break;
-            case Key.Favorites:
-                break;
-            case Key.Search:
-                break;
-            case Key.Standby:
-                break;
-            case Key.Openurl:
-                break;
-            case Key.Launchmail:
-                break;
-            case Key.Launchmedia:
-                break;
-            case Key.Launch0:
-                break;
-            case Key.Launch1:
-                break;
-            case Key.Launch2:
-                break;
-            case Key.Launch3:
-                break;
-            case Key.Launch4:
-                break;
-            case Key.Launch5:
-                break;
-            case Key.Launch6:
-                break;
-            case Key.Launch7:
-                break;
-            case Key.Launch8:
-                break;
-            case Key.Launch9:
-                break;
-            case Key.Launcha:
-                break;
-            case Key.Launchb:
-                break;
-            case Key.Launchc:
-                break;
-            case Key.Launchd:
-                break;
-            case Key.Launche:
-                break;
-            case Key.Launchf:
-                break;
-            case Key.Globe:
-                break;
-            case Key.Keyboard:
-                break;
-            case Key.JisEisu:
-                break;
-            case Key.JisKana:
-                break;
-            case Key.Unknown:
-                break;
-            case Key.Space:
-                break;
-            case Key.Exclam:
-                break;
-            case Key.Quotedbl:
-                break;
-            case Key.Numbersign:
-                break;
-            case Key.Dollar:
-                break;
-            case Key.Percent:
-                break;
-            case Key.Ampersand:
-                break;
-            case Key.Apostrophe:
-                break;
-            case Key.Parenleft:
-                break;
-            case Key.Parenright:
-                break;
-            case Key.Asterisk:
-                break;
-            case Key.Plus:
-                break;
-            case Key.Comma:
-                break;
-            case Key.Minus:
-                break;
-            case Key.Period:
-                break;
-            case Key.Slash:
-                break;
-            case Key.Key0:
-                break;
-            case Key.Key1:
-                break;
-            case Key.Key2:
-                break;
-            case Key.Key3:
-                break;
-            case Key.Key4:
-                break;
-            case Key.Key5:
-                break;
-            case Key.Key6:
-                break;
-            case Key.Key7:
-                break;
-            case Key.Key8:
-                break;
-            case Key.Key9:
-                break;
-            case Key.Colon:
-                break;
-            case Key.Semicolon:
-                break;
-            case Key.Less:
-                break;
-            case Key.Equal:
-                break;
-            case Key.Greater:
-                break;
-            case Key.Question:
-                break;
-            case Key.At:
-                break;
-            case Key.A:
-                break;
-            case Key.B:
-                break;
-            case Key.C:
-                break;
-            case Key.D:
-                break;
-            case Key.E:
-                break;
-            case Key.G:
-                break;
-            case Key.H:
-                break;
-            case Key.I:
-                break;
-            case Key.J:
-                break;
-            case Key.K:
-                break;
-            case Key.L:
-                break;
-            case Key.M:
-                break;
-            case Key.N:
-                break;
-            case Key.O:
-                break;
-            case Key.P:
-                break;
-            case Key.Q:
-                break;
-            case Key.S:
-                break;
-            case Key.T:
-                break;
-            case Key.U:
-                break;
-            case Key.V:
-                break;
-            case Key.W:
-                break;
-            case Key.X:
-                break;
-            case Key.Y:
-                break;
-            case Key.Z:
-                break;
-            case Key.Bracketleft:
-                break;
-            case Key.Backslash:
-                break;
-            case Key.Bracketright:
-                break;
-            case Key.Asciicircum:
-                break;
-            case Key.Underscore:
-                break;
-            case Key.Quoteleft:
-                break;
-            case Key.Braceleft:
-                break;
-            case Key.Bar:
-                break;
-            case Key.Braceright:
-                break;
-            case Key.Asciitilde:
-                break;
-            case Key.Yen:
-                break;
-            case Key.Section:
-                break;
+            switch (key.Keycode, this.mode) {
+            case (Key.Space, "World"): this.ToggleRun(); break;
+            case (Key.N, "World"): this.Pause(); this.Step(); break;
+            case (Key.B, "World"): this.AdvanceTurns(10); break;
+            case (Key.F, _): this.board.Fit(); break;
+            case (Key.R, "World creator"): this.RotateSelection(); break;
+            case (Key.Delete, "World creator") when this.Tool == "Inspect": this.DeleteSelection(); break;
             default:
                 break;
             }
@@ -666,17 +279,25 @@ public partial class MainInterface : Control {
             this.BuildPlaybackTools();
         }
 
-        this.BuildInspector(); this.board.Fit(); this.board.QueueRedraw();
+        this.Refresh(); this.board.Fit();
+        this.Status(this.mode == "World" ? "Simulation paused." : this.ToolInstruction());
         Callable.From(this.board.Fit).CallDeferred();
     }
     private void Refresh() {
         this.board.World = this.world; this.board.Selected = this.selected; this.board.QueueRedraw();
         this.turnLabel.Text = $"TURN {this.world.Turn:0000}";
-        this.populationLabel.Text = $"{this.world.Terrain.Count:N0} CELLS     {this.world.Entities.Count} UNITS     {this.world.Casualties} LOST";
+        this.populationLabel.Text = $"{this.world.Terrain.Count:N0} CELLS     {this.world.Entities.Count} UNITS" +
+            (this.mode == "World" ? $"     {this.world.Casualties} LOST" : "");
+        this.RefreshHoverLabel();
         this.eventLabel.Text = string.Join("\n", this.world.Events.TakeLast(2));
         this.eventLabel.Visible = this.eventLabel.Text.Length > 0;
         this.RefreshComparison();
         this.BuildInspector();
+    }
+    private void RefreshHoverLabel() {
+        this.hoverLabel?.Text = this.board.Hovered is { } cell
+            ? $"CELL {cell}  ·  {(this.world.Terrain.TryGetValue(cell, out Terrain type) ? Catalog.TerrainNames[(int)type] : "Outside world")}"
+            : "Hover a cell to inspect its coordinates";
     }
     private Entity? PlacementPreview(Hex cell) {
         return this.mode == "World creator" && this.Tool == "Place unit"
@@ -690,50 +311,78 @@ public partial class MainInterface : Control {
                 return;
             }
 
-            if (button == MouseButton.Right) { this.Tool = "Inspect"; this.selected = this.world.At(cell); this.Refresh(); return; }
-            if (this.Tool == "Inspect") { this.selected = this.world.At(cell); this.Refresh(); return; }
+            if (button == MouseButton.Right || this.Tool == "Inspect") {
+                this.Tool = "Inspect"; this.selected = this.world.At(cell); this.Refresh();
+                this.Status(this.selected is { } inspected ? $"Inspecting #{inspected.Id} {inspected.Name}." : "No unit at this cell. Select a unit to inspect it.");
+                return;
+            }
+            if (this.Tool == "File") {
+                return;
+            }
             this.Pause();
+            bool changed = false;
             if (this.Tool == "Paint terrain") {
+                Terrain? previous = this.world.Terrain.TryGetValue(cell, out Terrain value) ? value : null;
                 if (!this.world.Paint(cell, this.terrain)) {
                     this.Status("Cannot paint here: outside world or terrain incompatible with the occupying unit.");
+                } else {
+                    changed = previous != this.terrain;
+                    this.Status($"Painted {Catalog.TerrainNames[(int)this.terrain].ToLowerInvariant()} at {cell}.");
                 }
             } else if (this.Tool == "Erase entity") {
                 if (this.world.At(cell) is { } entity) {
                     this.world.Remove(entity); if (this.selected == entity) {
                         this.selected = null;
                     }
+                    changed = true;
+                    this.Status($"Removed {entity.Name} at {cell}.");
                 }
             } else if (this.PlacementPreview(cell) is { } entity) {
                 entity.Unit = entity.Unit.CreateFresh();
                 if (!this.world.Add(entity, out string reason)) {
                     this.Status(reason);
-                } else { this.selected = entity; this.Status($"Placed {entity.Name} at {cell}."); }
+                } else { changed = true; this.selected = entity; this.Status($"Placed {entity.Name} at {cell}."); }
             }
-            if (this.world.Turn == 0) {
-                this.checkpoint = this.world.Copy();
+            if (changed) {
+                this.RecordWorldEdit();
+            } else {
+                this.Refresh();
             }
-
-            this.Refresh();
         });
     }
     private void RotateSelection() {
-        if (this.mode == "World") {
+        if (this.mode != "World creator") {
             return;
         }
 
-        this.Pause(); this.facing = (this.facing + 1) % 6;
-        if (this.mode == "World creator" && this.Tool == "Inspect" && this.selected is not null) {
-            int rotation = (this.selected.Facing + 1) % 6;
-            if (this.world.CanOccupy(this.selected, this.selected.Position, out string reason)) { this.selected.Facing = rotation; this.world.RebuildOccupancy(); } else { this.Status(reason); return; }
+        if (this.Tool == "Inspect" && this.selected is not null) {
+            this.Pause();
+            // Regular hexagonal footprints occupy the same cells in every facing.
+            this.selected.Facing = (this.selected.Facing + 1) % 6;
+            this.Status($"{this.selected.Name} facing: {Hex.DirectionNames[this.selected.Facing]}.");
+            this.RecordWorldEdit();
+        } else if (this.Tool == "Place unit") {
+            this.facing = (this.facing + 1) % 6;
+            this.Status($"Placement facing: {Hex.DirectionNames[this.facing]}. R rotates by 60°."); this.Refresh();
         }
-        this.Status($"Placement facing: {Hex.DirectionNames[this.facing]}. R rotates by 60°."); this.Refresh();
     }
     private void DeleteSelection() {
         if (this.selected is null) {
             return;
         }
 
-        this.Pause(); this.world.Remove(this.selected); this.selected = null; this.Refresh();
+        this.Pause();
+        this.Status($"Removed {this.selected.Name} at {this.selected.Position}.");
+        this.world.Remove(this.selected); this.selected = null; this.RecordWorldEdit();
+    }
+    private void RecordWorldEdit() {
+        if (this.world.Turn == 0) {
+            this.checkpoint = this.world.Copy();
+            this.checkpointShots = this.experimentShots; this.checkpointChanges = this.experimentChanges;
+            this.ResetTuningCache();
+            this.referenceResult = null;
+        }
+        this.Refresh();
     }
     private void ReplaceWorld(World replacement, bool capture = true) {
         this.Pause(); this.world = replacement; this.selected = null; this.board.World = this.world;
@@ -753,17 +402,16 @@ public partial class MainInterface : Control {
     }
     private void BuildInspector() {
         Clear(this.inspectorPanel);
-        _ = Label(this.inspectorPanel, "WORLD TELEMETRY", 12, this.accent);
-        if (this.selected is null) {
-            _ = Label(this.inspectorPanel, "Choose Inspect and select a unit.", 13, this.muted);
-        } else {
-            _ = Label(this.inspectorPanel, this.selected.Name, 21, new Color(Catalog.FactionColors[(int)this.selected.Faction]));
-            _ = Label(this.inspectorPanel, Catalog.FactionNames[(int)this.selected.Faction], 13, this.muted);
-            _ = Label(this.inspectorPanel, $"Health {this.selected.Health} / {this.selected.MaximumHealth}\nHeat {this.selected.Heat} / 100{(this.selected.WeaponLocked ? " · LOCKED" : "")}", 13, this.muted);
-            this.BuildDecisionInspector(this.selected);
-        }
-        if (this.selected is not null && this.inspectorTab != 2) {
-            return;
+        if (this.mode == "World" || this.Tool == "Inspect") {
+            _ = Label(this.inspectorPanel, "UNIT INSPECTOR", 12, this.accent);
+            if (this.selected is null) {
+                _ = Label(this.inspectorPanel, "Select a unit on the board to inspect it.", 13, this.muted);
+            } else {
+                _ = Label(this.inspectorPanel, this.selected.Name, 21, new Color(Catalog.FactionColors[(int)this.selected.Faction]));
+                _ = Label(this.inspectorPanel, Catalog.FactionNames[(int)this.selected.Faction], 13, this.muted);
+                _ = Label(this.inspectorPanel, $"Health {this.selected.Health} / {this.selected.MaximumHealth}\nHeat {this.selected.Heat} / 100{(this.selected.WeaponLocked ? " · LOCKED" : "")}", 13, this.muted);
+                this.BuildDecisionInspector(this.selected);
+            }
         }
 
         _ = this.Heading(this.inspectorPanel, "FACTIONS / LIVE POPULATION");
@@ -771,7 +419,12 @@ public partial class MainInterface : Control {
             int count = this.world.Entities.Count(e => (int)e.Faction == i);
             _ = Label(this.inspectorPanel, $"●  {Catalog.FactionNames[i]}   {count}", 13, new Color(Catalog.FactionColors[i]));
         }
-        _ = this.Heading(this.inspectorPanel, "LABORATORY CONTROLS");
-        _ = Label(this.inspectorPanel, "Space   Run / pause\nN          Single turn\nB          Ten turns\nR          Rotate in creator\nF          Frame world\nEsc       Main menu\nRight click   Inspect a cell", 12, this.muted);
+        _ = this.Heading(this.inspectorPanel, "SHORTCUTS");
+        string shortcuts = this.mode == "World" ? "Space   Run / pause\nN          Single turn\nB          Ten turns\n" : this.Tool switch {
+            "Place unit" => "R          Rotate placement\n",
+            "Inspect" when this.selected is not null => "R          Rotate selected unit\nDelete   Remove selected unit\n",
+            _ => ""
+        };
+        Label(this.inspectorPanel, shortcuts + "F          Frame world\nEsc       Main menu\nRight click   Inspect a unit", 12, this.muted).Name = "ShortcutHelp";
     }
 }

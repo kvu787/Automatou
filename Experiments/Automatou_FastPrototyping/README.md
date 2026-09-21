@@ -30,29 +30,33 @@ The **Limited perception**, **Weapon heat**, and **Protective bonds** switches i
 
 The five-faction encounter uses a fixed, source-defined map of plains, forest, mountains, and water, preserving its original terrain and starting clearings. It has two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation.
 
-| Control           | Action                                           |
-| ----------------- | ------------------------------------------------ |
-| Middle mouse drag | Pan                                              |
-| Mouse wheel       | Zoom around the pointer                          |
-| Left click / drag | Use the selected world tool                      |
-| Right click       | Inspect a unit or cell                           |
-| Space             | Run / pause                                      |
-| N                 | Pause and advance one turn                       |
-| B                 | Pause and advance ten turns                      |
-| R                 | Rotate selection or placement                    |
-| F                 | Fit the current world                            |
-| Delete            | Remove the selected entity                       |
-| Escape            | Return to main menu                              |
+| Control           | Action                                                       |
+| ----------------- | ------------------------------------------------------------ |
+| Middle mouse drag | Pan                                                          |
+| Mouse wheel       | Zoom around the pointer                                      |
+| Left click / drag | Use the selected world tool                                  |
+| Right click       | Switch to Inspect and select a unit                          |
+| Space             | Run / pause in World mode                                    |
+| N                 | Pause and advance one turn in World mode                     |
+| B                 | Pause and advance ten turns in World mode                    |
+| R                 | Rotate selected unit in Inspect, or facing in Place unit mode |
+| F                 | Fit the current world                                        |
+| Delete            | Remove selected entity in World creator's Inspect mode       |
+| Escape            | Return to main menu                                          |
 
-Shortcuts are suspended while typing in a text or number field. Sidebars scroll independently. The window can be resized down to 1100 × 700.
+Shortcuts, including Escape, are suspended while typing in a text or number field. Rotation is available only in World creator. The sidebar lists shortcuts for the active mode and tool. The unit inspector appears in World mode and the creator's Inspect mode; the faction legend remains available on every inspector tab. The creator footer shows cell and unit counts; World mode also shows casualties. Sidebars scroll independently. The window can be resized down to 1100 × 700.
+
+The cell readout follows the pointer and refreshes when terrain or the world changes. Leaving the board clears the readout and placement preview and ends any paint or pan drag.
 
 ## World creator and storage
 
-The lower section of the World creator toolbar creates either a rectangle from width and height, or a hexagon from size. Positive sizes are required; maps are limited to 20,000 cells. A size-one hexagonal map has one cell. Rectangular coordinates begin at the lower left, with positive X rightward and positive Y upward. Odd rows are offset east. Hexagonal maps are centered at coordinate (0, 0), so they also use negative coordinates.
+The World creator's **File** mode contains **Save**, **Load**, **Play this world**, and **Create world**. Create either a rectangle from width and height, or a hexagon from size. Positive sizes are required; maps are limited to 20,000 cells. A size-one hexagonal map has one cell. Rectangular coordinates begin at the lower left, with positive X rightward and positive Y upward. Odd rows are offset east. Hexagonal maps are centered at coordinate (0, 0), so they also use negative coordinates.
 
 **Create world** creates an empty map of plains for manual authoring. The five terrain types are forest (green), plains (ochre), mountains (gray), water (blue), and exclusion zone (purple). Each is shown only by its unique fill color, with no terrain symbols. All five can be painted. Painting incompatible terrain under a unit is rejected.
 
-**Checkpoint** stores the current state in memory; **Exact rewind** restores it. **Rewind with tuning** restores the checkpoint while retaining the latest preferences and bonds for its units, including units lost during the run, along with the mechanism switches. Edits at turn zero also refresh the starting checkpoint. **Save** uses the name in the world field. Names already saved replace that in-memory snapshot (case-insensitively). **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Returning to the main menu pauses the simulation and retains the current map.
+**Checkpoint** stores the current state in memory; **Exact rewind** restores it. **Rewind with tuning** restores the checkpoint while retaining the latest preferences and bonds for its units, including units lost during the run, along with the mechanism switches. Successful terrain, placement, rotation, removal, and deployment edits in World creator at turn zero also refresh the starting checkpoint. Rejected or unchanged actions leave it intact. Edits after turn zero leave the checkpoint intact until **Checkpoint** is pressed. Preference and mechanism changes remain available for comparison through **Rewind with tuning**.
+
+**Save** uses the name in the world field. Names already saved replace that in-memory snapshot (case-insensitively). **Load** opens the world browser and returns the selected world to World creator. The browser refreshes its saved-world list whenever opened. Creating or loading a world replaces the workspace and its checkpoint, so save the current world first to retain it. Returning to the main menu pauses the simulation and retains the current map.
 
 - Session snapshots in RAM: map terrain, living entities, faction, facing, health, heat, weapon lock, directed bonds, turn, casualty count, experiment switches, concrete unit instances, automaton settings and memory, and deterministic random state.
 
@@ -121,6 +125,6 @@ From this folder in PowerShell:
 
 The first command builds and runs dependency-free simulation checks. The second also launches the real Godot renderer, exercises the interface, captures views under the session log folder, and exits. Its authored test content is isolated inside that log folder.
 
-Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, attack arcs and armor, action points, splash damage, obstacle routing, unit movement, independent brain memory, read-only sensing, hidden-target information boundaries, physical heat and recovery, terrain cooling, bounded contact memory, commitment, directed escorts, the three scenarios' observable differences, exact continuation after saving, copy isolation and invalid automaton memory, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, source-defined unit placement, terrain painting, world saving/loading, and the minimum window size.
+Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, duplicate entity rejection, extreme map dimensions, attack arcs and armor, action points, splash damage, obstacle routing, unit movement, independent brain memory, read-only sensing, hidden-target information boundaries, physical heat and recovery, terrain cooling, bounded contact memory, commitment, directed escorts, the three scenarios' observable differences, exact continuation after saving, copy isolation and invalid automaton memory, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, source-defined unit placement, terrain painting, world saving/loading, initial editor checkpoints, mode-specific shortcuts, typing focus, hover refresh and clearing, drag cancellation, and the minimum window size.
 
 `Source/Simulation` contains the engine-independent model and rules. `Source/Interface` contains the Godot renderer and world creator. `Tests` compiles the simulation directly without Godot or an external test framework. The experiment has its own build settings and does not reference the main repository application.
