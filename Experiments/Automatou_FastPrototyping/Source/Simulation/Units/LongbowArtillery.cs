@@ -9,6 +9,8 @@ public sealed class LongbowArtillery : Unit {
     }
 
     public sealed class Automaton : UnitAutomaton {
+        // Allied blast exposure penalizes both target rank and Engage score.
+        // It is a preference, not a prohibition: an accepted shot can hurt allies.
         public Automaton() {
             this.Settings = new() { Aggression = .75, Caution = .4, Commitment = .2 };
         }

@@ -57,6 +57,8 @@ public sealed partial class World {
     }
 
     internal bool CanOccupyKnown(Entity actor, Hex position, ISet<Hex>? knownOccupancy = null) {
+        // Planning ignores unseen occupants. Actual movement uses World.CanOccupy,
+        // so an apparently clear route can still produce a rejected move and end the turn.
         knownOccupancy ??= this.KnownOccupancy(actor);
         foreach (Hex cell in Hex.Disk(actor.Unit.Size).Select(offset => position + offset)) {
             if (!this.Terrain.TryGetValue(cell, out Terrain terrain) || !Traversable(actor.Unit, terrain) || knownOccupancy.Contains(cell)) {
@@ -83,6 +85,10 @@ public sealed partial class World {
     }
 
     private int FindDirection(Entity actor, IReadOnlyList<Hex> destinations, int stoppingDistance) {
+        // A* searches (position, facing), charging for turns as well as movement.
+        // Return only the heading of the first forward move, not a persistent route;
+        // execution turns toward it and replans from the next observation. The search
+        // can span multiple turns, but stops after 3,000 expanded poses or no route.
         if (actor.Stationary) {
             return -1;
         }

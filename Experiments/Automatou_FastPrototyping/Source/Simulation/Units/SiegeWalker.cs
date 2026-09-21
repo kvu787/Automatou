@@ -9,6 +9,8 @@ public sealed class SiegeWalker : Unit {
     }
 
     public sealed class Automaton : UnitAutomaton {
+        // Adds Recover to the usual combat/exploration/escort choices. HeatReserve
+        // is a preferred ceiling; the world's physical weapon lock starts at 100.
         public Automaton() {
             this.Settings = new() { Aggression = .65, Caution = .45, Commitment = .15, HeatReserve = 70 };
         }

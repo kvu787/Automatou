@@ -168,6 +168,8 @@ public sealed partial class World {
         this.RebuildOccupancy();
     }
     public void Step() {
+        // One world turn: cool everyone, then let each surviving actor spend its whole
+        // budget in sequence. Later actors see changes made by earlier actors this turn.
         this.Turn++; this.Effects.Clear();
         if (this.Settings.HeatEnabled) {
             foreach (Entity entity in this.Entities) {
@@ -203,6 +205,9 @@ public sealed partial class World {
         }
     }
     private bool ApplyAction(Entity actor, UnitSenses senses, UnitAction action) {
+        // The world enforces legality independently of the brain: at most one attack
+        // (2 points), each turn step (1 point), or each forward move (terrain cost).
+        // false stops this actor's turn; unused points are not carried into the next turn.
         switch (action) {
         case AttackAction attack:
             Entity? target = this.Entities.FirstOrDefault(e => e.Id == attack.TargetId);

@@ -9,6 +9,8 @@ public sealed class Home : Unit {
     }
 
     public sealed class Automaton : UnitAutomaton {
+        // Low aggression and high caution favor survival, with the same spacing
+        // helpers as the outrider. Escort competes when a visible bonded ally exists.
         public Automaton() {
             this.Settings = new() { Aggression = .35, Caution = .95, Commitment = .2 };
         }

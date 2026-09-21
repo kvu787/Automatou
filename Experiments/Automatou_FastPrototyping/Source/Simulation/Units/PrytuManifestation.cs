@@ -9,6 +9,8 @@ public sealed class PrytuManifestation : Unit {
     }
 
     public sealed class Automaton : UnitAutomaton {
+        // Like the hunter, favors wounded targets and offers no Escort candidate;
+        // greater commitment makes it more reluctant to switch targets/intentions.
         public Automaton() {
             this.Settings = new() { Aggression = .9, Caution = .15, Commitment = .25 };
         }

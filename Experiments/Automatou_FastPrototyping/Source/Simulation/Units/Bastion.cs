@@ -9,6 +9,7 @@ public sealed class Bastion : Unit {
     }
 
     public sealed class Automaton : UnitAutomaton {
+        // Aggressive approach-and-attack policy with no wounded-target or spacing bonus.
         public Automaton() {
             this.Settings = new() { Aggression = .85, Caution = .3, Commitment = .25 };
         }

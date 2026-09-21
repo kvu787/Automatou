@@ -2,6 +2,8 @@ namespace Automatou.Simulation;
 
 // A deliberately small tuning surface; unit classes supply their own defaults and choices.
 public sealed record BehaviorSettings {
+    // Aggression raises engagement scores; caution raises withdrawal and blast concerns.
+    // Commitment biases target selection and resists small intention-score changes.
     public double Aggression { get; set; } = .65;
     public double Caution { get; set; } = .5;
     public double Commitment { get; set; } = .15;
@@ -23,6 +25,8 @@ public sealed record DecisionConsideration(string Name, double Score, string Rea
 public sealed record DecisionTrace(int Turn, string Intention, string Reason, Hex? Destination);
 
 public sealed class AutomatonMemory {
+    // Checkpoints need independent mutable contacts and lists. Immutable trace/score
+    // records can be shared; the execution iterator itself is never saved.
     public AutomatonMemory Copy() {
         return new() {
             Intention = this.Intention, Reason = this.Reason, IntentionSince = this.IntentionSince,
@@ -47,6 +51,8 @@ public sealed class AutomatonMemory {
 }
 
 public abstract partial class UnitAutomaton {
+    // Extend this copy path when adding persistent brain data: World.Copy reaches it
+    // through Entity.Copy and Unit.Copy, so rewinds must preserve the same decisions.
     public void CopyTo(UnitAutomaton copy) {
         copy.TurnsObserved = this.TurnsObserved;
         copy.TargetId = this.TargetId;

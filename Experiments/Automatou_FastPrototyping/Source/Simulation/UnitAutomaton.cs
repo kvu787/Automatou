@@ -7,6 +7,8 @@ public abstract partial class UnitAutomaton {
 }
 
 public abstract record UnitAction;
+// Requests, not direct mutations: World.ApplyAction validates and charges for them.
+// Turning is one 60-degree step (-1 or +1); movement is one cell straight ahead.
 public sealed record TurnAction(int Direction) : UnitAction;
 public sealed record MoveForwardAction : UnitAction;
 public sealed record AttackAction(int TargetId) : UnitAction;
@@ -73,6 +75,8 @@ public static class TacticalPlanning {
     }
 
     public static UnitAction? Engage(UnitSenses senses, WorldObservation observation, EntityObservation target, bool keepDistance) {
+        // Priority matters: take a legal shot first, then consider spacing, aiming or
+        // approach. keepDistance does not force a retreat before an available attack.
         EntityObservation actor = observation.Self;
         UnitStatistics unit = actor.Unit;
         int distance = actor.Cells.Min(c => target.Cells.Min(c.Distance));

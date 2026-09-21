@@ -9,6 +9,7 @@ public sealed class TravelerOutrider : Unit {
     }
 
     public sealed class Automaton : UnitAutomaton {
+        // Skirmisher: nearby enemies boost Withdraw; Engage also tries to keep distance.
         public Automaton() {
             this.Settings = new() { Aggression = .6, Caution = .85, Commitment = .15 };
         }

@@ -7,6 +7,8 @@ public static class BehaviorPlanning {
     public const int ContactLifetime = 8;
 
     public static WorldObservation Begin(UnitAutomaton brain, UnitSenses senses) {
+        // Called once by Act. Search progress advances only at turn boundaries;
+        // Observe below can refresh contacts many times during the same turn.
         brain.TurnsObserved++;
         WorldObservation observation = Observe(brain, senses);
         if (brain.State.Intention == "Investigate" && brain.State.Destination is { } destination &&
@@ -22,6 +24,8 @@ public static class BehaviorPlanning {
     }
 
     private static WorldObservation Observe(UnitAutomaton brain, UnitSenses senses) {
+        // Visible enemies replace their old sightings. Unseen enemies retain only
+        // last-seen facts, including enemies that may since have died out of sight.
         WorldObservation observation = senses.Observe();
         if (!brain.Settings.RememberContacts) {
             brain.State.Contacts.Clear();
@@ -45,6 +49,8 @@ public static class BehaviorPlanning {
     }
 
     public static EntityObservation? Enemy(UnitAutomaton brain, WorldObservation observation, bool preferWounded = false, bool considerBlast = false) {
+        // Lower rank wins: footprint distance minus wounded/commitment bonuses,
+        // plus allied blast exposure. This selects a target before intentions compete.
         EntityObservation self = observation.Self;
         return observation.Entities.Where(entity => entity.Faction != self.Faction)
             .OrderBy(entity => Distance(self, entity) - (preferWounded ? 4 * (1 - ((double)entity.Health / entity.MaximumHealth)) : 0)
@@ -64,6 +70,8 @@ public static class BehaviorPlanning {
     }
 
     public static BehaviorOption Engage(UnitAutomaton brain, WorldObservation observation, EntityObservation target, bool considerBlast = false) {
+        // Scores are relative preferences, not probabilities or guarantees of a legal
+        // action. Facing, visibility and the remaining budget are checked at execution.
         double opportunity = Distance(observation.Self, target) <= observation.Self.Unit.Range ? .12 : 0;
         int allies = considerBlast ? FriendlyBlastCost(observation, target) : 0;
         double score = .35 + (.4 * brain.Settings.Aggression) + opportunity - (allies * .18 * brain.Settings.Caution);
@@ -86,6 +94,8 @@ public static class BehaviorPlanning {
     }
 
     public static BehaviorOption Recover(UnitAutomaton brain, UnitSenses senses, WorldObservation observation) {
+        // Recovery scores 1 when needed, bypassing commitment to a lower-scoring
+        // intention. Waiting adds no cooling bonus; World.Step cools every unit.
         EntityObservation self = observation.Self;
         bool relevant = senses.Settings.HeatEnabled && self.Unit.HeatPerShot > 0;
         double score = relevant && NeedsCooling(brain, self) ? 1 : 0;
@@ -113,6 +123,8 @@ public static class BehaviorPlanning {
     }
 
     public static BehaviorOption Explore(UnitAutomaton brain, UnitSenses senses, WorldObservation observation) {
+        // Prefer a lost contact's last known location; otherwise choose a deterministic
+        // patrol waypoint from known terrain. Neither path reveals hidden enemy positions.
         EntityObservation self = observation.Self;
         ContactMemory? remembered = brain.State.Contacts.Where(contact => !observation.Entities.Any(entity => entity.Id == contact.Id))
             .OrderByDescending(contact => contact.Id == brain.TargetId).ThenByDescending(contact => contact.LastSeenTurn).ThenBy(contact => contact.Id).FirstOrDefault();
@@ -151,12 +163,16 @@ public static class BehaviorPlanning {
     }
 
     public static BehaviorOption Choose(UnitAutomaton brain, WorldObservation observation, IEnumerable<BehaviorOption?> choices) {
+        // Highest score wins, with ordinal name order breaking ties. A recent intention
+        // can survive a small score deficit for fewer than four elapsed turns; the
+        // same intention must still be offered for the same target with a positive score.
         BehaviorOption[] options = choices.OfType<BehaviorOption>().OrderByDescending(option => option.Score).ThenBy(option => option.Name, StringComparer.Ordinal).ToArray();
         if (options.Length == 0) {
             options = [new("Hold", .1, "No available intention.")];
         }
 
         brain.State.Considerations = [.. options.Take(10).Select(option => new DecisionConsideration(option.Name, option.Score, option.Reason))];
+        // Inspector scores stay in raw rank order even if commitment keeps another option.
         BehaviorOption chosen = options[0];
         BehaviorOption? current = options.FirstOrDefault(option => option.Name == brain.State.Intention && option.TargetId == brain.TargetId);
         bool retained = current is not null && current.Score > 0 && chosen.Score < 1 &&
@@ -188,6 +204,10 @@ public static class BehaviorPlanning {
     }
 
     public static IEnumerable<UnitAction> Execute(UnitAutomaton brain, UnitSenses senses, BehaviorOption intention, bool keepDistance = false) {
+        // The intention stays fixed, but positions/health/contacts are freshly observed
+        // each iteration. yield return hands control to World.ApplyAction; on resumption
+        // the world and senses budget already reflect that action. If no action is
+        // available, execution stops even when points remain.
         while (senses.RemainingPoints > 0) {
             WorldObservation observation = Observe(brain, senses);
             EntityObservation self = observation.Self;

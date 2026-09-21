@@ -14,9 +14,13 @@ public sealed class CloneInfantry : Unit {
         }
 
         public override IEnumerable<UnitAction> Act(UnitSenses senses) {
+            // Representative turn pipeline: refresh memory, select one visible enemy,
+            // score intentions, then translate the chosen intention into action requests.
             WorldObservation observation = BehaviorPlanning.Begin(this, senses);
             EntityObservation? target = BehaviorPlanning.Enemy(this, observation, preferWounded: true, considerBlast: false);
             List<BehaviorOption?> choices = [];
+            // Wounded enemies get a targeting bonus; they are not an absolute priority.
+            // Investigation/patrol is considered only when no enemy is currently visible.
             if (target is not null) {
                 choices.Add(BehaviorPlanning.Engage(this, observation, target, considerBlast: false));
                 choices.Add(BehaviorPlanning.Withdraw(this, observation, target, skirmish: false));
@@ -25,6 +29,8 @@ public sealed class CloneInfantry : Unit {
             }
 
             choices.Add(BehaviorPlanning.Escort(this, senses, observation));
+            // Choose once per turn. Execute senses again after each resolved action,
+            // but does not run this intention competition again until the next turn.
             BehaviorOption intention = BehaviorPlanning.Choose(this, observation, choices);
             foreach (UnitAction action in BehaviorPlanning.Execute(this, senses, intention, keepDistance: false)) {
                 yield return action;
