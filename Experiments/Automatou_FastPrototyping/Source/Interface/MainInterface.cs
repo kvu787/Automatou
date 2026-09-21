@@ -26,7 +26,7 @@ public partial class MainInterface : Control {
             this.UpdateWorldToolVisibility();
         }
     } = "Inspect";
-    private static readonly string[] ToolNames = ["Inspect", "Paint terrain", "Place unit", "Erase entity", "File"];
+    private static readonly string[] ToolNames = ["File", "Inspect", "Paint terrain", "Place unit", "Erase entity"];
     private bool running;
     private double elapsed;
     private double turnsPerSecond = 2;

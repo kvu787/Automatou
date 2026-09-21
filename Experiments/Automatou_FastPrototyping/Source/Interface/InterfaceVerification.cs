@@ -215,7 +215,7 @@ public partial class MainInterface {
                 }
                 await this.Capture("Creator" + tool.Replace(" ", "") + ".png");
                 this.OnCell(Hex.FromOffset(1, 1), MouseButton.Right);
-                if (this.Tool != "Inspect" || this.toolChoice.Selected != 0 || this.terrainTools.IsVisibleInTree() || this.populationTools.IsVisibleInTree() || this.fileTools!.IsVisibleInTree()) {
+                if (this.Tool != "Inspect" || this.toolChoice.Selected != Array.IndexOf(ToolNames, "Inspect") || this.terrainTools.IsVisibleInTree() || this.populationTools.IsVisibleInTree() || this.fileTools!.IsVisibleInTree()) {
                     throw new InvalidOperationException("Right-click inspect did not hide editing tools.");
                 }
             }
