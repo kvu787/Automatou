@@ -5,10 +5,14 @@ namespace Automatou.UserInterface;
 
 public partial class MainInterface {
     private string worldSlotName = "My world";
+    private VBoxContainer? fileTools;
     private VBoxContainer? terrainTools;
     private VBoxContainer? populationTools;
 
     private void UpdateWorldToolVisibility() {
+        if (this.fileTools is not null && IsInstanceValid(this.fileTools)) {
+            this.fileTools.Visible = this.Tool == "File";
+        }
         if (this.terrainTools is not null && IsInstanceValid(this.terrainTools)) {
             this.terrainTools.Visible = this.Tool == "Paint terrain";
         }
@@ -21,7 +25,7 @@ public partial class MainInterface {
         _ = Label(this.modePanel, "MODE", 12, this.accent);
         this.toolChoice = this.Choice(this.modePanel, ToolNames, Array.IndexOf(ToolNames, this.Tool), index => {
             this.Tool = ToolNames[index];
-            this.Status($"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
+            this.Status(this.Tool == "File" ? "Manage session worlds or create a new world." : $"{this.Tool} tool selected. Click the world to use it."); this.board.QueueRedraw();
         });
         this.terrainTools = Column(this.toolsPanel);
         _ = Label(this.terrainTools, "TERRAIN BRUSH", 12, this.accent);
@@ -32,24 +36,25 @@ public partial class MainInterface {
         this.unitChoice = this.Choice(this.populationTools, this.unitDesigns.Select(u => u.Name), this.unitIndex, index => { this.unitIndex = index; this.Tool = "Place unit"; this.board.QueueRedraw(); });
         _ = this.Button(this.populationTools, "Place selected unit", () => { this.Tool = "Place unit"; this.Status("Click the world to place units. Red footprints cannot be placed."); });
         _ = this.Button(this.populationTools, "Rotate placement   [R]", this.RotateSelection);
-        this.UpdateWorldToolVisibility();
-        _ = Label(this.toolsPanel, "SESSION WORLDS", 12, this.accent);
-        _ = Label(this.toolsPanel, "Saved worlds stay in memory until you close the app.", 12, this.muted);
-        this.worldName = TextField(this.toolsPanel, this.worldSlotName, "World name");
+        this.fileTools = Column(this.toolsPanel);
+        _ = Label(this.fileTools, "SESSION WORLDS", 12, this.accent);
+        _ = Label(this.fileTools, "Saved worlds stay in memory until you close the app.", 12, this.muted);
+        this.worldName = TextField(this.fileTools, this.worldSlotName, "World name");
         this.worldName.TextChanged += value => this.worldSlotName = value;
-        HBoxContainer persistence = Row(this.toolsPanel);
+        HBoxContainer persistence = Row(this.fileTools);
         _ = this.Button(persistence, "Save", () => {
             this.savedWorlds.SaveWorld(this.worldName.Text, this.world); this.Status($"Saved world: {this.worldName.Text.Trim()}. Available only during this session.");
         });
         _ = this.Button(persistence, "Load", () => this.ShowWorldBrowser("World creator"));
-        _ = this.Button(this.toolsPanel, "Play this world", () => this.SwitchMode("World"));
-        _ = this.Heading(this.toolsPanel, "NEW WORLD");
-        OptionButton shape = this.Choice(this.toolsPanel, ["Rectangle", "Hexagon"], 0, _ => { });
-        SpinBox width = this.Number(this.toolsPanel, "Width / size", 34, 1, 200);
-        SpinBox height = this.Number(this.toolsPanel, "Height", 24, 1, 200);
+        _ = this.Button(this.fileTools, "Play this world", () => this.SwitchMode("World"));
+        _ = this.Heading(this.fileTools, "NEW WORLD");
+        OptionButton shape = this.Choice(this.fileTools, ["Rectangle", "Hexagon"], 0, _ => { });
+        SpinBox width = this.Number(this.fileTools, "Width / size", 34, 1, 200);
+        SpinBox height = this.Number(this.fileTools, "Height", 24, 1, 200);
         shape.ItemSelected += index => height.Editable = index == 0;
-        _ = this.Button(this.toolsPanel, "Create world", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value)));
-        _ = Label(this.toolsPanel, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, this.muted);
+        _ = this.Button(this.fileTools, "Create world", () => this.CreateWorkingWorld(World.Create(shape.Selected == 1, (int)width.Value, (int)height.Value)));
+        _ = Label(this.fileTools, "New worlds replace this workspace. Save or checkpoint first. Hexagon size 1 is one cell.", 12, this.muted);
+        this.UpdateWorldToolVisibility();
     }
     private void CreateWorkingWorld(World replacement) {
         this.experimentName = "Custom world";

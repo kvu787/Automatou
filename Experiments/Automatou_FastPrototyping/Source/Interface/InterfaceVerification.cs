@@ -194,6 +194,7 @@ public partial class MainInterface {
             this.RotateSelection(); this.Step();
             await this.Capture("WorldInspector.png");
             this.SwitchMode("World creator");
+            this.Tool = "File";
             OptionButton worldShape = this.toolsPanel.FindChildren("*", "OptionButton", true, false).OfType<OptionButton>().Single(choice => choice.ItemCount == 2 && choice.GetItemText(0) == "Rectangle");
             SpinBox[] dimensions = this.toolsPanel.FindChildren("*", "SpinBox", true, false).OfType<SpinBox>().ToArray();
             Button createWorld = this.toolsPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Create world");
@@ -209,12 +210,12 @@ public partial class MainInterface {
             }
             foreach (string tool in ToolNames) {
                 _ = this.toolChoice!.EmitSignal(OptionButton.SignalName.ItemSelected, Array.IndexOf(ToolNames, tool));
-                if (this.Tool != tool || this.terrainTools!.IsVisibleInTree() != (tool == "Paint terrain") || this.populationTools!.IsVisibleInTree() != (tool == "Place unit") || !this.worldName.IsVisibleInTree()) {
+                if (this.Tool != tool || this.terrainTools!.IsVisibleInTree() != (tool == "Paint terrain") || this.populationTools!.IsVisibleInTree() != (tool == "Place unit") || this.fileTools!.IsVisibleInTree() != (tool == "File") || this.worldName.IsVisibleInTree() != (tool == "File")) {
                     throw new InvalidOperationException("World creator shows unrelated controls for: " + tool);
                 }
                 await this.Capture("Creator" + tool.Replace(" ", "") + ".png");
                 this.OnCell(Hex.FromOffset(1, 1), MouseButton.Right);
-                if (this.Tool != "Inspect" || this.toolChoice.Selected != 0 || this.terrainTools.IsVisibleInTree() || this.populationTools.IsVisibleInTree()) {
+                if (this.Tool != "Inspect" || this.toolChoice.Selected != 0 || this.terrainTools.IsVisibleInTree() || this.populationTools.IsVisibleInTree() || this.fileTools!.IsVisibleInTree()) {
                     throw new InvalidOperationException("Right-click inspect did not hide editing tools.");
                 }
             }
@@ -224,6 +225,7 @@ public partial class MainInterface {
             }
 
             this.Tool = "Paint terrain"; this.terrain = Terrain.ExclusionZone; this.OnCell(Hex.FromOffset(1, 1), MouseButton.Left);
+            this.Tool = "File";
             this.worldName.Text = "Verification";
             _ = this.toolsPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Save").EmitSignal(BaseButton.SignalName.Pressed);
             this.ShowMainMenu();

@@ -26,7 +26,7 @@ public partial class MainInterface : Control {
             this.UpdateWorldToolVisibility();
         }
     } = "Inspect";
-    private static readonly string[] ToolNames = ["Inspect", "Paint terrain", "Place unit", "Erase entity"];
+    private static readonly string[] ToolNames = ["Inspect", "Paint terrain", "Place unit", "Erase entity", "File"];
     private bool running;
     private double elapsed;
     private double turnsPerSecond = 2;
@@ -656,6 +656,7 @@ public partial class MainInterface : Control {
         Clear(this.toolsPanel);
         Clear(this.modePanel);
         this.toolChoice = null;
+        this.fileTools = null;
         this.terrainTools = null;
         this.populationTools = null;
         this.modePillbox.Visible = this.mode == "World creator";
