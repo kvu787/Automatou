@@ -46,3 +46,46 @@ To see the reasoning live, select a unit and open **Inspect → Behavior**, then
 
 Added explanatory comments across the relevant code and committed them, with this discussion recorded separately. Behavior is unchanged. Build passed with no warnings; all 35 simulation verification groups passed.
 
+## User
+
+the mental model for automata that i want to express in this game for myself and players is "automata = sense, remember, think, act". the concept of an automaton should be well-encapsulated by in that structure. i want to strongly enforce this encapsulation so that players can design and tune new automata without having to reason about how every other automata and system works (i.e. avoid a combinatorial explosion in required understanding).
+
+separate from the automata are the world systems. for example, for a given turn, each AT will submit a list of actions they want to perform. the world systems are in charge of resolving and executing those actions. for example, if two different units want to move into the same space, the logic for resolving what happens will be in a world system.
+
+## Assistant
+
+I’ll record this as the architectural model for our discussion and spell out where the current code differs.
+
+## Assistant
+
+**The automaton’s boundary should be: observations and private memory in; updated memory and requested actions out.** Everything that determines what actually happens belongs to world systems.
+
+Within that boundary, your four stages have clear responsibilities:
+
+- **Sense:** receive the information this unit is allowed to know. World systems determine visibility; the automaton receives observations without access to the mutable world.
+- **Remember:** update its own memory from observations and previous action outcomes. An unseen enemy’s remembered location remains a past sighting.
+- **Think:** use those observations and memories to choose what it wants to do. Target selection, intentions, and preferences are internal implementation choices.
+- **Act:** submit an ordered list of requested actions. Submission expresses intent; it does not move the unit or guarantee success.
+
+The world’s turn structure would then be:
+
+```text
+World snapshot + previous outcomes
+                 ↓
+Each automaton: Sense → Remember → Think → Act
+                 ↓
+Collect every unit’s requested actions
+                 ↓
+World systems resolve and execute them
+                 ↓
+Updated world + action outcomes for the next turn
+```
+
+For your movement example, both automata may request the same destination. Neither needs to know the other’s decision logic. The movement system decides the outcome under a shared rule and reports the result. That rule could use priority, block both moves, or something else; it can be chosen separately from the automata design.
+
+**Encapsulation means players learn one stable contract:** what they can observe, what memory they own, which actions they can request, and which outcomes they can receive. They still need to understand the game’s movement and combat rules, but not the implementations of other brains or world systems. Shared planning helpers should be optional tools behind that boundary.
+
+**The current implementation only partially fits this.** It already gives each unit private brain memory, restricted sensing, and action requests that the world validates. But `Act()` currently yields one action at a time, the world immediately executes it, and the brain can sense again before yielding another. Units take their turns sequentially. It does **not** collect everyone’s action lists before resolution.
+
+Your model therefore implies a meaningful change: separate the decision phase from the resolution phase. A submitted action can fail, and later actions in its list may then become impossible; world systems need a defined policy for that and explicit outcome feedback. The automaton should never treat a requested action as an accomplished fact.
+
