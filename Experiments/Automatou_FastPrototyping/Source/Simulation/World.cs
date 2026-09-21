@@ -50,7 +50,8 @@ public sealed partial class World {
         }
     }
     public static World Create(bool hexagonal, int width, int height) {
-        if (width < 1 || height < 1 || (hexagonal ? 1L + (3L * width * (width - 1)) : (long)width * height) > 20000) {
+        // Bound width before the quadratic hexagon calculation can overflow long.
+        if (width < 1 || height < 1 || width > 20000 || (hexagonal ? 1L + (3L * width * (width - 1)) : (long)width * height) > 20000) {
             throw new ArgumentException("Use positive dimensions with at most 20,000 cells.");
         }
 
@@ -81,6 +82,10 @@ public sealed partial class World {
     }
 
     public bool Add(Entity entity, out string reason) {
+        if (this.Entities.Contains(entity)) {
+            reason = "This entity is already in the world.";
+            return false;
+        }
         ArgumentNullException.ThrowIfNull(entity.Unit);
         entity.Unit.Validate();
         if (!this.CanOccupy(entity, entity.Position, out reason)) {

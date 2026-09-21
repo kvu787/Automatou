@@ -110,7 +110,23 @@ Test("Rectangle and hexagon authoring start empty on plains and reject invalid m
         Check(world.Terrain.Values.All(terrain => terrain == Terrain.Plains), "New maps contain only plains");
         Check(world.Entities.Count == 0 && world.Turn == 0, "New maps start empty at turn zero");
     }
-    Reject(() => World.Create(false, 0, 1)); Reject(() => World.Create(true, 200, 1));
+    Check(World.Create(false, 200, 100).Terrain.Count == 20000, "Rectangle at cell limit");
+    Check(World.Create(true, 82, 1).Terrain.Count == 19927, "Largest allowed hexagon");
+    Reject(() => World.Create(false, 0, 1)); Reject(() => World.Create(true, 83, 1));
+    Reject(() => World.Create(false, 200, 101));
+    Reject(() => World.Create(false, int.MaxValue, int.MaxValue));
+    Reject(() => World.Create(true, int.MaxValue, 1));
+});
+Test("Adding the same entity twice leaves identity, health, and occupancy intact", () => {
+    World world = World.Create(false, 10, 10);
+    Entity entity = Unit(world, Hex.FromOffset(4, 4));
+    entity.Health -= 10;
+    World before = world.Copy();
+    Check(!world.Add(entity, out string reason) && !string.IsNullOrWhiteSpace(reason), "Duplicate entity is rejected");
+    Check(SameWorld(world, before), "Rejected addition does not mutate the world");
+    Check(ReferenceEquals(world.At(entity.Position), entity), "Occupancy remains intact");
+    Entity neighbor = Unit(world, Hex.FromOffset(5, 4));
+    Check(neighbor.Id == before.NextId, "Rejected addition does not consume an identity");
 });
 Test("Footprints respect borders, occupied cells and movement domains", () => {
     World world = World.Create(false, 20, 20);
