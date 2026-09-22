@@ -110,3 +110,48 @@ I’ll use `AutomatonInstance` for the unit property, since `Automaton` is alrea
 Replaced the terminology throughout the prototype’s code, documentation, tests, and local text logs. The property is now `AutomatonInstance`; local variables use `automaton`.
 
 No remaining text matches for “brain” in that folder. Build succeeded and all 35 verification groups passed. Changes committed; behavior is unchanged.
+
+## User
+
+returning to our discussion:
+
+an AT program should be kind of like a user program that runs on an OS that uses a user/kernel boundary abstraction. for example, for a bastion AT program, i should only be allowed to read world data by calling specific methods that encode limitations. for a bastion, it should be able to see a fairly long distance by default, and it should be able to use extra energy to see farther. so, the vision "system call" should reflect that.
+
+another way this system call architecture should work is that all sense system calls should use some of the unit's turn energy. this facilitates a natural way of programming ATs in which the programmer needs to carefully manage the unit's energy and cannot spam sense system calls to gain complete information about the world.
+
+list existing work to look into that relates to this kind of AI architecture
+
+## Assistant
+
+I’ll look for architectures that combine restricted world access, energy-budgeted sensing, and action requests resolved by the simulation, with an emphasis on programmable-agent games and active-perception research.
+
+## Assistant
+
+Grobots looks especially close to your energy-costed sensing idea. Battlecode is a useful reference for restricted APIs and metered calls, while the influence/reaction model directly addresses your separation between requested actions and world resolution. I’m checking the differences so these don’t get presented as exact matches.
+
+## Assistant
+
+**Grobots and Battlecode are the closest game references I found.** Your proposal also connects directly to *active sensing*, *capability-based isolation*, and the *influence/reaction* model of simulation. These cover different parts of the architecture.
+
+1. **Grobots — energy-costed sensors and programmable units.**  
+   Robots have configurable hardware and programs. Sensors detect particular categories of objects within limited range, and firing them consumes energy; longer-range sensors cost more to operate. Computation also consumes energy. This is a particularly close precedent for making information acquisition compete with other uses of a unit’s resources. Its documented sensor range is a hardware parameter, so it is not an exact match for your per-call vision boost. Start with the [hardware documentation](https://grobots.sourceforge.net/docs/hardware.html) and [programming interface](https://grobots.sourceforge.net/docs/hw-interface.html).
+
+2. **MIT Battlecode — restricted world APIs with metered calls.**  
+   Each robot runs its own program and accesses its surroundings through methods such as `senseNearbyRobots`. In the 2020 rules, sensing range varies by unit type and environmental conditions; sensing functions have fixed bytecode costs against a per-turn computation budget. **Study its API boundary, cost schedule, and treatment of exhausted budgets.** The important difference is that bytecodes measure computation, while physical actions use a separate cooldown mechanism; it does not directly implement your shared turn-energy pool. [Battlecode 2020 specification](https://github.com/battlecode/battlecode20/blob/master/specs/specs.md).
+
+3. **Screeps — collect requests, then resolve the world.**  
+   Programs operate against an unchanged start-of-tick state. Commands accumulate, and the engine resolves them afterward—including conflicts where multiple units request the same destination. This closely matches your world-system boundary. It also illustrates a consequence worth deciding explicitly: requesting movement does not change the position used by another command in that tick. **Study its action semantics and conflict resolution**, rather than treating its player-level CPU allowance as per-unit sensing energy. [Game loop](https://docs.screeps.com/game-loop.html), [CPU limits](https://docs.screeps.com/cpu-limit.html).
+
+4. **Robocode / Tank Royale — sensing as something a program actively controls.**  
+   A bot directs its radar; detections depend on range and the arc swept. Enemy updates arrive when scanned, and programs retain previous observations between scans. **Study the gameplay produced by choosing where and when to look**, particularly tracking one opponent versus searching for others. This is a reference for constrained attention and memory, not an exact energy-per-query model. [Radar tutorial](https://robocode.dev/tutorial/getting-started.html).
+
+5. **Active sensing and POMDP research — deciding whether information is worth its cost.**  
+   *Active Sensing for Partially Observable Markov Decision Processes* models sensor selection according to its longer-term effect on decisions. *Sensor Scheduling for Energy-Efficient Target Tracking* explicitly trades tracking quality against energy consumption. These address your Bastion’s question: **“Will spending more energy to see farther improve my decision enough to justify it?”** They provide design concepts even if players write simple rules rather than probabilistic planners. [Koltunova’s thesis](https://uwspace.uwaterloo.ca/items/6b741509-4931-41f1-b486-89164f27e164), [Atia, Veeravalli, and Fuemmeler’s paper](https://arxiv.org/abs/1009.2997).
+
+6. **Ferber and Müller’s influence/reaction model — formal separation of attempts from outcomes.**  
+   Agents produce *influences*; the environment combines them under world laws to determine the resulting state. It explicitly addresses simultaneous interacting actions. **This is the strongest conceptual reference for your “AT requests; world resolves” distinction.** [*Influences and Reaction: a Model of Situated Multiagent Systems*](https://cdn.aaai.org/ICMAS/1996/ICMAS96-009.pdf).
+
+7. **WebAssembly / Wasmtime — enforcing the user/kernel analogy.**  
+   WebAssembly provides isolated program memory and explicit imported functionality. A host can expose only the permitted sensing and action operations; Wasmtime also supports execution limits through fuel. **Study this for enforceable encapsulation when running player programs.** Your game would still implement sensing permissions and energy charges inside those host calls; runtime fuel does not automatically represent gameplay energy. [Sandbox architecture](https://docs.wasmtime.dev/security.html), [fuel example](https://docs.wasmtime.dev/examples-interrupting-wasm.html).
+
+I’d start with **Grobots → Battlecode → Screeps**. One design distinction I would preserve is **gameplay energy versus execution budget**: sensing spends the unit’s energy, while a separate execution limit bounds loops and computation that never call a sensing method.
