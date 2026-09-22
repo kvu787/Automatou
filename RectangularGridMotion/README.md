@@ -4,7 +4,7 @@ A self-contained Godot 4.7.2 experiment comparing integer-only turn rejection ru
 
 This experiment preserves the earlier rectangular-motion investigation. Its square
 grid, oblong footprints, rear pivot, and optional sweep checks are experimental
-rules, separate from Automatou's current hex-grid design. The game uses
+rules, separate from Automatou1's current hex-grid design. That project uses
 complete-ring unit footprints and does not perform swept collision checks during
 rotation.
 
@@ -61,4 +61,3 @@ All movement, pivot, rotation, reservation, and collision calculations use integ
 `Verify.gd` checks destination-only behavior, pivot centering, exact full rotations, whole-cell alignment, expected masks, sweep-only obstacle rejection, board boundaries, and unchanged translation for all rules. Coverage includes all footprint sizes, all four facings, and both turn directions. `VerifyKeyboard.gd` checks default Off selection, switching without movement, ESDF/W/R under every rule, preview/action agreement, and unchanged pose after rejection. `Run.cmd` runs both before export.
 
 Generated imports, executables, and local capture artifacts are ignored by `.gitignore`.
-

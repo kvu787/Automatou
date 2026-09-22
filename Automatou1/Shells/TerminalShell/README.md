@@ -24,7 +24,7 @@ From PowerShell:
 when launching interactively. Close a running published TerminalShell before
 rebuilding it.
 
-To develop without publishing, from the repository root:
+To develop without publishing, from the `Automatou1` folder:
 
 ```powershell
 dotnet run --project Shells/TerminalShell

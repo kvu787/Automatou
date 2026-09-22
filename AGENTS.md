@@ -67,3 +67,18 @@ Do not attempt to maintain any sort of application compatibility between differe
 # Repository-specific
 
 Do not edit anything in the Lore folder.
+
+## Repository layout
+
+The repository root contains only the shared `.editorconfig`, `.gitattributes`,
+`AGENTS.md`, `CLAUDE.md`, and `LICENSE.txt` files, the global `Blender`,
+`Conversations`, and `Lore` folders, and these independent project folders
+(excluding Git metadata):
+
+- `Automatou1`: the original Kernel and Shells application.
+- `Automatou2`: the standalone fast-prototyping application.
+- `RectangularGridMotion`: the integer-only rectangular motion experiment.
+
+Keep each project's source, assets, build configuration, tests, launchers, and
+`.gitignore` inside its own folder. Projects must build and run without sibling
+projects. Run development commands from the relevant project folder.

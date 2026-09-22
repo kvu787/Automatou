@@ -1,4 +1,8 @@
-# Automatou
+# Automatou1
+
+The original Automatou project. This folder contains its source, shells, tests,
+documentation, build configuration, and launchers. It builds and runs independently
+of the other projects in this repository.
 
 Automatou is a deterministic, turn-based science-fantasy war simulation about humanity's fight against an alien bioswarm. Humanity answers overwhelming biological adaptation with advanced magitech, fortified enclaves, ordinary soldiers, and the rare **Bastion**: a single super-soldier capable of changing an entire front.
 
@@ -15,9 +19,11 @@ The C# [TerminalShell](Shells/TerminalShell) builds with the x64 .NET 10 SDK and
 opens a command prompt for inspecting sectors and forces, editing the world,
 and advancing turns. Type `help` to begin. Godot is not required for this shell.
 
-On Windows x64, double-click `Run.cmd` at the repository root or inside `Shells/SimplePaint3DShell`. The wrapper runs the shell's `Run.ps1` to build and test the C# solution, publish a self-contained Windows x64 Kernel host, export `SimplePaint3DShell.exe`, and launch it. Use `Run.cmd -BuildOnly` to skip launching. Install the x64 .NET 10 SDK, Godot 4.7.2 **.NET** for Windows x64, and matching .NET export templates. The launcher defaults to `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`; set `GODOT_EXE` to override it. See the [shell setup instructions](Shells/SimplePaint3DShell/README.md#build-and-run).
+On Windows x64, double-click `Run.cmd` in this `Automatou1` folder or inside `Shells/SimplePaint3DShell`. The wrapper runs the shell's `Run.ps1` to build and test the C# solution, publish a self-contained Windows x64 Kernel host, export `SimplePaint3DShell.exe`, and launch it. Use `Run.cmd -BuildOnly` to skip launching. Install the x64 .NET 10 SDK, Godot 4.7.2 **.NET** for Windows x64, and matching .NET export templates. The launcher defaults to `%UserProfile%\Program\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`; set `GODOT_EXE` to override it. See the [shell setup instructions](Shells/SimplePaint3DShell/README.md#build-and-run).
 
 ## Develop
+
+Run these commands from this `Automatou1` folder:
 
 ```powershell
 dotnet build Automatou.slnx

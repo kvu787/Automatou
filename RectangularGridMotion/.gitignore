@@ -1,0 +1,8 @@
+.godot/
+Build/
+bin/
+obj/
+.vs/
+*.user
+*.tmp
+MyLogOutput/

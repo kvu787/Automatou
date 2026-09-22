@@ -7,3 +7,4 @@ Shells/SimplePaint3DShell/KernelHost/
 *.tmp
 Shells/TerminalShell/Build/
 .vs/
+MyLogOutput/

@@ -6,13 +6,13 @@ The shell starts the adjacent `KernelHost` process and exchanges one UTF-8 JSON 
 
 ## Build and run
 
-Use Windows x64 with the x64 .NET 10 SDK selected by the repository's
+Use Windows x64 with the x64 .NET 10 SDK selected by `Automatou1`'s
 `global.json`, Godot 4.7.2 **.NET** for Windows x64, and its matching .NET export
 templates. The standard GDScript-only Godot executable cannot load this project.
 The project uses Forward+ with Direct3D 12 and requires a compatible GPU and
 driver. Vulkan and OpenGL fallbacks are disabled.
 
-Double-click this folder's `Run.cmd` or the repository-root `Run.cmd`. The batch
+Double-click this folder's `Run.cmd` or `Automatou1/Run.cmd`. The batch
 launcher delegates to this folder's `Run.ps1`, which builds the C# solution,
 runs the Kernel and shell integration tests, publishes a self-contained Windows
 x64 Kernel host for editor play, exports `Build/SimplePaint3DShell.exe`, publishes
@@ -30,7 +30,7 @@ if needed. Close a running standalone game before exporting over its files.
 The project uses `Godot.NET.Sdk/4.7.2`, targets `net10.0-windows` with the
 `win-x64` runtime and `x64` platform, and participates in `Automatou.slnx`.
 `SimplePaint3DShell.slnx` supports the Godot editor's Debug,
-ExportDebug, and ExportRelease configurations. The root solution maps Release
+ExportDebug, and ExportRelease configurations. `Automatou1/Automatou.slnx` maps Release
 to the shell's ExportRelease configuration.
 
 If NuGet cannot resolve the Godot SDK, register the packages bundled with the
@@ -104,7 +104,7 @@ planned six-direction facing, rotation costs, or variable footprints.
 
 ## Integration check
 
-From the repository root, build the C# tests and publish the Kernel host:
+From the `Automatou1` folder, build the C# tests and publish the Kernel host:
 
 ```powershell
 dotnet build Automatou.slnx --configuration Debug

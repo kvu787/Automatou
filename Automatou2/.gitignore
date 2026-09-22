@@ -3,3 +3,6 @@ bin/
 obj/
 MyLogOutput/
 UserContent/
+.vs/
+*.user
+*.tmp

@@ -1,4 +1,8 @@
-# Automatou
+# Automatou2
+
+The standalone fast-prototyping project. This folder contains its source, tests,
+specification, build configuration, and launcher. It builds and runs independently
+of the other projects in this repository.
 
 A self-contained, native Godot prototype of the world-builder-and-runner described in [Specification.md](Specification.md). Create worlds, place source-defined units, populate factions, and observe their behavior. There is no player faction, score, or victory screen.
 
@@ -121,4 +125,4 @@ The first command builds and runs dependency-free simulation checks. The second 
 
 Verification covers coordinates, footprints, terrain, combat, assembly dependencies, paid sensing and exhaustion, extended vision, observation isolation, shared snapshots, action energy, attack authorization, competing destinations, hidden blockers, fault isolation, previous outcomes, all three special policies, heat, bonds, private memory, deterministic replay, and a 120-turn five-faction encounter. Interface checks exercise program selection, spacing limits, tuned/exact rewinds, sensing traces, all six scenarios, editor controls, session saving/loading, and minimum-window layout.
 
-`Source/AutomatonContract` is the complete public interface. `Source/AutomatonPrograms` contains programs and optional user-space planning helpers. `Source/Simulation` owns physical state and resolution. `Source/Interface` contains the Godot renderer and world creator. `Tests` compiles the simulation without Godot or an external test framework. The experiment does not reference the main repository application.
+`Source/AutomatonContract` is the complete public interface. `Source/AutomatonPrograms` contains programs and optional user-space planning helpers. `Source/Simulation` owns physical state and resolution. `Source/Interface` contains the Godot renderer and world creator. `Tests` compiles the simulation without Godot or an external test framework. This project does not reference `Automatou1` or `RectangularGridMotion`.
