@@ -14,35 +14,38 @@ Rendering uses Godot's Forward+ renderer with Direct3D 12 and 8× multisample an
 
 ## First experiment
 
-1. Choose **Load world** and a focused experiment. Read its description, then select a unit with **Inspect**. The inspector explains its current intention and heat; its **Behavior** tab shows scores, remembered contacts, and recent decisions.
+1. Choose **Load world** and a focused experiment. Read its description, then select a unit with **Inspect**. The inspector explains its current intention and heat; its **Behavior** tab shows energy spending, submitted actions, resolution results, scores, remembered contacts, and recent decisions.
 2. Press **Step** to advance one turn, **+10 turns** for a short batch, or **Run simulation** to watch continuously. Choose one to eight turns per second. **Show intentions** marks remembered contacts with their sighting turn, destinations, and protective bonds. **Dim unseen enemies** shows the selected unit's limited information while preserving the spectator's view.
-3. Open the inspector's **Tuning** tab and change one preference: **Aggression**, **Caution**, **Commitment**, **Heat reserve**, or **Remember contacts**. **Protect a particular ally** sets one directed bond. Heat reserve appears only for heat-producing weapons; inert training targets have no policy controls. Editing pauses the simulation. The **Unit** tab contains physical statistics and placement controls.
-4. Press **Rewind with tuning** to restore the checkpoint's world and automaton memory while keeping the edited preferences, bonds, and mechanism switches. Run to the same turn and compare health, shots, and intention changes with the previous run. **Exact rewind** also restores the checkpoint's settings. **Checkpoint** replaces the comparison's starting point.
+3. Open the inspector's **Tuning** tab and choose an **Automaton program**, set **Spacing** for either spacing program, or purchase **Extra sight range**. Other preferences include **Aggression**, **Caution**, **Commitment**, **Heat reserve**, or **Remember contacts**. **Protect a particular ally** sets one directed bond. Heat reserve appears only for heat-producing weapons; inert training targets have no policy controls. Editing pauses the simulation. The **Unit** tab contains physical statistics and placement controls.
+4. Press **Rewind with tuning** to restore the checkpoint's world and automaton memory while keeping the selected programs, edited preferences, bonds, and mechanism switches. A changed program starts with fresh memory. Run to the same turn and compare health, shots, and intention changes with the previous run. **Exact rewind** also restores the checkpoint's settings. **Checkpoint** replaces the comparison's starting point.
 5. Open **Edit in World creator** to paint terrain, place source-defined units, or erase entities. Placement previews become red where a footprint cannot fit. Save a named world before replacing it.
 
-The **Limited perception**, **Weapon heat**, and **Protective bonds** switches isolate mechanisms. Turn one off and rewind with tuning to compare the same starting state. The comparisons are descriptive: fewer shots or more survivors need not mean a more interesting automaton.
+The **Weapon heat** and **Protective bonds** switches isolate mechanisms. Vision limits and sensing costs are always enforced. Turn one off and rewind with tuning to compare the same starting state. The comparisons are descriptive: fewer shots or more survivors need not mean a more interesting automaton.
 
 | Focused experiment   | Observe                                                                      |
 | -------------------- | ---------------------------------------------------------------------------- |
 | Heat and readiness   | Identical walkers space shots or accept lockouts against inert targets.      |
 | Lost in the forest   | A pursuer investigates the last sighting of a fast, injured Traveler.        |
 | Bonds under pressure | Changing a Bastion's directed bond changes which vulnerable ally it assists. |
+| Lone wolf            | Upper artillery separates from allies; lower Standard artillery attacks.     |
+| Keep your distance   | Upper artillery separates from enemies before firing; lower Standard fires.  |
+| Hunt the weakest     | Upper artillery pursues lower health percentage; lower Standard fires near.  |
 
 The five-faction encounter uses a fixed, source-defined map of plains, forest, mountains, and water, preserving its original terrain and starting clearings. It has two Bastions, five Traveler outriders and a mobile H.O.M.E., two siege walkers, eight clone infantry and two artillery units, seven Prytu hunters and a manifestation.
 
-| Control           | Action                                                       |
-| ----------------- | ------------------------------------------------------------ |
-| Middle mouse drag | Pan                                                          |
-| Mouse wheel       | Zoom around the pointer                                      |
-| Left click / drag | Use the selected world tool                                  |
-| Right click       | Switch to Inspect and select a unit                          |
-| Space             | Run / pause in World mode                                    |
-| N                 | Pause and advance one turn in World mode                     |
-| B                 | Pause and advance ten turns in World mode                    |
+| Control           | Action                                                        |
+| ----------------- | ------------------------------------------------------------- |
+| Middle mouse drag | Pan                                                           |
+| Mouse wheel       | Zoom around the pointer                                       |
+| Left click / drag | Use the selected world tool                                   |
+| Right click       | Switch to Inspect and select a unit                           |
+| Space             | Run / pause in World mode                                     |
+| N                 | Pause and advance one turn in World mode                      |
+| B                 | Pause and advance ten turns in World mode                     |
 | R                 | Rotate selected unit in Inspect, or facing in Place unit mode |
-| F                 | Fit the current world                                        |
-| Delete            | Remove selected entity in World creator's Inspect mode       |
-| Escape            | Return to main menu                                          |
+| F                 | Fit the current world                                         |
+| Delete            | Remove selected entity in World creator's Inspect mode        |
+| Escape            | Return to main menu                                           |
 
 Shortcuts, including Escape, are suspended while typing in a text or number field. Rotation is available only in World creator. The sidebar lists shortcuts for the active mode and tool. The unit inspector appears in World mode and the creator's Inspect mode; the faction legend remains available on every inspector tab. The creator footer shows cell and unit counts; World mode also shows casualties. Sidebars scroll independently. The window can be resized down to 1100 × 700.
 
@@ -64,30 +67,21 @@ Saving retains an independent snapshot in RAM. Loading restores a fresh copy, so
 
 ## Source-defined units and automata
 
-Each unit type has a class in `Source/Simulation/Units`: Bastion, TravelerOutrider, Home, SiegeWalker, CloneInfantry, LongbowArtillery, PrytuHunter, PrytuManifestation, and the nonattacking TrainingTarget. Its immutable `UnitStatistics` defines its body, combat, sensing, and heat properties. There is no unit creator or unit blueprint loading.
+Start with [AutomatonProgramming.md](AutomatonProgramming.md). It explains the complete program-facing contract, energy costs, resolution rules, and a small new-program example.
 
-An automaton is the memory and logic a unit uses to decide what to do each turn. The plural is automata; these terms refer only to unit decision-making, never to units, their statistics, or the simulation as a whole. Each unit class contains its own nested `Automaton` class. Each placed unit owns a separate instance, exposed through `AutomatonInstance` and saved through its concrete `Memory` property. `CreateFresh()` creates a new unit with empty memory for placement.
+An automaton is **Sense → Remember → Think → Act**. A body supplies immutable statistics; each placed body owns a separately selectable program and private memory. Standard, Lone wolf, Keep your distance, and Hunt the weakest run through the same interface. The inert training target uses Hold. Unit definitions are in `Source/Simulation/Units`; programs are in `Source/AutomatonPrograms`.
 
-The shared automaton support separates editable `Settings` from runtime `State`. Preferences control aggression, caution, commitment, desired heat reserve, and whether to remember contacts. State records the intention and its start turn, explanation, destination, contacts, consideration scores, the last twelve decisions, and shot/transition counters. Each nested automaton chooses how to use this support, so adding a distinct routine does not require a world behavior switch. Contacts store the last observed position, never an invisible enemy's live position; at most eight contacts are retained and unseen contacts expire after eight turns or completion of three search destinations.
+`AutomatonPrograms` references only the separate `AutomatonContract` assembly. It cannot directly reference `World`, `Entity`, `Unit`, Godot, or the host's collision/attack implementation. Programs receive an `IAutomatonSystemCalls` capability for one turn. Vision costs energy, including repeat calls; extra range costs more. The terrain survey also costs energy and contains no occupancy. Observations are detached values and read-only collections. Forest still conceals units and blocks vision. There is no unlimited-perception bypass.
 
-On each turn, `World.Step()` invokes the living unit's `AutomatonInstance.Act(UnitSenses)` once. The automaton yields typed requests (`TurnAction`, `MoveForwardAction`, `AttackAction`). The world validates and applies each request before resuming the automaton. The automaton can take a fresh observation after each action, so it can react to a destroyed target or a changed position during the same turn. Ending the iterator ends the turn; rejected requests also end the turn. Every successful action consumes points, and destroyed actors stop immediately.
+Every living automaton submits its complete action list against the same physical snapshot before world systems execute anything. There is no mid-turn resensing after an action. Programs predict their own actions using observed data; the world resolves actual movement, competing destinations, collision, attacks, damage, and heat. The next paid scan includes the previous turn's action outcomes. The Behavior inspector displays sensing receipts, submitted requests, remaining energy, outcomes, memory, and explanations.
 
-`UnitSenses.Observe()` returns detached, read-only entity observations and immutable statistics, with no entity or automaton references. Terrain is known globally; enemy and allied entities must be within sight. Forest conceals occupants beyond two cells and blocks sight through intermediate cells. Sight distance uses the nearest pair of occupied footprint cells. The observer's own cells are always visible. The spectator still sees the whole world.
+Standard programs score engagement, withdrawal, investigation, patrol, recovery, and escort. Body defaults retain different preferences. The special programs impose hard priorities before optional standard behavior. Distance means the nearest occupied footprint cells: adjacent footprints are distance 1. Spacing considers observed units; unseen units and other units' later movement can prevent the desired separation from being achieved.
 
-Occupancy and route queries use only currently observed entities. `FindDirection(targetId)` rejects hidden targets; `FindDirection(destination, stoppingDistance)` navigates to a remembered location without looking up the enemy's real position. Movement still resolves against physical occupancy, and attacks require current visibility. This keeps concealment meaningful throughout planning and action execution. `TacticalPlanning` supplies optional target selection and engagement helpers; each unit's automaton chooses its tactics and can implement completely different logic.
+Saves and checkpoints copy the concrete program, settings, private memory, physical world state, reports, and random state. Changing programs starts fresh memory while keeping compatible settings. Rewind with tuning keeps the selected program; it restores checkpoint memory if that program is unchanged and starts fresh memory if changed. Exact rewind restores the original program as well. Copies exist only in the current application session.
 
-Saves and checkpoints are ordinary C# world copies. `World.Copy()` copies entities, units, settings, and automaton memory, and rebuilds occupancy using the copied entities. Mutable collections and contact records are copied; immutable records can be shared. Live event subscribers are not copied. Stats and executable logic come from source. Checkpoint/rewind and save/load restore independent automata and deterministic continuation. Suspended iterators are not saved; turns finish synchronously before a checkpoint can be taken. Snapshots exist only for the current application session.
+To add a body, derive from `Unit`, supply `UnitStatistics`, implement `CreateFresh()`, assign a default program, and register it in `Catalog.Units()`. To add behavior, create a program in `AutomatonPrograms` and register it in `AutomatonCatalog`. No change to world resolution or other programs is needed. See the programming guide for custom persistent fields and their copy hook.
 
-To add a unit, derive from `Unit`, define immutable statistics, implement a nested `UnitAutomaton`, expose its concrete memory, implement `CreateFresh()`, and register the class in `Catalog.Units()`. `CreateFresh()` must preserve the unit definition while starting with fresh memory. Keep lasting state in the automaton memory types and extend their explicit copy methods when adding fields.
-
-For a quick behavior experiment:
-
-1. Pick a unit file in `Source/Simulation/Units`. Change the defaults in its nested `Automaton`, change which candidate intentions it considers, or change a candidate's score. The inspector displays the candidates and reasons selected through `BehaviorPlanning.Choose`.
-2. Use `BehaviorPlanning` for contact bookkeeping and common routines where useful. A nested automaton may instead implement its own `Act` iterator and yield action requests directly. Store lasting data in the copied memory types; use `UnitSenses` rather than world references.
-3. Add a small deterministic scenario to `ScenarioCatalog.All`. Its factory should set the terrain, unit placement, physical conditions, and preferences needed to expose one behavior. The world browser lists registered scenarios automatically.
-4. Run `Run.ps1 -Verify -BuildOnly`, then launch with `Run.cmd`. Step through the scenario, inspect reasons and destinations, change one preference, and rewind with tuning. Add a regression when the change introduces a meaningful new rule or fixes a failure.
-
-`AutomatonBehaviorExploration.md` is the earlier research proposal; its descriptions of the old implementation are historical, and later candidate systems are not promises of implemented features.
+`AutomatonBehaviorExploration.md` is the earlier research proposal. Its old-implementation descriptions are historical; proposed systems are not promises of implemented features.
 
 Movement domains:
 
@@ -100,16 +94,16 @@ Movement domains:
 
 These are explicit prototype defaults for the combat mechanics left open by the specification. They can be changed in the C# simulation and unit classes.
 
-- Every turn replenishes each unit's action points. Unused points expire.
-- A 60-degree turn costs one point. Units move only forward, spending one point per cell, or two on forest for ground units.
-- Infantry-and-artillery faction units cross rough terrain for one point and take two health damage. Other movement domains ignore the ground movement surcharge.
-- An attack costs two points, with at most one attack per unit per turn. Adjacent targets take melee damage; more distant targets take ranged damage. Range is measured between occupied footprints.
+- Every turn replenishes each unit's turn energy. Sensing and actions share this pool; unused energy expires.
+- A 60-degree turn costs one energy. Units move only forward, spending one energy per cell, or two on forest for ground units.
+- Infantry-and-artillery faction units cross rough terrain for one energy and take two health damage. Other movement domains ignore the ground movement surcharge.
+- An attack costs two energy, with at most one attack per unit per turn. Adjacent targets take melee damage; more distant targets take ranged damage. Range is measured between occupied footprints.
 - Attacks cover the facing direction and its two neighboring directions. Front armor is full strength, front-side armor is two-thirds strength, and rear-side/rear armor is one-quarter strength. Hits always deal at least one damage.
 - Evasion is a deterministic seeded chance to avoid a hit. Ranged blast attacks damage every entity in the impact radius, including allies and potentially the attacker. Melee attacks do not splash.
 - Weapons with a nonzero `HeatPerShot` accumulate heat on each shot, including misses. At 100 heat the weapon locks; it unlocks at 40 or below. All units cool once at the beginning of a turn. All terrain uses the source-defined cooling rate. A disabled heat experiment preserves stored heat while bypassing its restrictions and updates.
 - Automata score engaging, withdrawing, investigating, patrolling, and escorting according to their unit's candidates and preferences. Heat-capable machines can recover. Commitment prevents small score changes from replacing a recent intention; urgent recovery overrides it. Travelers and artillery prefer distance; clones and Prytu favor weakened enemies; artillery considers allied blast exposure.
 - Automata search routes around blocked terrain and occupied footprints. Searches are bounded to 3,000 expanded positions per decision. A route too complex for this bound causes the unit to wait and retry next turn.
-- The first acting unit rotates each turn. Factions are mutually hostile. The simulation keeps running after only one faction remains.
+- Programs plan together. Resolution runs one action slot at a time. All conflicting destination requests are rejected; swaps are blocked. Other actions use a rotating unit-ID order. Factions are mutually hostile. The simulation keeps running after only one faction remains.
 - **Deploy / hold position** anchors a selected unit and removes its evasion until **Mobilize unit** is pressed. This provides the H.O.M.E. mobile/stationary toggle without changing its footprint.
 
 The theme and named factions are represented through colors, geometric symbols and behavior. No artwork is used. This remains a combat-oriented laboratory: reproduction, trading, Traveler sickness, environmental sensing errors, diplomacy, learned policies, magic subsystems, resource production, and programmable in-game automata graphs are not implemented. The faction prose in the specification provides direction for future systems. Automata and definitions are ordinary editable C# code today.
@@ -125,6 +119,6 @@ From this folder in PowerShell:
 
 The first command builds and runs dependency-free simulation checks. The second also launches the real Godot renderer, exercises the interface, captures views under the session log folder, and exits. Its authored test content is isolated inside that log folder.
 
-Verification covers coordinates, footprint sizes, rotations, terrain and collision restrictions, duplicate entity rejection, extreme map dimensions, attack arcs and armor, action points, splash damage, obstacle routing, unit movement, independent automaton memory, read-only sensing, hidden-target information boundaries, physical heat and recovery, terrain cooling, bounded contact memory, commitment, directed escorts, the three scenarios' observable differences, exact continuation after saving, copy isolation and invalid automaton memory, and a 120-turn five-faction encounter. Interface checks cover selection, pan, zoom, rotation, stepping, source-defined unit placement, terrain painting, world saving/loading, initial editor checkpoints, mode-specific shortcuts, typing focus, hover refresh and clearing, drag cancellation, and the minimum window size.
+Verification covers coordinates, footprints, terrain, combat, assembly dependencies, paid sensing and exhaustion, extended vision, observation isolation, shared snapshots, action energy, attack authorization, competing destinations, hidden blockers, fault isolation, previous outcomes, all three special policies, heat, bonds, private memory, deterministic replay, and a 120-turn five-faction encounter. Interface checks exercise program selection, spacing limits, tuned/exact rewinds, sensing traces, all six scenarios, editor controls, session saving/loading, and minimum-window layout.
 
-`Source/Simulation` contains the engine-independent model and rules. `Source/Interface` contains the Godot renderer and world creator. `Tests` compiles the simulation directly without Godot or an external test framework. The experiment has its own build settings and does not reference the main repository application.
+`Source/AutomatonContract` is the complete public interface. `Source/AutomatonPrograms` contains programs and optional user-space planning helpers. `Source/Simulation` owns physical state and resolution. `Source/Interface` contains the Godot renderer and world creator. `Tests` compiles the simulation without Godot or an external test framework. The experiment does not reference the main repository application.

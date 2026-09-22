@@ -104,7 +104,7 @@ There is no 2D or 3D "art".
   - However, unit rotation is used to for many other things.
   - Attack region: Most units can only attack in the direction they are facing.
   - Defense stats: Most units have strong defense when attacked from the front, medium at the front sides, and weak at the rear sides and rear.
-  - Movement: Most units can only travel in the direction they are facing. Turning costs action points.
+  - Movement: Most units can only travel in the direction they are facing. Turning costs turn energy.
 
 ## World view
 
@@ -125,10 +125,10 @@ There is no 2D or 3D "art".
 
 - Units are defined directly in C# source; there is no unit creator.
 - Each unit type has its own C# class defining its properties.
-- Each unit class defines its own nested automaton class.
-- Each placed unit owns an independent automaton instance.
-- Each turn, the automaton senses the world, executes its logic, and outputs requested actions.
-- The world validates and applies actions. Automata can sense again after each action within the turn.
+- Physical unit definitions and independently selectable automaton programs are separate. Programs reference only the public contract assembly, never world implementation types.
+- Each placed unit owns an independent automaton instance. Standard, Lone wolf, Keep your distance, and Hunt the weakest are available in the inspector. Lone wolf first seeks minimum N distance from observed allies. Keep your distance first seeks minimum N from observed enemies, requires a ranged body, and enforces 1 <= N < attack range. Distances are between nearest footprint cells. When crowded, these programs only separate or wait for the turn; once safe, they can use standard behavior without planning movement inside N. Hunt the weakest only approaches or attacks the visible enemy with the lowest health percentage; ties use identity. It never attacks a healthier substitute when the selected target cannot be reached.
+- An automaton is Sense, Remember, Think, Act. Every sense call consumes turn energy. Vision has body-specific base range and can purchase extra range with extra energy. The same energy pays for actions.
+- All programs plan from one snapshot and submit complete action lists before resolution. World systems resolve action slots, collisions, competing destinations, attacks, and physical effects. There is no mid-resolution program execution or resensing. Conflicting destination requests all fail; swaps are blocked. Next-turn paid observations include prior action outcomes.
 - The automaton holds memory that persists across turns, including longer-term goals, and is restored with saved worlds.
 - Behavior preferences are distinct from runtime memory and physical unit state. An automaton may choose to tolerate heat, but cannot bypass a locked weapon.
 - Observations include only entities currently within sight, including allies. Terrain is public knowledge. The spectator retains an omniscient world view.
