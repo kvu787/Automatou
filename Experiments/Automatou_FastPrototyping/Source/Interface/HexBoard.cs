@@ -242,14 +242,14 @@ public partial class HexBoard : Control {
 
     private void DrawDecisionOverlay(Entity entity) {
         Color memoryColor = new("87d9cc"), bondColor = new("eab0dc");
-        foreach (ContactMemory contact in entity.Unit.Brain.State.Contacts) {
+        foreach (ContactMemory contact in entity.Unit.AutomatonInstance.State.Contacts) {
             Vector2 point = this.Screen(contact.Position);
             this.DrawCircle(point, Math.Max(7, Radius * this.Zoom * .8f), memoryColor, false, 1.5f, true);
             if (this.Zoom > .4f) {
                 this.Text(point + new Vector2(7, -8), $"#{contact.Id} T{contact.LastSeenTurn}", 11, memoryColor);
             }
         }
-        if (entity.Unit.Brain.State.Destination is { } destination) {
+        if (entity.Unit.AutomatonInstance.State.Destination is { } destination) {
             Vector2 point = this.Screen(destination);
             this.DrawDashedLine(this.Screen(entity.Position), point, memoryColor, 1.5f, 6, true, true);
             this.DrawPolyline([point + new Vector2(0, -9), point + new Vector2(9, 0), point + new Vector2(0, 9), point + new Vector2(-9, 0), point + new Vector2(0, -9)], memoryColor, 2, true);

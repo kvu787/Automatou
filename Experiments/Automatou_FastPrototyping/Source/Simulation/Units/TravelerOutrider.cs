@@ -3,7 +3,7 @@ namespace Automatou.Simulation;
 public sealed class TravelerOutrider : Unit {
     public override UnitStatistics Statistics { get; } = new() { Name = "Traveler outrider", Health = 65, Armor = 2, Damage = 22, Range = 2, ActionPoints = 7, Evasion = 30 };
     public Automaton Memory { get; set; } = new();
-    public override UnitAutomaton Brain => this.Memory;
+    public override UnitAutomaton AutomatonInstance => this.Memory;
     public override Unit CreateFresh() {
         return new TravelerOutrider();
     }

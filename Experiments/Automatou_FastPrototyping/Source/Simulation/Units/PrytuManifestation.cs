@@ -3,7 +3,7 @@ namespace Automatou.Simulation;
 public sealed class PrytuManifestation : Unit {
     public override UnitStatistics Statistics { get; } = new() { Name = "Prytu manifestation", Size = 3, Health = 600, Armor = 10, Damage = 65, MeleeDamage = 65, Range = 2, ActionPoints = 4 };
     public Automaton Memory { get; set; } = new();
-    public override UnitAutomaton Brain => this.Memory;
+    public override UnitAutomaton AutomatonInstance => this.Memory;
     public override Unit CreateFresh() {
         return new PrytuManifestation();
     }

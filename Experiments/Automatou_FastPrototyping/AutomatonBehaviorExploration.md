@@ -52,7 +52,7 @@ Once this produces a recognizable rhythm, optionally give a known terrain type a
 
 Other candidates use the same design pattern: a weapon that needs a turn without movement to settle, or Traveler travel strain that makes returning toward H.O.M.E. desirable. Start with one condition. Do not add heat, fatigue, morale, ammunition, hunger, and stress together.
 
-**State ownership.** Actual heat and weapon lockout are physical unit state, updated and enforced by the world. Desired heat reserve, planned recovery destination, and learned expectations belong to the automaton. Both must be saved where applicable. The brain must not be able to erase an inconvenient physical condition.
+**State ownership.** Actual heat and weapon lockout are physical unit state, updated and enforced by the world. Desired heat reserve, planned recovery destination, and learned expectations belong to the automaton. Both must be saved where applicable. The automaton must not be able to erase an inconvenient physical condition.
 
 **Success criterion.** Changing the cooling rate or operator preference changes the timing of advances, shots, and retreats in a readable way. A condition that merely reduces damage without changing choices is a weaker experiment.
 
@@ -155,7 +155,7 @@ Scope in later rows assumes earlier supporting observations and diagnostics wher
 
 For each experiment, define one observable claim before implementation. Use a few authored maps and a fixed set of seeds. Include an easy case, a constrained case, and a failure case. Track intention changes, idle turns, repeated route failures, separation from allies, and mechanism-specific events. Keep win rate as context rather than treating it as the measure of interestingness.
 
-The existing checkpoint/rewind system is valuable. Re-run from the same state with one altered parameter or relationship and inspect the difference. Copy physical state, beliefs, intentions, relationships, leases, and randomness into independent C# snapshots. Test save/restore continuation for new state. Time-dependent updates such as cooling, forgetting, and field decay should run at declared simulation boundaries rather than depending on how often an inspector or brain calls a query.
+The existing checkpoint/rewind system is valuable. Re-run from the same state with one altered parameter or relationship and inspect the difference. Copy physical state, beliefs, intentions, relationships, leases, and randomness into independent C# snapshots. Test save/restore continuation for new state. Time-dependent updates such as cooling, forgetting, and field decay should run at declared simulation boundaries rather than depending on how often an inspector or automaton calls a query.
 
 Add a compact inspector explanation with the first experiment: current intention; decisive considerations; relevant physical condition; remembered target/destination; and the reason for the last transition. For later experiments, show uncertainty and important relationships. This supports the game's purpose of observing and understanding worlds, and makes an interesting decision distinguishable from a bug.
 

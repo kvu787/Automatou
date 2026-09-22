@@ -6,38 +6,38 @@ public sealed record BehaviorOption(string Name, double Score, string Reason, in
 public static class BehaviorPlanning {
     public const int ContactLifetime = 8;
 
-    public static WorldObservation Begin(UnitAutomaton brain, UnitSenses senses) {
+    public static WorldObservation Begin(UnitAutomaton automaton, UnitSenses senses) {
         // Called once by Act. Search progress advances only at turn boundaries;
         // Observe below can refresh contacts many times during the same turn.
-        brain.TurnsObserved++;
-        WorldObservation observation = Observe(brain, senses);
-        if (brain.State.Intention == "Investigate" && brain.State.Destination is { } destination &&
+        automaton.TurnsObserved++;
+        WorldObservation observation = Observe(automaton, senses);
+        if (automaton.State.Intention == "Investigate" && automaton.State.Destination is { } destination &&
             observation.Self.Position.Distance(destination) <= 1 &&
-            brain.State.Contacts.FirstOrDefault(contact => contact.Id == brain.TargetId) is { } searched && searched.LastSeenTurn < observation.Turn) {
+            automaton.State.Contacts.FirstOrDefault(contact => contact.Id == automaton.TargetId) is { } searched && searched.LastSeenTurn < observation.Turn) {
             searched.SearchStep = Math.Min(3, searched.SearchStep + 1);
             if (searched.SearchStep == 3) {
-                _ = brain.State.Contacts.Remove(searched);
+                _ = automaton.State.Contacts.Remove(searched);
             }
         }
-        brain.State.LastUpdatedTurn = observation.Turn;
+        automaton.State.LastUpdatedTurn = observation.Turn;
         return observation;
     }
 
-    private static WorldObservation Observe(UnitAutomaton brain, UnitSenses senses) {
+    private static WorldObservation Observe(UnitAutomaton automaton, UnitSenses senses) {
         // Visible enemies replace their old sightings. Unseen enemies retain only
         // last-seen facts, including enemies that may since have died out of sight.
         WorldObservation observation = senses.Observe();
-        if (!brain.Settings.RememberContacts) {
-            brain.State.Contacts.Clear();
+        if (!automaton.Settings.RememberContacts) {
+            automaton.State.Contacts.Clear();
         } else {
             foreach (EntityObservation? enemy in observation.Entities.Where(entity => entity.Faction != observation.Self.Faction)) {
-                _ = brain.State.Contacts.RemoveAll(contact => contact.Id == enemy.Id);
-                brain.State.Contacts.Add(new ContactMemory {
+                _ = automaton.State.Contacts.RemoveAll(contact => contact.Id == enemy.Id);
+                automaton.State.Contacts.Add(new ContactMemory {
                     Id = enemy.Id, Faction = enemy.Faction, Position = enemy.Position,
                     LastSeenTurn = observation.Turn, Health = enemy.Health, MaximumHealth = enemy.MaximumHealth
                 });
             }
-            brain.State.Contacts = [.. brain.State.Contacts.Where(contact => observation.Turn - contact.LastSeenTurn <= ContactLifetime && contact.SearchStep < 3)
+            automaton.State.Contacts = [.. automaton.State.Contacts.Where(contact => observation.Turn - contact.LastSeenTurn <= ContactLifetime && contact.SearchStep < 3)
                 .OrderByDescending(contact => contact.LastSeenTurn).ThenBy(contact => contact.Position.Distance(observation.Self.Position))
                 .ThenBy(contact => contact.Id).Take(8)];
         }
@@ -48,14 +48,14 @@ public static class BehaviorPlanning {
         return a.Cells.Min(cell => b.Cells.Min(cell.Distance));
     }
 
-    public static EntityObservation? Enemy(UnitAutomaton brain, WorldObservation observation, bool preferWounded = false, bool considerBlast = false) {
+    public static EntityObservation? Enemy(UnitAutomaton automaton, WorldObservation observation, bool preferWounded = false, bool considerBlast = false) {
         // Lower rank wins: footprint distance minus wounded/commitment bonuses,
         // plus allied blast exposure. This selects a target before intentions compete.
         EntityObservation self = observation.Self;
         return observation.Entities.Where(entity => entity.Faction != self.Faction)
             .OrderBy(entity => Distance(self, entity) - (preferWounded ? 4 * (1 - ((double)entity.Health / entity.MaximumHealth)) : 0)
-                - (entity.Id == brain.TargetId ? brain.Settings.Commitment * 4 : 0)
-                + (considerBlast ? FriendlyBlastCost(observation, entity) * (2 + (6 * brain.Settings.Caution)) : 0))
+                - (entity.Id == automaton.TargetId ? automaton.Settings.Commitment * 4 : 0)
+                + (considerBlast ? FriendlyBlastCost(observation, entity) * (2 + (6 * automaton.Settings.Caution)) : 0))
             .ThenBy(entity => entity.Id).FirstOrDefault();
     }
 
@@ -69,41 +69,41 @@ public static class BehaviorPlanning {
             entity.Cells.Any(cell => cell.Distance(impact) <= observation.Self.Unit.BlastRadius));
     }
 
-    public static BehaviorOption Engage(UnitAutomaton brain, WorldObservation observation, EntityObservation target, bool considerBlast = false) {
+    public static BehaviorOption Engage(UnitAutomaton automaton, WorldObservation observation, EntityObservation target, bool considerBlast = false) {
         // Scores are relative preferences, not probabilities or guarantees of a legal
         // action. Facing, visibility and the remaining budget are checked at execution.
         double opportunity = Distance(observation.Self, target) <= observation.Self.Unit.Range ? .12 : 0;
         int allies = considerBlast ? FriendlyBlastCost(observation, target) : 0;
-        double score = .35 + (.4 * brain.Settings.Aggression) + opportunity - (allies * .18 * brain.Settings.Caution);
+        double score = .35 + (.4 * automaton.Settings.Aggression) + opportunity - (allies * .18 * automaton.Settings.Caution);
         return new("Engage", Math.Clamp(score, 0, 1), allies > 0
             ? $"Target #{target.Id}; {allies} allied footprint(s) in blast area reduce this choice."
-            : $"Target #{target.Id} is visible; aggression {brain.Settings.Aggression:0.00} favors pressure.", target.Id, target.Position);
+            : $"Target #{target.Id} is visible; aggression {automaton.Settings.Aggression:0.00} favors pressure.", target.Id, target.Position);
     }
 
-    public static BehaviorOption Withdraw(UnitAutomaton brain, WorldObservation observation, EntityObservation target, bool skirmish = false) {
+    public static BehaviorOption Withdraw(UnitAutomaton automaton, WorldObservation observation, EntityObservation target, bool skirmish = false) {
         double wounded = 1 - ((double)observation.Self.Health / observation.Self.MaximumHealth);
         int nearby = observation.Entities.Count(entity => entity.Faction != observation.Self.Faction && Distance(observation.Self, entity) <= 4);
         double close = skirmish && Distance(observation.Self, target) < Math.Max(2, observation.Self.Unit.Range - 1) ? .42 : 0;
-        double score = (brain.Settings.Caution * (.1 + (wounded * .85) + (Math.Min(nearby, 3) * .08))) + close;
-        return new("Withdraw", Math.Clamp(score, 0, 1), $"Health {observation.Self.Health}/{observation.Self.MaximumHealth}; {nearby} nearby threats; caution {brain.Settings.Caution:0.00}.", target.Id, target.Position);
+        double score = (automaton.Settings.Caution * (.1 + (wounded * .85) + (Math.Min(nearby, 3) * .08))) + close;
+        return new("Withdraw", Math.Clamp(score, 0, 1), $"Health {observation.Self.Health}/{observation.Self.MaximumHealth}; {nearby} nearby threats; caution {automaton.Settings.Caution:0.00}.", target.Id, target.Position);
     }
 
-    private static bool NeedsCooling(UnitAutomaton brain, EntityObservation self) {
-        return self.WeaponLocked || self.Heat >= brain.Settings.HeatReserve ||
-        (brain.Settings.Aggression < .8 && self.Heat > 0 && self.Heat + self.Unit.HeatPerShot > brain.Settings.HeatReserve);
+    private static bool NeedsCooling(UnitAutomaton automaton, EntityObservation self) {
+        return self.WeaponLocked || self.Heat >= automaton.Settings.HeatReserve ||
+        (automaton.Settings.Aggression < .8 && self.Heat > 0 && self.Heat + self.Unit.HeatPerShot > automaton.Settings.HeatReserve);
     }
 
-    public static BehaviorOption Recover(UnitAutomaton brain, UnitSenses senses, WorldObservation observation) {
+    public static BehaviorOption Recover(UnitAutomaton automaton, UnitSenses senses, WorldObservation observation) {
         // Recovery scores 1 when needed, bypassing commitment to a lower-scoring
         // intention. Waiting adds no cooling bonus; World.Step cools every unit.
         EntityObservation self = observation.Self;
         bool relevant = senses.Settings.HeatEnabled && self.Unit.HeatPerShot > 0;
-        double score = relevant && NeedsCooling(brain, self) ? 1 : 0;
+        double score = relevant && NeedsCooling(automaton, self) ? 1 : 0;
         return new("Recover", score, self.WeaponLocked ? $"Weapon locked at heat {self.Heat}; unlocks at 40."
-            : $"Heat {self.Heat}; preferred ceiling {brain.Settings.HeatReserve}; next shot adds {self.Unit.HeatPerShot}.");
+            : $"Heat {self.Heat}; preferred ceiling {automaton.Settings.HeatReserve}; next shot adds {self.Unit.HeatPerShot}.");
     }
 
-    public static BehaviorOption? Escort(UnitAutomaton brain, UnitSenses senses, WorldObservation observation) {
+    public static BehaviorOption? Escort(UnitAutomaton automaton, UnitSenses senses, WorldObservation observation) {
         if (!senses.Settings.BondsEnabled || observation.Self.BondedUnitId is not { } id) {
             return null;
         }
@@ -117,17 +117,17 @@ public static class BehaviorPlanning {
         double selfWounded = 1 - ((double)observation.Self.Health / observation.Self.MaximumHealth);
         bool threatened = observation.Entities.Any(entity => entity.Faction != ward.Faction && Distance(ward, entity) <= 5);
         double score = .4 + (.25 * need) + (threatened ? .25 : 0) + (Distance(observation.Self, ward) > 2 ? .12 : 0)
-            - (selfWounded * brain.Settings.Caution * .5);
+            - (selfWounded * automaton.Settings.Caution * .5);
         return new("Escort", Math.Clamp(score, 0, .98), $"Bond to #{id}; ward health {ward.Health}/{ward.MaximumHealth}" +
             (threatened ? "; a visible threat is near the ward." : "; staying within supporting distance."), id, ward.Position);
     }
 
-    public static BehaviorOption Explore(UnitAutomaton brain, UnitSenses senses, WorldObservation observation) {
+    public static BehaviorOption Explore(UnitAutomaton automaton, UnitSenses senses, WorldObservation observation) {
         // Prefer a lost contact's last known location; otherwise choose a deterministic
         // patrol waypoint from known terrain. Neither path reveals hidden enemy positions.
         EntityObservation self = observation.Self;
-        ContactMemory? remembered = brain.State.Contacts.Where(contact => !observation.Entities.Any(entity => entity.Id == contact.Id))
-            .OrderByDescending(contact => contact.Id == brain.TargetId).ThenByDescending(contact => contact.LastSeenTurn).ThenBy(contact => contact.Id).FirstOrDefault();
+        ContactMemory? remembered = automaton.State.Contacts.Where(contact => !observation.Entities.Any(entity => entity.Id == contact.Id))
+            .OrderByDescending(contact => contact.Id == automaton.TargetId).ThenByDescending(contact => contact.LastSeenTurn).ThenBy(contact => contact.Id).FirstOrDefault();
         if (remembered is not null && !self.Stationary) {
             Hex destination = remembered.Position;
             if (remembered.SearchStep > 0) {
@@ -142,8 +142,8 @@ public static class BehaviorPlanning {
             return new("Hold", .1, "Deployed: observing without moving.");
         }
 
-        if (brain.State.Intention == "Patrol" && brain.State.Destination is { } existing && self.Position.Distance(existing) > 1 &&
-            observation.Turn - brain.State.IntentionSince < 6) {
+        if (automaton.State.Intention == "Patrol" && automaton.State.Destination is { } existing && self.Position.Distance(existing) > 1 &&
+            observation.Turn - automaton.State.IntentionSince < 6) {
             return new("Patrol", .12, "Continuing toward a known map location; no enemy location is supplied.", Destination: existing);
         }
 
@@ -153,7 +153,7 @@ public static class BehaviorPlanning {
         }
 
         Hex center = new((int)cells.Average(cell => cell.Q), (int)cells.Average(cell => cell.R));
-        int heading = (self.Id + brain.State.PatrolIndex++) % 6;
+        int heading = (self.Id + automaton.State.PatrolIndex++) % 6;
         Hex desired = center + new Hex(Hex.Directions[heading].Q * 4, Hex.Directions[heading].R * 4);
         Hex? chosen = cells.Where(cell => self.Position.Distance(cell) > 1)
             .OrderBy(cell => cell.Distance(desired)).ThenBy(cell => cell.Q).ThenBy(cell => cell.R)
@@ -162,7 +162,7 @@ public static class BehaviorPlanning {
             : new("Hold", .1, "No usable patrol destination.");
     }
 
-    public static BehaviorOption Choose(UnitAutomaton brain, WorldObservation observation, IEnumerable<BehaviorOption?> choices) {
+    public static BehaviorOption Choose(UnitAutomaton automaton, WorldObservation observation, IEnumerable<BehaviorOption?> choices) {
         // Highest score wins, with ordinal name order breaking ties. A recent intention
         // can survive a small score deficit for fewer than four elapsed turns; the
         // same intention must still be offered for the same target with a positive score.
@@ -171,51 +171,51 @@ public static class BehaviorPlanning {
             options = [new("Hold", .1, "No available intention.")];
         }
 
-        brain.State.Considerations = [.. options.Take(10).Select(option => new DecisionConsideration(option.Name, option.Score, option.Reason))];
+        automaton.State.Considerations = [.. options.Take(10).Select(option => new DecisionConsideration(option.Name, option.Score, option.Reason))];
         // Inspector scores stay in raw rank order even if commitment keeps another option.
         BehaviorOption chosen = options[0];
-        BehaviorOption? current = options.FirstOrDefault(option => option.Name == brain.State.Intention && option.TargetId == brain.TargetId);
+        BehaviorOption? current = options.FirstOrDefault(option => option.Name == automaton.State.Intention && option.TargetId == automaton.TargetId);
         bool retained = current is not null && current.Score > 0 && chosen.Score < 1 &&
-            observation.Turn - brain.State.IntentionSince < 4 && chosen.Score - current.Score < brain.Settings.Commitment;
+            observation.Turn - automaton.State.IntentionSince < 4 && chosen.Score - current.Score < automaton.Settings.Commitment;
         if (retained) {
             chosen = current!;
         }
 
-        bool changed = chosen.Name != brain.State.Intention || chosen.TargetId != brain.TargetId;
+        bool changed = chosen.Name != automaton.State.Intention || chosen.TargetId != automaton.TargetId;
         if (changed) {
-            brain.State.IntentionChanges++;
-            brain.State.IntentionSince = observation.Turn;
+            automaton.State.IntentionChanges++;
+            automaton.State.IntentionSince = observation.Turn;
         }
         // Reaching a patrol waypoint starts a fresh commitment even with the same intention name.
-        else if (chosen.Name == "Patrol" && chosen.Destination != brain.State.Destination) {
-            brain.State.IntentionSince = observation.Turn;
+        else if (chosen.Name == "Patrol" && chosen.Destination != automaton.State.Destination) {
+            automaton.State.IntentionSince = observation.Turn;
         }
 
-        brain.State.Intention = chosen.Name;
-        brain.State.Reason = chosen.Reason + (retained && chosen != options[0] ? " Keeping the existing commitment." : "");
-        brain.State.Destination = chosen.Destination;
-        brain.TargetId = chosen.TargetId;
-        brain.State.History.Add(new(observation.Turn, chosen.Name, brain.State.Reason, chosen.Destination));
-        if (brain.State.History.Count > 12) {
-            brain.State.History.RemoveAt(0);
+        automaton.State.Intention = chosen.Name;
+        automaton.State.Reason = chosen.Reason + (retained && chosen != options[0] ? " Keeping the existing commitment." : "");
+        automaton.State.Destination = chosen.Destination;
+        automaton.TargetId = chosen.TargetId;
+        automaton.State.History.Add(new(observation.Turn, chosen.Name, automaton.State.Reason, chosen.Destination));
+        if (automaton.State.History.Count > 12) {
+            automaton.State.History.RemoveAt(0);
         }
 
         return chosen;
     }
 
-    public static IEnumerable<UnitAction> Execute(UnitAutomaton brain, UnitSenses senses, BehaviorOption intention, bool keepDistance = false) {
+    public static IEnumerable<UnitAction> Execute(UnitAutomaton automaton, UnitSenses senses, BehaviorOption intention, bool keepDistance = false) {
         // The intention stays fixed, but positions/health/contacts are freshly observed
         // each iteration. yield return hands control to World.ApplyAction; on resumption
         // the world and senses budget already reflect that action. If no action is
         // available, execution stops even when points remain.
         while (senses.RemainingPoints > 0) {
-            WorldObservation observation = Observe(brain, senses);
+            WorldObservation observation = Observe(automaton, senses);
             EntityObservation self = observation.Self;
             EntityObservation? enemy = observation.Entities.FirstOrDefault(entity => entity.Id == intention.TargetId && entity.Faction != self.Faction);
             UnitAction? action = null;
             if (intention.Name == "Engage") {
-                if (enemy is null) { brain.State.Reason = "Contact lost during the turn; reconsidering next turn."; yield break; }
-                if (senses.Settings.HeatEnabled && self.Unit.HeatPerShot > 0 && NeedsCooling(brain, self)) { brain.State.Reason = "Firing would exceed the chosen heat policy; waiting for the next decision."; yield break; }
+                if (enemy is null) { automaton.State.Reason = "Contact lost during the turn; reconsidering next turn."; yield break; }
+                if (senses.Settings.HeatEnabled && self.Unit.HeatPerShot > 0 && NeedsCooling(automaton, self)) { automaton.State.Reason = "Firing would exceed the chosen heat policy; waiting for the next decision."; yield break; }
                 action = TacticalPlanning.Engage(senses, observation, enemy, keepDistance);
             } else if (intention.Name == "Withdraw") {
                 if (enemy is null) {
@@ -231,8 +231,8 @@ public static class BehaviorPlanning {
                 yield break;
             } else if (intention.Name == "Escort") {
                 EntityObservation? ward = observation.Entities.FirstOrDefault(entity => entity.Id == intention.TargetId && entity.Faction == self.Faction);
-                if (ward is null) { brain.State.Reason = "Bonded unit is not currently observed; no hidden location is supplied."; yield break; }
-                brain.State.Destination = ward.Position;
+                if (ward is null) { automaton.State.Reason = "Bonded unit is not currently observed; no hidden location is supplied."; yield break; }
+                automaton.State.Destination = ward.Position;
                 // Supporting a ward means proximity and attacking its threats, not intercepting bullets.
                 EntityObservation? threat = observation.Entities.Where(entity => entity.Faction != self.Faction && Distance(entity, ward) <= 5)
                     .OrderBy(entity => Distance(self, entity) > self.Unit.Range).ThenBy(entity => Distance(entity, ward)).ThenBy(entity => entity.Id).FirstOrDefault();
@@ -244,7 +244,7 @@ public static class BehaviorPlanning {
                     action = MoveToward(senses, self, ward.Position, self.Unit.Size + ward.Unit.Size);
                 }
             } else if (intention.Name is "Investigate" or "Patrol" && intention.Destination is { } destination) {
-                if (Enemy(brain, observation) is not null) { brain.State.Reason = "A new enemy is visible; reconsidering at the next turn boundary."; yield break; }
+                if (Enemy(automaton, observation) is not null) { automaton.State.Reason = "A new enemy is visible; reconsidering at the next turn boundary."; yield break; }
                 action = MoveToward(senses, self, destination, intention.Name == "Patrol" ? 1 : 0);
             }
             if (action is null) {

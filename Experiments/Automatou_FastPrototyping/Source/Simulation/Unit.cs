@@ -20,12 +20,12 @@ public sealed record UnitStatistics {
 public abstract class Unit {
     public Unit Copy() {
         Unit copy = this.CreateFresh();
-        this.Brain.CopyTo(copy.Brain);
+        this.AutomatonInstance.CopyTo(copy.AutomatonInstance);
         return copy;
     }
 
     public abstract UnitStatistics Statistics { get; }
-    public abstract UnitAutomaton Brain { get; }
+    public abstract UnitAutomaton AutomatonInstance { get; }
     public abstract Unit CreateFresh();
     public string Name => this.Statistics.Name;
     public int Size => this.Statistics.Size;
@@ -42,13 +42,13 @@ public abstract class Unit {
     public int CoolingPerTurn => this.Statistics.CoolingPerTurn;
     public Mobility Mobility => this.Statistics.Mobility;
     public void Validate() {
-        if (this.Brain is null || string.IsNullOrWhiteSpace(this.Name) || this.Size is < 1 or > 12 || this.Health is < 1 or > 10000 ||
+        if (this.AutomatonInstance is null || string.IsNullOrWhiteSpace(this.Name) || this.Size is < 1 or > 12 || this.Health is < 1 or > 10000 ||
             this.Armor is < 0 or > 1000 || this.Damage is < 1 or > 1000 || this.MeleeDamage is < 1 or > 1000 || this.Range is < 1 or > 30 ||
             this.ActionPoints is < 1 or > 20 || this.Evasion is < 0 or > 90 || this.BlastRadius is < 0 or > 3 || this.SightRange is < 1 or > 40 ||
             this.HeatPerShot is < 0 or > 100 || this.CoolingPerTurn is < 0 or > 100 || !Enum.IsDefined(this.Mobility)) {
             throw new InvalidDataException("Invalid source-defined unit or missing automaton memory.");
         }
 
-        this.Brain.ValidateMemory();
+        this.AutomatonInstance.ValidateMemory();
     }
 }

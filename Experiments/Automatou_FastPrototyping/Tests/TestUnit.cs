@@ -7,8 +7,8 @@ sealed class TestUnit : Unit {
     public override UnitStatistics Statistics => this.statistics;
     public TestBehavior Behavior { get; init; }
     public Func<UnitSenses, IEnumerable<UnitAction>>? Actions { get; init; }
-    private UnitAutomaton? brain;
-    public override UnitAutomaton Brain => this.brain ??= new TestAutomaton(this);
+    private UnitAutomaton? automaton;
+    public override UnitAutomaton AutomatonInstance => this.automaton ??= new TestAutomaton(this);
     public override Unit CreateFresh() {
         return new TestUnit { statistics = this.statistics, Behavior = this.Behavior, Actions = this.Actions };
     }

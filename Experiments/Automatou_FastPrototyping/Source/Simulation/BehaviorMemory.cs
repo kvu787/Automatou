@@ -51,7 +51,7 @@ public sealed class AutomatonMemory {
 }
 
 public abstract partial class UnitAutomaton {
-    // Extend this copy path when adding persistent brain data: World.Copy reaches it
+    // Extend this copy path when adding persistent automaton data: World.Copy reaches it
     // through Entity.Copy and Unit.Copy, so rewinds must preserve the same decisions.
     public void CopyTo(UnitAutomaton copy) {
         copy.TurnsObserved = this.TurnsObserved;

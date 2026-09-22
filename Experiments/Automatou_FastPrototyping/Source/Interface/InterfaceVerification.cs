@@ -46,22 +46,22 @@ public partial class MainInterface {
                 }
 
                 this.Step();
-                if (this.selected.Unit.Brain.TurnsObserved == 0 || string.IsNullOrWhiteSpace(this.selected.Unit.Brain.State.Reason)) {
+                if (this.selected.Unit.AutomatonInstance.TurnsObserved == 0 || string.IsNullOrWhiteSpace(this.selected.Unit.AutomatonInstance.State.Reason)) {
                     throw new InvalidOperationException("Experiment did not expose decision reasoning: " + scenario.Name);
                 }
             }
             World checkpointWorld = this.checkpoint.Copy();
             int selectedId = this.selected!.Id;
             Entity initialEntity = checkpointWorld.Entities.Single(entity => entity.Id == selectedId);
-            double changedAggression = initialEntity.Unit.Brain.Settings.Aggression > .5 ? .2 : .9;
+            double changedAggression = initialEntity.Unit.AutomatonInstance.Settings.Aggression > .5 ? .2 : .9;
             _ = this.inspectorPanel.FindChildren("*", "Button", true, false).OfType<Button>().Single(button => button.Text == "Tuning").EmitSignal(BaseButton.SignalName.Pressed);
-            if (Math.Abs(this.inspectorPanel.FindChildren("Aggression", "SpinBox", true, false).OfType<SpinBox>().Single().Value - this.selected.Unit.Brain.Settings.Aggression) > .000001) {
+            if (Math.Abs(this.inspectorPanel.FindChildren("Aggression", "SpinBox", true, false).OfType<SpinBox>().Single().Value - this.selected.Unit.AutomatonInstance.Settings.Aggression) > .000001) {
                 throw new InvalidOperationException("Tuning display rounded the unit's actual setting.");
             }
 
             this.ToggleRun();
             this.inspectorPanel.FindChildren("Aggression", "SpinBox", true, false).OfType<SpinBox>().Single().Value = changedAggression;
-            if (this.running || this.selected.Unit.Brain.Settings.Aggression != changedAggression) {
+            if (this.running || this.selected.Unit.AutomatonInstance.Settings.Aggression != changedAggression) {
                 throw new InvalidOperationException("Tuning did not pause and update the unit.");
             }
 
@@ -86,7 +86,7 @@ public partial class MainInterface {
             // A casualty must retain its last tuning when the checkpoint restores it.
             this.world.Remove(this.selected);
             this.RewindExperiment(true);
-            if (this.selected is null || this.selected.Unit.Brain.Settings.Aggression != changedAggression || this.world.Settings != tunedSettings || this.selected.Unit.Brain.TurnsObserved != initialEntity.Unit.Brain.TurnsObserved || this.selected.Heat != initialEntity.Heat || this.selected.Unit.Brain.State.History.Count != initialEntity.Unit.Brain.State.History.Count || (peer is not null && this.selected.BondedUnitId != peer.Id)) {
+            if (this.selected is null || this.selected.Unit.AutomatonInstance.Settings.Aggression != changedAggression || this.world.Settings != tunedSettings || this.selected.Unit.AutomatonInstance.TurnsObserved != initialEntity.Unit.AutomatonInstance.TurnsObserved || this.selected.Heat != initialEntity.Heat || this.selected.Unit.AutomatonInstance.State.History.Count != initialEntity.Unit.AutomatonInstance.State.History.Count || (peer is not null && this.selected.BondedUnitId != peer.Id)) {
                 throw new InvalidOperationException("Tuned rewind did not restore the removed unit's tuning and checkpoint state.");
             }
 
@@ -96,7 +96,7 @@ public partial class MainInterface {
             }
 
             this.RewindExperiment(false);
-            if (this.selected is null || this.selected.Unit.Brain.Settings.Aggression != initialEntity.Unit.Brain.Settings.Aggression || this.world.Settings != checkpointWorld.Settings || this.world.Turn != checkpointWorld.Turn) {
+            if (this.selected is null || this.selected.Unit.AutomatonInstance.Settings.Aggression != initialEntity.Unit.AutomatonInstance.Settings.Aggression || this.world.Settings != checkpointWorld.Settings || this.world.Turn != checkpointWorld.Turn) {
                 throw new InvalidOperationException("Exact rewind changed checkpoint values.");
             }
 
@@ -106,7 +106,7 @@ public partial class MainInterface {
                 CheckButton toggle = this.toolsPanel.FindChildren("*", "CheckButton", true, false).OfType<CheckButton>().Single(control => control.Text == caption);
                 toggle.ButtonPressed = false; toggle.ButtonPressed = true;
             }
-            if (!this.board.DecisionOverlay || !this.board.DimUnseenEnemies || !this.inspectorPanel.FindChildren("*", "Label", true, false).OfType<Label>().Any(label => label.Text == this.selected!.Unit.Brain.State.Reason)) {
+            if (!this.board.DecisionOverlay || !this.board.DimUnseenEnemies || !this.inspectorPanel.FindChildren("*", "Label", true, false).OfType<Label>().Any(label => label.Text == this.selected!.Unit.AutomatonInstance.State.Reason)) {
                 throw new InvalidOperationException("Decision inspector or observation overlay failed.");
             }
 
@@ -345,15 +345,15 @@ public partial class MainInterface {
 
         this.SwitchMode("World creator");
         this.SelectTool("Place unit"); this.OnCell(origin, MouseButton.Left);
-        double aggression = this.world.Entities.Single().Unit.Brain.Settings.Aggression;
-        this.world.Entities.Single().Unit.Brain.Settings.Aggression = aggression == 0 ? 1 : 0;
+        double aggression = this.world.Entities.Single().Unit.AutomatonInstance.Settings.Aggression;
+        this.world.Entities.Single().Unit.AutomatonInstance.Settings.Aggression = aggression == 0 ? 1 : 0;
         this.SelectTool("File"); this.OnCell(empty, MouseButton.Left);
         this.SelectTool("Place unit"); KeyPress(Key.R); this.OnCell(origin, MouseButton.Left);
         this.SelectTool("Paint terrain"); this.terrain = Terrain.Water; this.OnCell(origin, MouseButton.Left);
         this.terrain = Terrain.Plains; this.OnCell(empty, MouseButton.Left);
         this.SelectTool("Erase entity"); this.OnCell(empty, MouseButton.Left);
         Rewind();
-        Check(this.world.Entities.Single().Unit.Brain.Settings.Aggression == aggression, "A rejected or unchanged editor action silently replaces the checkpoint.");
+        Check(this.world.Entities.Single().Unit.AutomatonInstance.Settings.Aggression == aggression, "A rejected or unchanged editor action silently replaces the checkpoint.");
 
         this.Step(); this.CaptureCheckpoint();
         Entity checkpointEntity = this.world.Entities.Single().Copy();

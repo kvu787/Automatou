@@ -82,7 +82,7 @@ public partial class MainInterface {
             replacement.Settings = settings;
             foreach (Entity entity in replacement.Entities) {
                 if (tuning.TryGetValue(entity.Id, out (BehaviorSettings Settings, int? BondedUnitId) value)) {
-                    entity.Unit.Brain.Settings = value.Settings;
+                    entity.Unit.AutomatonInstance.Settings = value.Settings;
                     entity.BondedUnitId = value.BondedUnitId;
                 }
             }
@@ -122,8 +122,8 @@ public partial class MainInterface {
     }
 
     private void BuildDecisionInspector(Entity entity) {
-        UnitAutomaton brain = entity.Unit.Brain;
-        AutomatonMemory state = brain.State;
+        UnitAutomaton automaton = entity.Unit.AutomatonInstance;
+        AutomatonMemory state = automaton.State;
         _ = this.Heading(this.inspectorPanel, "CURRENT INTENTION");
         _ = Label(this.inspectorPanel, string.IsNullOrWhiteSpace(state.Intention) ? "Awaiting first turn" : state.Intention, 19, this.accent);
         _ = Label(this.inspectorPanel, string.IsNullOrWhiteSpace(state.Reason) ? "Advance one turn to see this unit's reasoning." : state.Reason, 13);
@@ -135,7 +135,7 @@ public partial class MainInterface {
         }
         if (this.inspectorTab == 1) { this.BuildTuningControls(entity); return; }
         if (this.inspectorTab == 2) { this.BuildUnitDetails(entity); return; }
-        _ = Label(this.inspectorPanel, $"Since turn {state.IntentionSince} · {brain.TurnsObserved} turns observed\nDestination: {state.Destination?.ToString() ?? "none"}\nTarget: {(brain.TargetId is { } target ? "#" + target : "none")}\n{state.ShotsFired} shots · {state.IntentionChanges} intention changes", 12, this.muted);
+        _ = Label(this.inspectorPanel, $"Since turn {state.IntentionSince} · {automaton.TurnsObserved} turns observed\nDestination: {state.Destination?.ToString() ?? "none"}\nTarget: {(automaton.TargetId is { } target ? "#" + target : "none")}\n{state.ShotsFired} shots · {state.IntentionChanges} intention changes", 12, this.muted);
         if (state.Considerations.Count > 0) {
             _ = this.Heading(this.inspectorPanel, "DECISION SCORES");
             foreach (DecisionConsideration? consideration in state.Considerations.OrderByDescending(value => value.Score)) {
@@ -149,7 +149,7 @@ public partial class MainInterface {
     }
 
     private void BuildTuningControls(Entity entity) {
-        UnitAutomaton brain = entity.Unit.Brain;
+        UnitAutomaton automaton = entity.Unit.AutomatonInstance;
         _ = this.Heading(this.inspectorPanel, "BEHAVIOR TUNING");
         if (entity.Unit is TrainingTarget) {
             _ = Label(this.inspectorPanel, "This inert training target holds position. Its policy does not use behavior tuning.", 13, this.muted);
@@ -159,7 +159,7 @@ public partial class MainInterface {
         void Tune(Action edit) {
             this.Pause(); edit();
             this.RememberTuning(entity);
-            this.Log("TUNING " + $"Id={entity.Id} Settings={entity.Unit.Brain.Settings} BondedUnitId={entity.BondedUnitId}");
+            this.Log("TUNING " + $"Id={entity.Id} Settings={entity.Unit.AutomatonInstance.Settings} BondedUnitId={entity.BondedUnitId}");
             this.board.QueueRedraw();
             this.Status($"Tuned #{entity.Id} {entity.Name}. Playback paused; Rewind with tuning replays the change.");
         }
@@ -169,14 +169,14 @@ public partial class MainInterface {
             spin.ValueChanged += updated => this.Guard(() => Tune(() => assign(updated)));
             return spin;
         }
-        _ = Parameter("Aggression", brain.Settings.Aggression, value => brain.Settings = brain.Settings with { Aggression = value }, "Higher values favor engagement. At 0.8 or above, firing may overrun the preferred heat ceiling and risk a weapon lock.");
-        _ = Parameter("Caution", brain.Settings.Caution, value => brain.Settings = brain.Settings with { Caution = value }, "Higher values favor survival when wounded or threatened.");
-        _ = Parameter("Commitment", brain.Settings.Commitment, value => brain.Settings = brain.Settings with { Commitment = value }, "Higher values favor continuing the current intention.");
+        _ = Parameter("Aggression", automaton.Settings.Aggression, value => automaton.Settings = automaton.Settings with { Aggression = value }, "Higher values favor engagement. At 0.8 or above, firing may overrun the preferred heat ceiling and risk a weapon lock.");
+        _ = Parameter("Caution", automaton.Settings.Caution, value => automaton.Settings = automaton.Settings with { Caution = value }, "Higher values favor survival when wounded or threatened.");
+        _ = Parameter("Commitment", automaton.Settings.Commitment, value => automaton.Settings = automaton.Settings with { Commitment = value }, "Higher values favor continuing the current intention.");
         if (entity.Unit.HeatPerShot > 0) {
-            _ = Parameter("Heat reserve", brain.Settings.HeatReserve, value => brain.Settings = brain.Settings with { HeatReserve = (int)value }, "Preferred heat ceiling. Below 0.8 aggression, next-shot heat is checked before firing. Higher aggression permits exceeding the ceiling.", 40, 100, 5);
+            _ = Parameter("Heat reserve", automaton.Settings.HeatReserve, value => automaton.Settings = automaton.Settings with { HeatReserve = (int)value }, "Preferred heat ceiling. Below 0.8 aggression, next-shot heat is checked before firing. Higher aggression permits exceeding the ceiling.", 40, 100, 5);
         }
 
-        _ = this.Toggle(this.inspectorPanel, "Remember contacts", brain.Settings.RememberContacts, value => Tune(() => brain.Settings = brain.Settings with { RememberContacts = value }));
+        _ = this.Toggle(this.inspectorPanel, "Remember contacts", automaton.Settings.RememberContacts, value => Tune(() => automaton.Settings = automaton.Settings with { RememberContacts = value }));
         if (entity.Unit is PrytuHunter or PrytuManifestation) {
             _ = Label(this.inspectorPanel, "This unit's policy does not use individual bonds.", 12, this.muted);
             return;
@@ -206,7 +206,7 @@ public partial class MainInterface {
     }
 
     private void RememberTuning(Entity entity) {
-        this.experimentTuning[entity.Id] = (entity.Unit.Brain.Settings with { }, entity.BondedUnitId);
+        this.experimentTuning[entity.Id] = (entity.Unit.AutomatonInstance.Settings with { }, entity.BondedUnitId);
     }
 
     private void CaptureLiveTuning() {

@@ -3,7 +3,7 @@ namespace Automatou.Simulation;
 public sealed class Bastion : Unit {
     public override UnitStatistics Statistics { get; } = new() { Name = "Bastion", Size = 2, Health = 500, Armor = 22, Damage = 52, MeleeDamage = 75, Range = 4, ActionPoints = 3 };
     public Automaton Memory { get; set; } = new();
-    public override UnitAutomaton Brain => this.Memory;
+    public override UnitAutomaton AutomatonInstance => this.Memory;
     public override Unit CreateFresh() {
         return new Bastion();
     }

@@ -3,7 +3,7 @@ namespace Automatou.Simulation;
 public sealed class CloneInfantry : Unit {
     public override UnitStatistics Statistics { get; } = new() { Name = "Clone infantry", Health = 38, Armor = 1, Damage = 12, Range = 2, ActionPoints = 5 };
     public Automaton Memory { get; set; } = new();
-    public override UnitAutomaton Brain => this.Memory;
+    public override UnitAutomaton AutomatonInstance => this.Memory;
     public override Unit CreateFresh() {
         return new CloneInfantry();
     }

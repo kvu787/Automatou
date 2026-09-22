@@ -125,7 +125,7 @@ There is no 2D or 3D "art".
 
 - Units are defined directly in C# source; there is no unit creator.
 - Each unit type has its own C# class defining its properties.
-- Each unit class defines a nested automaton class, the unit's brain.
+- Each unit class defines its own nested automaton class.
 - Each placed unit owns an independent automaton instance.
 - Each turn, the automaton senses the world, executes its logic, and outputs requested actions.
 - The world validates and applies actions. Automata can sense again after each action within the turn.

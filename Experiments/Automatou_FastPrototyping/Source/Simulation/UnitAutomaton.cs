@@ -18,7 +18,7 @@ public sealed record EntityObservation(int Id, Faction Faction, Hex Position, in
     int Heat = 0, bool WeaponLocked = false, int? BondedUnitId = null);
 public sealed record WorldObservation(int Turn, EntityObservation Self, IReadOnlyList<EntityObservation> Entities);
 
-// No mutable world/entity/brain references escape this read-only sensing interface.
+// No mutable world/entity/automaton references escape this read-only sensing interface.
 // Observe returns detached values; call it again after actuation for fresh information.
 // Terrain is known globally. Every entity query obeys the same current visibility.
 public sealed class UnitSenses {

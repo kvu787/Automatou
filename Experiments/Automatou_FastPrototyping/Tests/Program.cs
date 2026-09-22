@@ -19,10 +19,10 @@ bool SameWorld(World first, World second) {
             return (a.Id, a.Faction, a.Position, a.Facing, a.Health, a.Stationary, a.Heat, a.WeaponLocked, a.BondedUnitId) ==
                 (b.Id, b.Faction, b.Position, b.Facing, b.Health, b.Stationary, b.Heat, b.WeaponLocked, b.BondedUnitId) &&
                 a.Unit.GetType() == b.Unit.GetType() && a.Unit.Statistics == b.Unit.Statistics &&
-                a.Unit.Brain.GetType() == b.Unit.Brain.GetType() &&
-                (a.Unit.Brain.TurnsObserved, a.Unit.Brain.TargetId, a.Unit.Brain.Settings) ==
-                (b.Unit.Brain.TurnsObserved, b.Unit.Brain.TargetId, b.Unit.Brain.Settings) &&
-                SameMemory(a.Unit.Brain.State, b.Unit.Brain.State);
+                a.Unit.AutomatonInstance.GetType() == b.Unit.AutomatonInstance.GetType() &&
+                (a.Unit.AutomatonInstance.TurnsObserved, a.Unit.AutomatonInstance.TargetId, a.Unit.AutomatonInstance.Settings) ==
+                (b.Unit.AutomatonInstance.TurnsObserved, b.Unit.AutomatonInstance.TargetId, b.Unit.AutomatonInstance.Settings) &&
+                SameMemory(a.Unit.AutomatonInstance.State, b.Unit.AutomatonInstance.State);
         });
 }
 List<string> report = [];
@@ -59,7 +59,7 @@ Test("Session worlds are independent snapshots and new sessions start empty", ()
     Reject(() => session.SaveWorld("   ", original));
 });
 
-Test("World copies detach every mutable collection, brain, and event subscriber", () => {
+Test("World copies detach every mutable collection, automaton, and event subscriber", () => {
     World original = ScenarioCatalog.All[0].Create();
     for (int turn = 0; turn < 5; turn++) { original.Step(); }
     int notifications = 0;
@@ -70,8 +70,8 @@ Test("World copies detach every mutable collection, brain, and event subscriber"
     Check(!ReferenceEquals(original.Settings, copy.Settings), "Separate world settings");
     foreach ((Entity source, Entity target) in original.Entities.Zip(copy.Entities)) {
         Check(!ReferenceEquals(source, target) && !ReferenceEquals(source.Unit, target.Unit), "Separate entities and units");
-        UnitAutomaton a = source.Unit.Brain, b = target.Unit.Brain;
-        Check(!ReferenceEquals(a, b) && !ReferenceEquals(a.Settings, b.Settings) && !ReferenceEquals(a.State, b.State), "Separate brains, settings, and state");
+        UnitAutomaton a = source.Unit.AutomatonInstance, b = target.Unit.AutomatonInstance;
+        Check(!ReferenceEquals(a, b) && !ReferenceEquals(a.Settings, b.Settings) && !ReferenceEquals(a.State, b.State), "Separate automata, settings, and state");
         Check(!ReferenceEquals(a.State.Contacts, b.State.Contacts) && !ReferenceEquals(a.State.Considerations, b.State.Considerations) && !ReferenceEquals(a.State.History, b.State.History), "Separate memory lists");
         foreach ((ContactMemory first, ContactMemory second) in a.State.Contacts.Zip(b.State.Contacts)) {
             Check(!ReferenceEquals(first, second), "Mutable contacts are copied");
@@ -226,19 +226,19 @@ Test("Every source unit owns a distinct nested automaton and saves its memory", 
         World world = World.Create(false, 30, 20);
         Entity actor = Unit(world, Hex.FromOffset(7, 10), design: prototype.CreateFresh());
         Entity other = Unit(world, Hex.FromOffset(20, 10), design: prototype.CreateFresh());
-        Check(actor.Unit.Brain.GetType().DeclaringType == actor.Unit.GetType(), "Brain defined by its unit class");
-        Check(!ReferenceEquals(actor.Unit.Brain, other.Unit.Brain), "Independent brains");
-        Type memoryType = actor.Unit.Brain.GetType();
-        memoryType.GetProperty("TurnsObserved")!.SetValue(actor.Unit.Brain, 41);
-        memoryType.GetProperty("TargetId")!.SetValue(actor.Unit.Brain, 123);
+        Check(actor.Unit.AutomatonInstance.GetType().DeclaringType == actor.Unit.GetType(), "Automaton defined by its unit class");
+        Check(!ReferenceEquals(actor.Unit.AutomatonInstance, other.Unit.AutomatonInstance), "Independent automata");
+        Type memoryType = actor.Unit.AutomatonInstance.GetType();
+        memoryType.GetProperty("TurnsObserved")!.SetValue(actor.Unit.AutomatonInstance, 41);
+        memoryType.GetProperty("TargetId")!.SetValue(actor.Unit.AutomatonInstance, 123);
         World snapshot = world.Copy();
         World restored = snapshot.Copy();
-        UnitAutomaton brain = restored.Entities[0].Unit.Brain;
-        Check(brain.GetType() == memoryType && (int)memoryType.GetProperty("TurnsObserved")!.GetValue(brain)! == 41, "Concrete brain and memory restored");
-        Check((int)memoryType.GetProperty("TargetId")!.GetValue(brain)! == 123, "Goal memory restored");
+        UnitAutomaton automaton = restored.Entities[0].Unit.AutomatonInstance;
+        Check(automaton.GetType() == memoryType && (int)memoryType.GetProperty("TurnsObserved")!.GetValue(automaton)! == 41, "Concrete automaton and memory restored");
+        Check((int)memoryType.GetProperty("TargetId")!.GetValue(automaton)! == 123, "Goal memory restored");
         restored.Step();
-        Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(brain)! == 42, "One brain invocation each turn");
-        Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(restored.Entities[1].Unit.Brain)! == 1, "Other memory independent");
+        Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(automaton)! == 42, "One automaton invocation each turn");
+        Check((int)memoryType.GetProperty("TurnsObserved")!.GetValue(restored.Entities[1].Unit.AutomatonInstance)! == 1, "Other memory independent");
     }
 });
 Test("Sensing is detached and refreshes after each accepted action", () => {
@@ -281,7 +281,7 @@ Test("Actuation rejects invalid requests and enforces per-turn limits", () => {
     Entity walker = Unit(blocked, Hex.FromOffset(5, 5), design: new TestUnit { Actions = _ => [new MoveForwardAction()] });
     Hex start = walker.Position;
     blocked.Terrain[start + Hex.Directions[0]] = Terrain.Water;
-    blocked.Step(); Check(walker.Position == start, "Brain cannot bypass terrain");
+    blocked.Step(); Check(walker.Position == start, "Automaton cannot bypass terrain");
 });
 Test("Sight radius and forest concealment restrict observations for every faction", () => {
     World world = World.Create(false, 30, 20);
@@ -415,14 +415,14 @@ Test("Lost contacts are pursued at their last sighting and expire without remote
     Entity actor = Unit(world, Hex.FromOffset(5, 8), design: new Bastion());
     Entity target = Unit(world, actor.Position + new Hex(6, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
     world.Step();
-    AutomatonMemory memory = actor.Unit.Brain.State;
+    AutomatonMemory memory = actor.Unit.AutomatonInstance.State;
     Hex lastSighting = target.Position;
     Check(memory.Contacts.Any(contact => contact.Id == target.Id && contact.Position == lastSighting && contact.LastSeenTurn == 1), "The visible target is recorded");
     target.Position += new Hex(15, 0);
     world.RebuildOccupancy();
     Check(!world.CanObserve(actor, target), "The enemy has left perception");
     world.Step();
-    Check(memory.Intention == "Investigate" && memory.Destination == lastSighting && actor.Unit.Brain.TargetId == target.Id, "Pursuit uses the stale location and identity");
+    Check(memory.Intention == "Investigate" && memory.Destination == lastSighting && actor.Unit.AutomatonInstance.TargetId == target.Id, "Pursuit uses the stale location and identity");
     Check(memory.Contacts.Single().Position == lastSighting && memory.Contacts.Single().LastSeenTurn == 1, "Hidden movement does not refresh the memory");
     actor.Stationary = true;
     while (world.Turn < 9) {
@@ -431,7 +431,7 @@ Test("Lost contacts are pursued at their last sighting and expire without remote
 
     Check(memory.Contacts.Count == 1, "A contact remains available for eight turns after the sighting");
     world.Step();
-    Check(memory.Contacts.Count == 0 && actor.Unit.Brain.TargetId is null, "Stale contacts expire and cease supplying a target");
+    Check(memory.Contacts.Count == 0 && actor.Unit.AutomatonInstance.TargetId is null, "Stale contacts expire and cease supplying a target");
 });
 Test("Contact and decision memory stay bounded and remembering can be disabled", () => {
     World world = World.Create(false, 35, 20);
@@ -446,12 +446,12 @@ Test("Contact and decision memory stay bounded and remembering can be disabled",
         world.Step();
     }
 
-    UnitAutomaton brain = actor.Unit.Brain;
-    Check(brain.State.Contacts.Count == 8 && brain.State.Contacts.Select(contact => contact.Id).Distinct().Count() == 8, "Contact memory is capped without duplicates");
-    Check(brain.State.History.Count == 12 && brain.State.History[0].Turn == 5 && brain.State.History[^1].Turn == 16, "The decision trace retains the latest twelve turns");
-    brain.Settings.RememberContacts = false;
+    UnitAutomaton automaton = actor.Unit.AutomatonInstance;
+    Check(automaton.State.Contacts.Count == 8 && automaton.State.Contacts.Select(contact => contact.Id).Distinct().Count() == 8, "Contact memory is capped without duplicates");
+    Check(automaton.State.History.Count == 12 && automaton.State.History[0].Turn == 5 && automaton.State.History[^1].Turn == 16, "The decision trace retains the latest twelve turns");
+    automaton.Settings.RememberContacts = false;
     world.Step();
-    Check(brain.State.Contacts.Count == 0 && brain.State.Intention == "Engage", "Disabling memory clears contacts while retaining current observations");
+    Check(automaton.State.Contacts.Count == 0 && automaton.State.Intention == "Engage", "Disabling memory clears contacts while retaining current observations");
 });
 Test("Directed bonds change a healthy escort's choice under pressure", () => {
     (World World, Entity Actor, Entity Ward) Encounter(bool bonds) {
@@ -468,58 +468,58 @@ Test("Directed bonds change a healthy escort's choice under pressure", () => {
     (World World, Entity Actor, Entity Ward) bonded = Encounter(true); (World World, Entity Actor, Entity Ward) independent = Encounter(false);
     int initialDistance = World.Separation(bonded.Actor, bonded.Ward);
     bonded.World.Step(); independent.World.Step();
-    Check(bonded.Actor.Unit.Brain.State.Intention == "Escort" && bonded.Actor.Unit.Brain.TargetId == bonded.Ward.Id, "The explicit bond wins over the nearby attack");
+    Check(bonded.Actor.Unit.AutomatonInstance.State.Intention == "Escort" && bonded.Actor.Unit.AutomatonInstance.TargetId == bonded.Ward.Id, "The explicit bond wins over the nearby attack");
     Check(World.Separation(bonded.Actor, bonded.Ward) < initialDistance, "Escort decisions produce movement toward the ward");
-    Check(independent.Actor.Unit.Brain.State.Intention == "Engage" && independent.Actor.Unit.Brain.State.ShotsFired == 1, "Disabling bonds restores pressure against the nearby enemy");
+    Check(independent.Actor.Unit.AutomatonInstance.State.Intention == "Engage" && independent.Actor.Unit.AutomatonInstance.State.ShotsFired == 1, "Disabling bonds restores pressure against the nearby enemy");
 });
 Test("The same heat-limited machine develops distinct firing rhythms from its policy", () => {
     (World World, Entity Actor) Encounter(double aggression, int reserve) {
         World world = World.Create(false, 22, 16);
         Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
         actor.Stationary = true;
-        actor.Unit.Brain.Settings.Aggression = aggression;
-        actor.Unit.Brain.Settings.HeatReserve = reserve;
-        actor.Unit.Brain.Settings.Commitment = 0;
+        actor.Unit.AutomatonInstance.Settings.Aggression = aggression;
+        actor.Unit.AutomatonInstance.Settings.HeatReserve = reserve;
+        actor.Unit.AutomatonInstance.Settings.Commitment = 0;
         _ = Unit(world, actor.Position + new Hex(4, 0), Faction.Prytu, new TrainingTarget());
         return (world, actor);
     }
     (World World, Entity Actor) bold = Encounter(1, 100); (World World, Entity Actor) measured = Encounter(.5, 70);
     for (int i = 0; i < 3; i++) { bold.World.Step(); measured.World.Step(); }
-    Check(bold.Actor.Unit.Brain.State.ShotsFired == 3 && bold.Actor.WeaponLocked, "Aggressive policy takes three consecutive shots and accepts lockout");
-    Check(measured.Actor.Unit.Brain.State.ShotsFired == 2 && !measured.Actor.WeaponLocked, "Measured policy spaces shots to preserve availability");
-    Check(measured.Actor.Unit.Brain.State.History.Any(trace => trace.Intention == "Recover"), "The reason for the skipped shot is available in the decision trace");
+    Check(bold.Actor.Unit.AutomatonInstance.State.ShotsFired == 3 && bold.Actor.WeaponLocked, "Aggressive policy takes three consecutive shots and accepts lockout");
+    Check(measured.Actor.Unit.AutomatonInstance.State.ShotsFired == 2 && !measured.Actor.WeaponLocked, "Measured policy spaces shots to preserve availability");
+    Check(measured.Actor.Unit.AutomatonInstance.State.History.Any(trace => trace.Intention == "Recover"), "The reason for the skipped shot is available in the decision trace");
 });
 Test("Commitment resists minor score changes but yields to emergency recovery", () => {
     World world = World.Create(false, 15, 15);
     Entity actor = Unit(world, Hex.FromOffset(5, 5));
-    UnitAutomaton brain = actor.Unit.Brain;
-    brain.Settings.Commitment = .2;
+    UnitAutomaton automaton = actor.Unit.AutomatonInstance;
+    automaton.Settings.Commitment = .2;
     WorldObservation observation = new UnitSenses(world, actor).Observe();
-    _ = BehaviorPlanning.Choose(brain, observation with { Turn = 1 }, [new("Engage", .6, "Initial pressure", 2)]);
-    _ = BehaviorPlanning.Choose(brain, observation with { Turn = 2 }, [new("Engage", .5, "Still possible", 2), new("Withdraw", .6, "Small advantage", 2)]);
-    Check(brain.State.Intention == "Engage" && brain.State.IntentionSince == 1, "A small advantage does not immediately replace the commitment");
-    _ = BehaviorPlanning.Choose(brain, observation with { Turn = 3 }, [new("Engage", .9, "Keep pressure", 2), new("Recover", 1, "Weapon unavailable")]);
-    Check(brain.State.Intention == "Recover" && brain.State.IntentionSince == 3, "An emergency overrides commitment");
+    _ = BehaviorPlanning.Choose(automaton, observation with { Turn = 1 }, [new("Engage", .6, "Initial pressure", 2)]);
+    _ = BehaviorPlanning.Choose(automaton, observation with { Turn = 2 }, [new("Engage", .5, "Still possible", 2), new("Withdraw", .6, "Small advantage", 2)]);
+    Check(automaton.State.Intention == "Engage" && automaton.State.IntentionSince == 1, "A small advantage does not immediately replace the commitment");
+    _ = BehaviorPlanning.Choose(automaton, observation with { Turn = 3 }, [new("Engage", .9, "Keep pressure", 2), new("Recover", 1, "Weapon unavailable")]);
+    Check(automaton.State.Intention == "Recover" && automaton.State.IntentionSince == 3, "An emergency overrides commitment");
 });
 Test("A heat reserve smaller than one shot still permits firing from cold", () => {
     World world = World.Create(false, 22, 16);
     Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new SiegeWalker());
     actor.Stationary = true;
-    actor.Unit.Brain.Settings.Aggression = .5;
-    actor.Unit.Brain.Settings.HeatReserve = 40;
+    actor.Unit.AutomatonInstance.Settings.Aggression = .5;
+    actor.Unit.AutomatonInstance.Settings.HeatReserve = 40;
     _ = Unit(world, actor.Position + new Hex(4, 0), Faction.Prytu, new TrainingTarget());
     world.Step();
-    Check(actor.Unit.Brain.State.ShotsFired == 1 && actor.Heat == actor.Unit.HeatPerShot, "The minimum slider value does not permanently strand a cold weapon in recovery");
+    Check(actor.Unit.AutomatonInstance.State.ShotsFired == 1 && actor.Heat == actor.Unit.HeatPerShot, "The minimum slider value does not permanently strand a cold weapon in recovery");
 });
 Test("Focused experiments demonstrate their advertised behavioral differences", () => {
     World heat = ScenarioCatalog.All.Single(scenario => scenario.Name == "Heat and readiness").Create();
-    Entity[] walkers = heat.Entities.Where(entity => entity.Unit is SiegeWalker).OrderBy(entity => entity.Unit.Brain.Settings.Aggression).ToArray();
+    Entity[] walkers = heat.Entities.Where(entity => entity.Unit is SiegeWalker).OrderBy(entity => entity.Unit.AutomatonInstance.Settings.Aggression).ToArray();
     List<int> measuredRhythm = []; List<int> aggressiveRhythm = [];
     bool aggressiveLocked = false;
     for (int i = 0; i < 12; i++) {
         heat.Step();
-        measuredRhythm.Add(walkers[0].Unit.Brain.State.ShotsFired);
-        aggressiveRhythm.Add(walkers[1].Unit.Brain.State.ShotsFired);
+        measuredRhythm.Add(walkers[0].Unit.AutomatonInstance.State.ShotsFired);
+        aggressiveRhythm.Add(walkers[1].Unit.AutomatonInstance.State.ShotsFired);
         Check(!walkers[0].WeaponLocked, "The measured operator preserves weapon availability");
         aggressiveLocked |= walkers[1].WeaponLocked;
     }
@@ -529,7 +529,7 @@ Test("Focused experiments demonstrate their advertised behavioral differences", 
     bool investigated = false;
     for (int i = 0; i < 12; i++) {
         forest.Step();
-        investigated |= pursuer.Unit.Brain.State.Intention == "Investigate";
+        investigated |= pursuer.Unit.AutomatonInstance.State.Intention == "Investigate";
     }
     Check(investigated, "The forest scenario actually produces investigation of a lost contact");
     ExperimentScenario bonds = ScenarioCatalog.All.Single(scenario => scenario.Name == "Bonds under pressure");
@@ -539,7 +539,7 @@ Test("Focused experiments demonstrate their advertised behavioral differences", 
     upperGuard.BondedUnitId = upperWorld.Entities.First(entity => entity.Unit is TrainingTarget && entity.Id != upperGuard.BondedUnitId).Id;
     for (int i = 0; i < 3; i++) { lowerWorld.Step(); upperWorld.Step(); }
     Check(lowerGuard.Position != upperGuard.Position, "Changing only the bond sends the guardian along a different route");
-    Check(lowerGuard.Unit.Brain.State.History.Any(trace => trace.Intention == "Escort") && upperGuard.Unit.Brain.State.History.Any(trace => trace.Intention == "Escort"), "Both routes are explained by escort decisions");
+    Check(lowerGuard.Unit.AutomatonInstance.State.History.Any(trace => trace.Intention == "Escort") && upperGuard.Unit.AutomatonInstance.State.History.Any(trace => trace.Intention == "Escort"), "Both routes are explained by escort decisions");
 });
 Test("Every focused experiment restores rich automaton state and continues exactly", () => {
     foreach (ExperimentScenario scenario in ScenarioCatalog.All) {
@@ -548,13 +548,13 @@ Test("Every focused experiment restores rich automaton state and continues exact
             world.Step();
         }
 
-        Check(world.Entities.Any(entity => entity.Unit.Brain.State.History.Count > 0 && entity.Unit.Brain.State.Considerations.Count > 0), "The saved state includes real decisions");
+        Check(world.Entities.Any(entity => entity.Unit.AutomatonInstance.State.History.Count > 0 && entity.Unit.AutomatonInstance.State.Considerations.Count > 0), "The saved state includes real decisions");
         World saved = world.Copy();
         World restored = saved.Copy();
         Check(SameWorld(restored, saved), $"{scenario.Name}: full state round-trips exactly");
         foreach (Entity actor in world.Entities) {
             Entity copy = restored.Entities.Single(entity => entity.Id == actor.Id);
-            Check(!ReferenceEquals(copy.Unit.Brain.Settings, actor.Unit.Brain.Settings) && !ReferenceEquals(copy.Unit.Brain.State, actor.Unit.Brain.State), "Restored preferences and runtime state are independent");
+            Check(!ReferenceEquals(copy.Unit.AutomatonInstance.Settings, actor.Unit.AutomatonInstance.Settings) && !ReferenceEquals(copy.Unit.AutomatonInstance.State, actor.Unit.AutomatonInstance.State), "Restored preferences and runtime state are independent");
         }
         for (int i = 0; i < 12; i++) {
             world.Step(); restored.Step();
@@ -563,26 +563,26 @@ Test("Every focused experiment restores rich automaton state and continues exact
     }
 });
 Test("Invalid automaton preferences and contact records are rejected", () => {
-    UnitAutomaton brain = new Bastion().Brain;
-    brain.Settings.Aggression = 1.1;
-    Reject(brain.ValidateMemory);
-    brain.Settings.Aggression = .5;
-    brain.State.Contacts.Add(new() { Id = 2, Faction = Faction.Prytu, LastSeenTurn = 0, Health = 5, MaximumHealth = 5, SearchStep = 4 });
-    Reject(brain.ValidateMemory);
+    UnitAutomaton automaton = new Bastion().AutomatonInstance;
+    automaton.Settings.Aggression = 1.1;
+    Reject(automaton.ValidateMemory);
+    automaton.Settings.Aggression = .5;
+    automaton.State.Contacts.Add(new() { Id = 2, Faction = Faction.Prytu, LastSeenTurn = 0, Health = 5, MaximumHealth = 5, SearchStep = 4 });
+    Reject(automaton.ValidateMemory);
 });
 Test("Finishing the final search probe abandons the exhausted contact", () => {
     World world = World.Create(false, 20, 16);
     Entity actor = Unit(world, Hex.FromOffset(6, 8), design: new Bastion());
-    UnitAutomaton brain = actor.Unit.Brain;
-    brain.TargetId = 999;
-    brain.State.Intention = "Investigate";
-    brain.State.Destination = actor.Position;
-    brain.State.Contacts.Add(new ContactMemory {
+    UnitAutomaton automaton = actor.Unit.AutomatonInstance;
+    automaton.TargetId = 999;
+    automaton.State.Intention = "Investigate";
+    automaton.State.Destination = actor.Position;
+    automaton.State.Contacts.Add(new ContactMemory {
         Id = 999, Faction = Faction.Prytu, Position = actor.Position, LastSeenTurn = 0,
         Health = 100, MaximumHealth = 100, SearchStep = 2
     });
     world.Step();
-    Check(brain.State.Contacts.Count == 0 && brain.TargetId is null && brain.State.Intention != "Investigate", "Reaching the third search destination does not schedule a fourth probe");
+    Check(automaton.State.Contacts.Count == 0 && automaton.TargetId is null && automaton.State.Intention != "Investigate", "Reaching the third search destination does not schedule a fourth probe");
 });
 Test("An escort turns toward and attacks a threat while already beside its ward", () => {
     World world = World.Create(false, 24, 18);
@@ -592,8 +592,8 @@ Test("An escort turns toward and attacks a threat while already beside its ward"
     Entity threat = Unit(world, guard.Position + new Hex(4, 0), Faction.Prytu, new TestUnit { Health = 1000, Actions = _ => [] });
     Check(!world.CanAttack(guard, threat) && World.Separation(guard, ward) <= 2, "The guard is supporting its ward but the threat starts outside its attack arc");
     world.Step();
-    Check(guard.Unit.Brain.State.Intention == "Escort" && guard.Facing != 2, "The escort rotates to protect the ward");
-    Check(threat.Health < 1000 && guard.Unit.Brain.State.ShotsFired == 1, "Turning and firing completes inside the action budget");
+    Check(guard.Unit.AutomatonInstance.State.Intention == "Escort" && guard.Facing != 2, "The escort rotates to protect the ward");
+    Check(threat.Health < 1000 && guard.Unit.AutomatonInstance.State.ShotsFired == 1, "Turning and firing completes inside the action budget");
 });
 Test("Artillery distinguishes safe melee attacks from allied exposure to ranged blasts", () => {
     World world = World.Create(false, 24, 18);
@@ -605,12 +605,12 @@ Test("Artillery distinguishes safe melee attacks from allied exposure to ranged 
     WorldObservation observation = new UnitSenses(world, actor).Observe();
     EntityObservation close = observation.Entities.Single(entity => entity.Id == meleeTarget.Id);
     EntityObservation far = observation.Entities.Single(entity => entity.Id == rangedTarget.Id);
-    UnitAutomaton brain = actor.Unit.Brain;
-    Check(BehaviorPlanning.Engage(brain, observation, close, considerBlast: true).Score == BehaviorPlanning.Engage(brain, observation, close).Score,
+    UnitAutomaton automaton = actor.Unit.AutomatonInstance;
+    Check(BehaviorPlanning.Engage(automaton, observation, close, considerBlast: true).Score == BehaviorPlanning.Engage(automaton, observation, close).Score,
         "Nearby allies do not reduce the score of a nonsplash melee attack");
-    Check(BehaviorPlanning.Engage(brain, observation, far, considerBlast: true).Score < BehaviorPlanning.Engage(brain, observation, far).Score,
+    Check(BehaviorPlanning.Engage(automaton, observation, far, considerBlast: true).Score < BehaviorPlanning.Engage(automaton, observation, far).Score,
         "The same policy still accounts for real ranged blast exposure");
-    Check(BehaviorPlanning.Enemy(brain, observation, considerBlast: true)?.Id == meleeTarget.Id, "False splash exposure does not divert artillery from the close target");
+    Check(BehaviorPlanning.Enemy(automaton, observation, considerBlast: true)?.Id == meleeTarget.Id, "False splash exposure does not divert artillery from the close target");
     world.Step();
     Check(meleeTarget.Health < 1000 && meleeAlly.Health == meleeAlly.MaximumHealth, "The chosen melee strike damages the enemy without splashing its neighboring ally");
 });

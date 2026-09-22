@@ -21,10 +21,10 @@ public static class ScenarioCatalog {
     private static World HeatAndReadiness() {
         World world = World.Create(false, 22, 20);
         Entity measured = Place(world, new SiegeWalker(), Faction.MechAndTank, 5, 14);
-        measured.Unit.Brain.Settings = new() { Aggression = .55, Caution = .4, Commitment = .1, HeatReserve = 70 };
+        measured.Unit.AutomatonInstance.Settings = new() { Aggression = .55, Caution = .4, Commitment = .1, HeatReserve = 70 };
         _ = Place(world, new TrainingTarget(), Faction.Prytu, 10, 14, 3, true);
         Entity aggressive = Place(world, new SiegeWalker(), Faction.MechAndTank, 5, 5);
-        aggressive.Unit.Brain.Settings = new() { Aggression = .95, Caution = .4, Commitment = .1, HeatReserve = 100 };
+        aggressive.Unit.AutomatonInstance.Settings = new() { Aggression = .95, Caution = .4, Commitment = .1, HeatReserve = 100 };
         _ = Place(world, new TrainingTarget(), Faction.Prytu, 10, 5, 3, true);
         world.Note("Experiment: heat and readiness. Upper walker is measured; lower walker accepts overheating.");
         return world;
@@ -35,7 +35,7 @@ public static class ScenarioCatalog {
         Entity pursuer = Place(world, new CloneInfantry(), Faction.InfantryAndArtillery, 5, 7);
         Entity runner = Place(world, new TravelerOutrider(), Faction.Travelers, 9, 7);
         runner.Health = 24;
-        runner.Unit.Brain.Settings = new() { Aggression = .1, Caution = 1, Commitment = .05, RememberContacts = false };
+        runner.Unit.AutomatonInstance.Settings = new() { Aggression = .1, Caution = 1, Commitment = .05, RememberContacts = false };
         for (int y = 2; y <= 13; y++) {
             for (int x = 11; x <= 13; x++) {
                 world.Terrain[Hex.FromOffset(x, y)] = Terrain.Forest;
@@ -43,13 +43,13 @@ public static class ScenarioCatalog {
         }
         // A real initial sighting, before the first acting unit rotates. No hidden position is seeded.
         if (world.CanObserve(pursuer, runner)) {
-            pursuer.Unit.Brain.State.Contacts.Add(new ContactMemory {
+            pursuer.Unit.AutomatonInstance.State.Contacts.Add(new ContactMemory {
                 Id = runner.Id, Faction = runner.Faction, Position = runner.Position,
                 LastSeenTurn = 0, Health = runner.Health, MaximumHealth = runner.MaximumHealth
             });
         }
 
-        pursuer.Unit.Brain.State.Reason = "The Traveler was observed at the start; follow its last sighting if contact is lost.";
+        pursuer.Unit.AutomatonInstance.State.Reason = "The Traveler was observed at the start; follow its last sighting if contact is lost.";
         world.Note("Experiment: lost in the forest. Select the infantry pursuer to see remembered sightings.");
         return world;
     }
@@ -61,7 +61,7 @@ public static class ScenarioCatalog {
         Entity upper = Place(world, new TrainingTarget(), Faction.Bastions, 10, 14, 0, true);
         lower.Health = 350; upper.Health = 350;
         guard.BondedUnitId = lower.Id;
-        guard.Unit.Brain.Settings = new() { Aggression = .6, Caution = .7, Commitment = .2 };
+        guard.Unit.AutomatonInstance.Settings = new() { Aggression = .6, Caution = .7, Commitment = .2 };
         foreach (int y in new[] { 6, 14 }) {
             for (int i = 0; i < 3; i++) {
                 _ = Place(world, new CloneInfantry(), Faction.InfantryAndArtillery, 14 + (i * 2), y, 3);

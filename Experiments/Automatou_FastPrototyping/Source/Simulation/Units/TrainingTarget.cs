@@ -4,7 +4,7 @@ namespace Automatou.Simulation;
 public sealed class TrainingTarget : Unit {
     public override UnitStatistics Statistics { get; } = new() { Name = "Training target", Health = 5000, Armor = 0, Damage = 1, MeleeDamage = 1, Range = 1, ActionPoints = 1 };
     public Automaton Memory { get; set; } = new();
-    public override UnitAutomaton Brain => this.Memory;
+    public override UnitAutomaton AutomatonInstance => this.Memory;
     public override Unit CreateFresh() {
         return new TrainingTarget();
     }

@@ -141,7 +141,7 @@ public sealed partial class World {
             return;
         }
 
-        attacker.Unit.Brain.State.ShotsFired++;
+        attacker.Unit.AutomatonInstance.State.ShotsFired++;
         if (this.Settings.HeatEnabled && attacker.Unit.HeatPerShot > 0) {
             attacker.Heat = Math.Min(200, attacker.Heat + attacker.Unit.HeatPerShot);
             if (attacker.Heat >= 100 && !attacker.WeaponLocked) {
@@ -195,8 +195,8 @@ public sealed partial class World {
 
             UnitSenses senses = new(this, actor);
             // A rejected request ends this turn. Successful actions always consume points,
-            // so even a brain yielding endlessly cannot exceed its action budget.
-            using IEnumerator<UnitAction> actions = actor.Unit.Brain.Act(senses).GetEnumerator();
+            // so even an automaton yielding endlessly cannot exceed its action budget.
+            using IEnumerator<UnitAction> actions = actor.Unit.AutomatonInstance.Act(senses).GetEnumerator();
             while (senses.RemainingPoints > 0 && this.Entities.Contains(actor) && actions.MoveNext()) {
                 if (!this.ApplyAction(actor, senses, actions.Current)) {
                     break;
@@ -205,7 +205,7 @@ public sealed partial class World {
         }
     }
     private bool ApplyAction(Entity actor, UnitSenses senses, UnitAction action) {
-        // The world enforces legality independently of the brain: at most one attack
+        // The world enforces legality independently of the automaton: at most one attack
         // (2 points), each turn step (1 point), or each forward move (terrain cost).
         // false stops this actor's turn; unused points are not carried into the next turn.
         switch (action) {
