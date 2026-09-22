@@ -44,3 +44,32 @@ Once an attack is accepted, [combat resolution](C:/Users/k/Repository/Automatou/
 
 So the program does face uncertainty about whether its planned attack will still be valid. However, **it does not need to predict an impact position**: the world supplies the target’s live position at execution. There is no projectile travel time or shot left heading toward a vacated hex in the current implementation.
 
+## User
+
+i'm thinking of simplifying this to say that all movement occurs after attack or attack-like actions. would that simplify things?
+
+## Assistant
+
+I’ll consider how that phase order would affect the existing action lists, especially moving or turning before an attack.
+
+## Assistant
+
+**Yes—resolving all attacks before any movement would make targeting substantially easier to understand.** Everyone attacks the positions they observed when planning. A target cannot escape an otherwise valid attack by moving earlier in the resolution order.
+
+A clear turn structure would be:
+
+1. **Observe and plan.** All units see the same starting state.
+2. **Resolve attacks and similar effects.** Positions remain fixed throughout this phase.
+3. **Resolve movement.** Surviving units carry out their movement plans.
+
+The main gameplay consequence is that **you can attack and then move, but cannot move into range and attack during the same turn.** Approaching an enemy prepares an attack for a later turn. That is a meaningful change, but a straightforward rule.
+
+There are three details I would settle explicitly:
+
+- **Turning:** I would put turning alongside movement, after attacks. Otherwise an earlier turn could still change attack eligibility or directional armor during the attack phase. Units would attack using their starting facing.
+- **Units attacking each other:** Attacks-first does not itself resolve this. Sequential attacks still let the first attacker kill the second before it fires. For predictable exchanges, I would evaluate attacks against the starting state, collect damage, and apply it together. Two units could then destroy each other.
+- **Existing action lists:** The current planner can submit `move → turn → attack`. Simply rearranging those requests would break its assumptions about range and facing. The planner should explicitly choose an attack for the current position and facing, then plan movement separately, within the shared energy budget.
+
+“Attack-like” would also need a defined scope as abilities are added: an effect that pushes, teleports, or changes visibility could reintroduce ordering questions.
+
+**For this prototype, I would favor attacks evaluated from the starting state, damage applied together, then movement and turning by survivors.** That removes the target-position uncertainty and the first-shooter advantage from ordinary combat, while leaving movement conflicts as a separate problem.
