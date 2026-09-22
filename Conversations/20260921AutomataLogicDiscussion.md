@@ -288,3 +288,88 @@ That does not establish that current choices are optimal, or that players univer
 **My assessment is that your architectural idea is a credible foundation, while “it will relatively easily produce sustained interesting behavior” remains a hypothesis.** Automatou is well positioned to test it because designing and examining AT behavior is central to the experience.
 
 A useful first test would be small: create a situation where remembering an earlier sighting changes whether an AT should spend energy scanning or act immediately. Then vary the circumstances. Look for understandable, consequential differences—and whether interacting with those differences stays interesting after the initial surprise.
+
+## User
+
+okay, i want to change Automatou_FastPrototyping to support the architecture i described. the most important deliverable of this is that there should be these special automata programs in addition to "standard" ATs:
+- "lone wolf": the unit's first priority is always to maintain N units of space between it and any allied units, before doing anything else
+- "keep your distance": the unit's first priority is to maintain N units of space between it and any enemy units, before doing anything else. N must be lesser than the unit's attack range. only applies to ranged units
+- "hunt the weakest": the unit only attacks or tries to get in attack range for the weakest unit it can see, even if there are other enemy units
+
+the intent of this architecture is to make it "easy" to write new AT programs analogous to how a programmer can "easily" write a new program for any mainstream OS by understanding the system call interface and language but not having to understand every other program that could be running on the system or having to understand the entirety of the OS kernel.
+
+do this rearchitecting/rewrite end-to-end
+
+## Assistant
+
+I’ll rewrite the prototype around an explicit automaton interface: paid sensing, private memory, and submitted action lists, with world systems resolving the results. I’ll also add the three programs, make them selectable and tunable in the app, and verify their behavior end to end.
+
+## Assistant question
+
+For “hunt the weakest,” how should the automaton rank visible enemies? I’ll use lowest current health unless you prefer another definition.
+
+## User
+
+Lowest health percentage
+
+## Assistant
+
+“Hunt the weakest” will rank by lowest health percentage. I’m making the program interface a separate C# assembly so automaton code cannot directly reference the world implementation. Sensing will consume the same turn-energy pool as actions, and every program will plan from the same turn snapshot before resolution begins.
+
+## Assistant
+
+The new program boundary and two-phase turn loop are in place. For simultaneous moves into overlapping space, I’m using a simple rule: all contenders stay put, and each receives a rejection result. The spacing programs use a hard priority: when too close, they plan separation or wait; they do not choose an attack instead.
+
+## Assistant
+
+The three programs are now wired into the prototype, including health-percentage targeting. I’m checking the behaviors that matter most: sensing must consume energy, programs must plan before the world changes, and spacing must take priority over combat. I’m also adding example scenarios so you can compare each program with a standard automaton.
+
+## Assistant
+
+One detail I’m tightening is the information boundary: the old “unlimited perception” switch would bypass paid vision, so I’m removing that bypass. Spacing will apply to units the automaton can observe, measured between footprint edges. The world still handles hidden obstacles and competing moves when it resolves the submitted plan.
+
+## Assistant
+
+The regression suite now covers the key rules, including lowest-health-percentage targeting, no fallback attacks when the weakest target is unreachable, and rejection of conflicting moves involving large footprints. I’m checking the app controls next, then updating the programming guide so the contract and a small example program are enough to get started.
+
+## Assistant
+
+The rendered app checks passed, including program selection, spacing limits, and both rewind modes. The comparison screenshots also show the intended distinction: Lone wolf separates while Standard fires, and Hunt the weakest advances toward the farther enemy with the lower health percentage. I’m finishing the model checks and reviewing the changes before committing them in separate pieces.
+
+## User
+
+fyi i've gotten a few of these popups
+
+![Attached dotnet.exe application error popup](20260921AutomataLogicDiscussionDotnetError.png)
+
+Original attachment: `C:/Users/k/AppData/Local/Temp/codex-clipboard-5eb3594d-2eb8-4433-b3ef-4e04d49abcd2.png`.
+
+## Assistant
+
+Those line up with the failed .NET test runs I launched while adapting the suite. The test runner was letting assertion exceptions escape, which can produce this Windows dialog. I’m fixing it to log failures and exit normally instead. You can dismiss the existing dialogs with **OK**.
+
+## Assistant
+
+The runner now catches and logs test failures. I’m doing the final pass through the simulation suite and the real Godot interface, and checking that the guide’s example automaton compiles without access to the world implementation.
+
+## Assistant
+
+All 36 simulation checks and the rendered interface checks pass. The example program also compiled independently, and the compiler rejected an attempted direct `World` reference. I’m saving the work as separate commits for the contract and programs, world integration, interface, and documentation.
+
+## Assistant
+
+The final launch review caught a build issue: C# files saved under `MyLogOutput` for verification were being picked up as application source. I’m excluding session artifacts from compilation so they cannot break future launches.
+
+## Assistant
+
+Implemented and committed the rewrite.
+
+- **Automaton contract:** Sense → Remember → Think → Act, paid sensing, shared turn energy, and private memory.
+- **Three selectable programs:** Lone wolf, Keep your distance, and Hunt the weakest using **lowest health percentage**.
+- **World resolution:** complete submitted plans, movement conflicts, and next-turn action results.
+
+Launch [Run.cmd](C:/Users/k/Repository/Automatou/Experiments/Automatou_FastPrototyping/Run.cmd), then **Load world** to try the three comparison scenarios. The [programming guide](C:/Users/k/Repository/Automatou/Experiments/Automatou_FastPrototyping/AutomatonProgramming.md) explains the interface and adding programs.
+
+**Verified:** 36 simulation checks, rendered interface checks, and independent program compilation. Test failures now log and exit normally instead of escaping as exceptions that can trigger those Windows dialogs.
+
+Spacing uses observed units and footprint-edge distance. Encapsulation is enforced through separate assemblies; programs still share the host process, so hostile-code isolation is not implemented.
