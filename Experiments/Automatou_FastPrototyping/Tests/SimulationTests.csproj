@@ -6,5 +6,6 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="../Source/Simulation/**/*.cs" Link="Simulation/%(Filename)%(Extension)" />
+        <ProjectReference Include="../Source/AutomatonPrograms/AutomatonPrograms.csproj" />
     </ItemGroup>
 </Project>

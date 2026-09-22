@@ -106,7 +106,6 @@ public partial class MainInterface {
         this.RefreshComparison();
         _ = this.Heading(this.toolsPanel, "WORLD MECHANICS");
         _ = Label(this.toolsPanel, "Changes pause playback. Replay to compare.", 12, this.muted);
-        _ = this.Toggle(this.toolsPanel, "Limited perception", this.world.Settings.LimitedPerception, value => this.ChangeMechanics(() => this.world.Settings = this.world.Settings with { LimitedPerception = value }), "Enemies can disappear beyond sight or behind forest.");
         _ = this.Toggle(this.toolsPanel, "Weapon heat", this.world.Settings.HeatEnabled, value => this.ChangeMechanics(() => this.world.Settings = this.world.Settings with { HeatEnabled = value }), "Weapons build heat; excess heat temporarily locks them.");
         _ = this.Toggle(this.toolsPanel, "Protective bonds", this.world.Settings.BondsEnabled, value => this.ChangeMechanics(() => this.world.Settings = this.world.Settings with { BondsEnabled = value }), "A bond can make a unit protect a particular ally.");
         _ = this.Heading(this.toolsPanel, "OBSERVATION");
@@ -194,7 +193,7 @@ public partial class MainInterface {
     private void BuildUnitDetails(Entity entity) {
         _ = this.Heading(this.inspectorPanel, "UNIT STATISTICS");
         Unit unit = entity.Unit;
-        _ = Label(this.inspectorPanel, $"Origin {entity.Position} · {Hex.DirectionNames[entity.Facing]}\n{entity.OccupiedCells().Count()} occupied cells\n{unit.ActionPoints} action points / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, this.muted);
+        _ = Label(this.inspectorPanel, $"Origin {entity.Position} · {Hex.DirectionNames[entity.Facing]}\n{entity.OccupiedCells().Count()} occupied cells\n{unit.TurnEnergy} energy / turn / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, this.muted);
         _ = this.Button(this.inspectorPanel, entity.Stationary ? "Mobilize unit" : "Deploy / hold position", () => {
             this.Pause(); entity.Stationary = !entity.Stationary;
             if (this.mode == "World creator") { this.RecordWorldEdit(); } else { this.Refresh(); }

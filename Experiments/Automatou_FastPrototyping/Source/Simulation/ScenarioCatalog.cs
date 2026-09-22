@@ -7,8 +7,11 @@ public static class ScenarioCatalog {
     public static IReadOnlyList<ExperimentScenario> All { get; } = Array.AsReadOnly(new ExperimentScenario[]
     {
         new("Heat and readiness", "Two identical walkers fire at inert targets. The upper walker spaces shots; the lower accepts lockouts. Change aggression or the heat ceiling, then rewind with tuning. Disable machine heat for a control run.", HeatAndReadiness),
-        new("Lost in the forest", "A pursuer has a starting sighting of an injured, fast Traveler. Forest breaks contact. Inspect the pursuer's remembered cells and search decisions; compare with memory or limited perception disabled.", LostInTheForest),
-        new("Bonds under pressure", "One Bastion can support two vulnerable allies threatened by infantry. Its initial bond favors the lower ally. Change the bond to the upper ally or disable bonds, then rewind with tuning and compare its route.", BondsUnderPressure)
+        new("Lost in the forest", "A pursuer has a starting sighting of an injured, fast Traveler. Forest breaks contact. Inspect remembered sightings and compare with contact memory disabled or extra sight range purchased.", LostInTheForest),
+        new("Bonds under pressure", "One Bastion can support two vulnerable allies threatened by infantry. Its initial bond favors the lower ally. Change the bond to the upper ally or disable bonds, then rewind with tuning and compare its route.", BondsUnderPressure),
+        new("Lone wolf", "Upper artillery uses Lone wolf with spacing 3; lower artillery uses Standard. Both have an ally beside them and an enemy in range. The lone wolf separates before attacking. Inspect Tuning to change N or the program.", () => ProgramComparison("Lone wolf")),
+        new("Keep your distance", "Upper artillery maintains spacing 4 before firing; lower artillery uses Standard. Nearby enemies force the special program to separate. N is always below attack range. Compare the submitted lists and resolution results.", () => ProgramComparison("Keep your distance")),
+        new("Hunt the weakest", "Upper artillery hunts the lowest health percentage, even when a healthier enemy is closer. The farther target has more health points but a smaller health percentage. Lower artillery uses Standard. Inspect the target IDs and submitted attacks.", () => ProgramComparison("Hunt the weakest"))
     });
 
     private static Entity Place(World world, Unit unit, Faction faction, int x, int y, int facing = 0, bool stationary = false) {
@@ -69,6 +72,29 @@ public static class ScenarioCatalog {
         }
 
         world.Note("Experiment: bonds under pressure. The Bastion initially favors the lower ally; compare a different bond.");
+        return world;
+    }
+
+    private static World ProgramComparison(string program) {
+        World world = World.Create(false, 28, 32);
+        foreach (int y in new[] { 24, 7 }) {
+            Entity actor = Place(world, new LongbowArtillery(), Faction.InfantryAndArtillery, 8, y);
+            actor.Unit.AutomatonInstance.Settings.Aggression = .95;
+            actor.Unit.AutomatonInstance.Settings.Caution = 0;
+            if (y == 24) { AutomatonCatalog.Assign(actor.Unit, program); }
+            actor.Unit.AutomatonInstance.Settings.Spacing = program == "Keep your distance" ? 4 : 3;
+            if (program == "Lone wolf") {
+                _ = Place(world, new TrainingTarget(), actor.Faction, 9, y, stationary: true);
+                _ = Place(world, new TrainingTarget(), Faction.Prytu, 14, y, stationary: true);
+            } else if (program == "Keep your distance") {
+                _ = Place(world, new TrainingTarget(), Faction.Prytu, 10, y, stationary: true);
+            } else {
+                Entity near = Place(world, new CloneInfantry(), Faction.Prytu, 11, y, stationary: true);
+                near.Unit.AutomatonInstance = new HoldAutomaton(); near.Health = 20;
+                Entity far = Place(world, new TrainingTarget(), Faction.Prytu, 18, y, stationary: true); far.Health = 500;
+            }
+        }
+        world.Note($"Program comparison: upper {program}, lower Standard. All programs sense before any action is resolved.");
         return world;
     }
 }

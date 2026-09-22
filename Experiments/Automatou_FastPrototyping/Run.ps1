@@ -29,10 +29,12 @@ try {
         '<configuration><packageSources><clear/><add key="GodotLocal" value="' + $escapedPackageDirectory + '" /></packageSources><config><add key="signatureValidationMode" value="accept" /></config></configuration>' | Set-Content -LiteralPath $packageConfiguration -Encoding UTF8
         & dotnet restore Automatou.csproj --configfile $packageConfiguration -p:NuGetAudit=false
         if ($LASTEXITCODE -ne 0) { throw 'Package restore failed.' }
-        & dotnet build Automatou.csproj --no-restore --configuration Debug
+        & dotnet build Automatou.csproj --no-restore --configuration Debug -m:1 -nr:false
         if ($LASTEXITCODE -ne 0) { throw 'The game did not build.' }
         if ($Verify) {
-            & dotnet run --project Tests/SimulationTests.csproj --configuration Release -p:NuGetAudit=false -- --output $sessionDirectory
+            & dotnet build Tests/SimulationTests.csproj --configuration Release -m:1 -nr:false -p:NuGetAudit=false
+            if ($LASTEXITCODE -ne 0) { throw 'Simulation checks did not build.' }
+            & dotnet run --project Tests/SimulationTests.csproj --configuration Release --no-build --no-restore -- --output $sessionDirectory
             if ($LASTEXITCODE -ne 0) { throw 'Simulation verification failed.' }
         }
         if ($BuildOnly) { Write-Host 'Build completed.' }

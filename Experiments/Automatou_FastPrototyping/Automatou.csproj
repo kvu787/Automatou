@@ -9,5 +9,6 @@
     <ItemGroup>
         <Compile Remove="Tests/**/*.cs" />
         <Compile Remove="Source/AutomatonContract/**/*.cs;Source/AutomatonPrograms/**/*.cs" />
+        <ProjectReference Include="Source/AutomatonPrograms/AutomatonPrograms.csproj" />
     </ItemGroup>
 </Project>

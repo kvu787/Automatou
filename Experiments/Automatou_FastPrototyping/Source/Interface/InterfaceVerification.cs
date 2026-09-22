@@ -74,11 +74,11 @@ public partial class MainInterface {
                     throw new InvalidOperationException("Bond selector did not update the unit.");
                 }
             }
-            foreach (string caption in new[] { "Limited perception", "Weapon heat", "Protective bonds" }) {
+            foreach (string caption in new[] { "Weapon heat", "Protective bonds" }) {
                 CheckButton toggle = this.toolsPanel.FindChildren("*", "CheckButton", true, false).OfType<CheckButton>().Single(control => control.Text == caption);
                 toggle.ButtonPressed = !toggle.ButtonPressed;
             }
-            if (this.world.Settings.LimitedPerception == checkpointWorld.Settings.LimitedPerception || this.world.Settings.HeatEnabled == checkpointWorld.Settings.HeatEnabled || this.world.Settings.BondsEnabled == checkpointWorld.Settings.BondsEnabled) {
+            if (this.world.Settings.HeatEnabled == checkpointWorld.Settings.HeatEnabled || this.world.Settings.BondsEnabled == checkpointWorld.Settings.BondsEnabled) {
                 throw new InvalidOperationException("Mechanic switches did not update settings.");
             }
 

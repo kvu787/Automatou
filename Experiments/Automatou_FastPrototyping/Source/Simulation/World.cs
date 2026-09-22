@@ -127,21 +127,21 @@ public sealed partial class World {
         return Hex.TurnDistance(a.Facing, a.Position.DirectionTo(AimCell(a.Position, b))) <= 1;
     }
 
-    public bool CanAttack(Entity a, Entity b) {
+    public bool CanAttack(Entity a, Entity b, int? sightRange = null) {
         return a.Faction != b.Faction && (!this.Settings.HeatEnabled || !a.WeaponLocked) &&
-            this.CanObserve(a, b) && Separation(a, b) <= a.Unit.Range && InAttackArc(a, b);
+            this.CanObserve(a, b, sightRange) && Separation(a, b) <= a.Unit.Range && InAttackArc(a, b);
     }
 
     public static int ArmorAgainst(Entity defender, Hex attacker) {
         int difference = Hex.TurnDistance(defender.Facing, defender.Position.DirectionTo(attacker));
         return difference == 0 ? defender.Unit.Armor : difference == 1 ? defender.Unit.Armor * 2 / 3 : defender.Unit.Armor / 4;
     }
-    public void Attack(Entity attacker, Entity defender) {
-        if (!this.CanAttack(attacker, defender)) {
+    public void Attack(Entity attacker, Entity defender, int? sightRange = null) {
+        if (!this.CanAttack(attacker, defender, sightRange)) {
             return;
         }
 
-        attacker.Unit.AutomatonInstance.State.ShotsFired++;
+        attacker.ShotsFired++;
         if (this.Settings.HeatEnabled && attacker.Unit.HeatPerShot > 0) {
             attacker.Heat = Math.Min(200, attacker.Heat + attacker.Unit.HeatPerShot);
             if (attacker.Heat >= 100 && !attacker.WeaponLocked) {
@@ -166,93 +166,6 @@ public sealed partial class World {
             if (victim.Health <= 0) { this.Note($"{victim.Name} destroyed."); this.Casualties++; _ = this.Entities.Remove(victim); }
         }
         this.RebuildOccupancy();
-    }
-    public void Step() {
-        // One world turn: cool everyone, then let each surviving actor spend its whole
-        // budget in sequence. Later actors see changes made by earlier actors this turn.
-        this.Turn++; this.Effects.Clear();
-        if (this.Settings.HeatEnabled) {
-            foreach (Entity entity in this.Entities) {
-                int cooling = entity.Unit.CoolingPerTurn;
-                entity.Heat = Math.Max(0, entity.Heat - cooling);
-                if (entity.WeaponLocked && entity.Heat <= 40) {
-                    entity.WeaponLocked = false;
-                    this.Note($"{entity.Name} cooled; weapon ready.");
-                }
-            }
-        }
-
-        Entity[] order = this.Entities.OrderBy(e => e.Id).ToArray();
-        if (order.Length == 0) {
-            return;
-        }
-        // Rotate first actor each turn, avoiding a permanent first-faction advantage.
-        order = [.. order.Skip(this.Turn % order.Length), .. order.Take(this.Turn % order.Length)];
-        foreach (Entity? actor in order) {
-            if (!this.Entities.Contains(actor)) {
-                continue;
-            }
-
-            UnitSenses senses = new(this, actor);
-            // A rejected request ends this turn. Successful actions always consume points,
-            // so even an automaton yielding endlessly cannot exceed its action budget.
-            using IEnumerator<UnitAction> actions = actor.Unit.AutomatonInstance.Act(senses).GetEnumerator();
-            while (senses.RemainingPoints > 0 && this.Entities.Contains(actor) && actions.MoveNext()) {
-                if (!this.ApplyAction(actor, senses, actions.Current)) {
-                    break;
-                }
-            }
-        }
-    }
-    private bool ApplyAction(Entity actor, UnitSenses senses, UnitAction action) {
-        // The world enforces legality independently of the automaton: at most one attack
-        // (2 points), each turn step (1 point), or each forward move (terrain cost).
-        // false stops this actor's turn; unused points are not carried into the next turn.
-        switch (action) {
-        case AttackAction attack:
-            Entity? target = this.Entities.FirstOrDefault(e => e.Id == attack.TargetId);
-            if (senses.HasAttacked || senses.RemainingPoints < 2 || target is null || !this.CanAttack(actor, target)) {
-                return false;
-            }
-
-            this.Attack(actor, target);
-            senses.RemainingPoints -= 2; senses.HasAttacked = true;
-            return true;
-        case TurnAction turn:
-            if (actor.Stationary || turn.Direction is not (-1 or 1)) {
-                return false;
-            }
-
-            actor.Facing = (actor.Facing + turn.Direction + 6) % 6;
-            senses.RemainingPoints--;
-            return true;
-        case MoveForwardAction:
-            if (actor.Stationary) {
-                return false;
-            }
-
-            Hex next = actor.Position + Hex.Directions[actor.Facing];
-            if (!this.CanOccupy(actor, next, out _)) {
-                return false;
-            }
-
-            bool rough = this.Terrain[next] == Simulation.Terrain.Forest;
-            int cost = this.MovementCost(actor, next);
-            if (senses.RemainingPoints < cost) {
-                return false;
-            }
-
-            actor.Position = next; senses.RemainingPoints -= cost;
-            if (rough && actor.Faction == Faction.InfantryAndArtillery) {
-                actor.Health -= 2;
-            }
-
-            if (actor.Health <= 0) { _ = this.Entities.Remove(actor); this.Casualties++; this.Note($"{actor.Name} lost crossing rough terrain."); }
-            this.RebuildOccupancy();
-            return true;
-        default:
-            return false;
-        }
     }
     public static World Demonstration() {
         // Fixed encounter terrain, including the original starting units' clearings.
