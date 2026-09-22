@@ -7,7 +7,8 @@
         <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-        <Compile Remove="Tests/**/*.cs" />
+        <!-- Session artifacts, including standalone verification projects, are not application source. -->
+        <Compile Remove="Tests/**/*.cs;MyLogOutput/**/*.cs" />
         <Compile Remove="Source/AutomatonContract/**/*.cs;Source/AutomatonPrograms/**/*.cs" />
         <ProjectReference Include="Source/AutomatonPrograms/AutomatonPrograms.csproj" />
     </ItemGroup>
