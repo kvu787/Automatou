@@ -89,3 +89,24 @@ For your movement example, both automata may request the same destination. Neith
 
 Your model therefore implies a meaningful change: separate the decision phase from the resolution phase. A submitted action can fail, and later actions in its list may then become impossible; world systems need a defined policy for that and explicit outcome feedback. The automaton should never treat a requested action as an accomplished fact.
 
+## User
+
+before we continue this discussion, remove all usage of "brain" in C:\Users\k\Repository\Automatou\Experiments\Automatou_FastPrototyping. this is misleading terminology that should be replaced with with "automaton" or terms involving "automatons" 
+
+## Assistant
+
+I’ll replace “brain” throughout the prototype with automaton terminology, including code identifiers, comments, documentation, and test descriptions, then build and verify it.
+
+## User
+
+before we continue this discussion, remove all usage of "brain" in C:\Users\k\Repository\Automatou\Experiments\Automatou_FastPrototyping. this is misleading terminology that should be replaced with with "automaton" or terms involving "automaton"
+
+## Assistant
+
+I’ll use `AutomatonInstance` for the unit property, since `Automaton` is already the nested class name, and `automaton` for local variables and prose. I’ll also update occurrences in local text logs and saved source copies under that folder.
+
+## Assistant
+
+Replaced the terminology throughout the prototype’s code, documentation, tests, and local text logs. The property is now `AutomatonInstance`; local variables use `automaton`.
+
+No remaining text matches for “brain” in that folder. Build succeeded and all 35 verification groups passed. Changes committed; behavior is unchanged.
