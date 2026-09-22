@@ -204,12 +204,18 @@ public partial class MainInterface : Control {
     private void Step() {
         this.CaptureLiveTuning();
         Entity[] actors = this.world.Entities.ToArray();
-        Dictionary<int, (int ShotsFired, int IntentionChanges)> counters = actors.ToDictionary(entity => entity.Id, entity => (entity.Unit.AutomatonInstance.State.ShotsFired, entity.Unit.AutomatonInstance.State.IntentionChanges));
+        Dictionary<int, (int ShotsFired, int IntentionChanges)> counters = actors.ToDictionary(entity => entity.Id, entity => (entity.ShotsFired, entity.Unit.AutomatonInstance.State.IntentionChanges));
         this.world.Step(); this.board.Flash();
         foreach (Entity entity in actors) {
             AutomatonMemory memory = entity.Unit.AutomatonInstance.State;
-            this.experimentShots += memory.ShotsFired - counters[entity.Id].ShotsFired;
+            this.experimentShots += entity.ShotsFired - counters[entity.Id].ShotsFired;
             this.experimentChanges += memory.IntentionChanges - counters[entity.Id].IntentionChanges;
+            foreach (SensingReceipt call in entity.LastTurn.Sensing) {
+                this.Log($"SENSE Turn={this.world.Turn} Id={entity.Id} Call={call.Call} Energy={call.EnergySpent} Remaining={call.RemainingEnergy} Received={call.Succeeded}");
+            }
+            foreach (ActionOutcome outcome in entity.LastTurn.Outcomes) {
+                this.Log($"RESOLVE Turn={this.world.Turn} Id={entity.Id} Request={outcome.Action} Success={outcome.Succeeded} Energy={outcome.EnergySpent} Reason={outcome.Reason}");
+            }
             if (memory.History.LastOrDefault() is { } decision && decision.Turn == this.world.Turn) {
                 this.Log("DECISION " + $"Turn={this.world.Turn} Id={entity.Id} Name={entity.Name} Health={entity.Health} Heat={entity.Heat} Intention={decision.Intention} Reason={decision.Reason} Destination={decision.Destination}");
             }
@@ -392,7 +398,7 @@ public partial class MainInterface : Control {
             this.Log(entry);
         }
 
-        this.experimentShots = this.world.Entities.Sum(entity => entity.Unit.AutomatonInstance.State.ShotsFired);
+        this.experimentShots = this.world.Entities.Sum(entity => entity.ShotsFired);
         this.experimentChanges = this.world.Entities.Sum(entity => entity.Unit.AutomatonInstance.State.IntentionChanges);
         if (capture) {
             this.checkpoint = this.world.Copy();

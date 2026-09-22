@@ -11,7 +11,7 @@ public partial class MainInterface {
     private ExperimentResult? referenceResult;
     private int experimentShots, experimentChanges, checkpointShots, checkpointChanges;
     private int inspectorTab;
-    private readonly Dictionary<int, (BehaviorSettings Settings, int? BondedUnitId)> experimentTuning = [];
+    private readonly Dictionary<int, (BehaviorSettings Settings, int? BondedUnitId, string Program)> experimentTuning = [];
     private sealed record ExperimentResult(int Turn, int Survivors, int Health, int Shots, int Changes, string Population);
 
     private CheckButton Toggle(Node parent, string caption, bool value, Action<bool> changed, string tooltip = "") {
@@ -73,15 +73,16 @@ public partial class MainInterface {
         int? selection = this.selected?.Id;
         SimulationSettings settings = this.world.Settings with { };
         this.CaptureLiveTuning();
-        Dictionary<int, (BehaviorSettings Settings, int? BondedUnitId)> tuning = this.experimentTuning.ToDictionary(entry => entry.Key,
-            entry => (Settings: entry.Value.Settings with { }, entry.Value.BondedUnitId));
+        Dictionary<int, (BehaviorSettings Settings, int? BondedUnitId, string Program)> tuning = this.experimentTuning.ToDictionary(entry => entry.Key,
+            entry => (Settings: entry.Value.Settings with { }, entry.Value.BondedUnitId, entry.Value.Program));
         this.referenceResult = this.Result();
         this.LogResult(preserveTuning ? "COMPARE_TUNED" : "COMPARE_EXACT", this.referenceResult);
         World replacement = this.checkpoint.Copy();
         if (preserveTuning) {
             replacement.Settings = settings;
             foreach (Entity entity in replacement.Entities) {
-                if (tuning.TryGetValue(entity.Id, out (BehaviorSettings Settings, int? BondedUnitId) value)) {
+                if (tuning.TryGetValue(entity.Id, out (BehaviorSettings Settings, int? BondedUnitId, string Program) value)) {
+                    if (entity.Unit.AutomatonInstance.ProgramName != value.Program) { AutomatonCatalog.Assign(entity.Unit, value.Program); }
                     entity.Unit.AutomatonInstance.Settings = value.Settings;
                     entity.BondedUnitId = value.BondedUnitId;
                 }
@@ -124,6 +125,7 @@ public partial class MainInterface {
         UnitAutomaton automaton = entity.Unit.AutomatonInstance;
         AutomatonMemory state = automaton.State;
         _ = this.Heading(this.inspectorPanel, "CURRENT INTENTION");
+        _ = Label(this.inspectorPanel, automaton.ProgramName, 15, this.muted);
         _ = Label(this.inspectorPanel, string.IsNullOrWhiteSpace(state.Intention) ? "Awaiting first turn" : state.Intention, 19, this.accent);
         _ = Label(this.inspectorPanel, string.IsNullOrWhiteSpace(state.Reason) ? "Advance one turn to see this unit's reasoning." : state.Reason, 13);
         HBoxContainer tabs = Row(this.inspectorPanel);
@@ -134,7 +136,18 @@ public partial class MainInterface {
         }
         if (this.inspectorTab == 1) { this.BuildTuningControls(entity); return; }
         if (this.inspectorTab == 2) { this.BuildUnitDetails(entity); return; }
-        _ = Label(this.inspectorPanel, $"Since turn {state.IntentionSince} · {automaton.TurnsObserved} turns observed\nDestination: {state.Destination?.ToString() ?? "none"}\nTarget: {(automaton.TargetId is { } target ? "#" + target : "none")}\n{state.ShotsFired} shots · {state.IntentionChanges} intention changes", 12, this.muted);
+        TurnReport report = entity.LastTurn;
+        _ = this.Heading(this.inspectorPanel, "SENSE → REMEMBER → THINK → ACT");
+        _ = Label(this.inspectorPanel, $"Turn energy {report.InitialEnergy} · left {report.RemainingEnergy}\n" +
+            (report.Sensing.Count == 0 ? "No sensing yet." : string.Join("\n", report.Sensing.Select(call => $"{call.Call}: {call.EnergySpent} energy · {(call.Succeeded ? "received" : "denied")}"))), 12, this.muted);
+        _ = Label(this.inspectorPanel, "Submitted: " + (report.Submitted.Count == 0 ? "none" : string.Join(" → ", report.Submitted.Select(action => action switch {
+            TurnAction turn => turn.Direction > 0 ? "turn +60°" : "turn −60°",
+            MoveForwardAction => "forward",
+            AttackAction attack => $"attack #{attack.TargetId}",
+            _ => "unknown"
+        }))), 12, this.muted);
+        _ = Label(this.inspectorPanel, report.Error.Length > 0 ? report.Error : string.Join("\n", report.Outcomes.Select(outcome => $"{outcome.Index + 1}. {(outcome.Succeeded ? "OK" : "Stopped")} · {outcome.Reason}")), 12, this.muted);
+        _ = Label(this.inspectorPanel, $"Since turn {state.IntentionSince} · {automaton.TurnsObserved} turns observed\nDestination: {state.Destination?.ToString() ?? "none"}\nTarget: {(automaton.TargetId is { } target ? "#" + target : "none")}\n{entity.ShotsFired} shots · {state.IntentionChanges} intention changes", 12, this.muted);
         if (state.Considerations.Count > 0) {
             _ = this.Heading(this.inspectorPanel, "DECISION SCORES");
             foreach (DecisionConsideration? consideration in state.Considerations.OrderByDescending(value => value.Score)) {
@@ -155,6 +168,13 @@ public partial class MainInterface {
             return;
         }
         _ = Label(this.inspectorPanel, "Changes pause playback. Rewind with tuning keeps these values.", 12, this.muted);
+        _ = Label(this.inspectorPanel, "Automaton program", 12, this.accent);
+        string[] programNames = [.. AutomatonCatalog.Names.Where(name => name != "Keep your distance" || entity.Unit.Range > 1)];
+        this.Choice(this.inspectorPanel, programNames, Array.IndexOf(programNames, automaton.ProgramName), index => {
+            this.Pause(); AutomatonCatalog.Assign(entity.Unit, programNames[index]); this.RememberTuning(entity);
+            this.Log($"PROGRAM Id={entity.Id} Program={programNames[index]}"); this.BuildInspector();
+            this.Status("Program changed; its memory starts fresh. Rewind with tuning compares from the checkpoint.");
+        }).Name = "AutomatonProgram";
         void Tune(Action edit) {
             this.Pause(); edit();
             this.RememberTuning(entity);
@@ -168,14 +188,28 @@ public partial class MainInterface {
             spin.ValueChanged += updated => this.Guard(() => Tune(() => assign(updated)));
             return spin;
         }
+        if (automaton is LoneWolfAutomaton or KeepYourDistanceAutomaton) {
+            _ = Parameter("Spacing", automaton.Settings.Spacing, value => automaton.Settings.Spacing = (int)value,
+                "Minimum distance in hex steps between footprint edges. Applies to observed units; separation takes precedence over attacking.",
+                1, automaton is KeepYourDistanceAutomaton ? entity.Unit.Range - 1 : 20, 1);
+        }
+        _ = Parameter("Extra sight range", automaton.Settings.ExtraSightRange, value => automaton.Settings.ExtraSightRange = (int)value,
+            "Vision costs 1 energy plus 1 per extra hex of range. Terrain survey costs 1. Both reduce energy available for actions.",
+            0, Math.Min(AutomatonCosts.MaximumExtraRange, entity.Unit.TurnEnergy - 2), 1);
+        if (automaton is HuntTheWeakestAutomaton) {
+            _ = Label(this.inspectorPanel, "Targets the lowest health percentage among visible enemies. Ties use unit ID. Other enemies never replace that target during this turn.", 12, this.muted);
+        }
         _ = Parameter("Aggression", automaton.Settings.Aggression, value => automaton.Settings = automaton.Settings with { Aggression = value }, "Higher values favor engagement. At 0.8 or above, firing may overrun the preferred heat ceiling and risk a weapon lock.");
-        _ = Parameter("Caution", automaton.Settings.Caution, value => automaton.Settings = automaton.Settings with { Caution = value }, "Higher values favor survival when wounded or threatened.");
-        _ = Parameter("Commitment", automaton.Settings.Commitment, value => automaton.Settings = automaton.Settings with { Commitment = value }, "Higher values favor continuing the current intention.");
+        if (automaton is not HuntTheWeakestAutomaton) {
+            _ = Parameter("Caution", automaton.Settings.Caution, value => automaton.Settings = automaton.Settings with { Caution = value }, "Higher values favor survival when wounded or threatened.");
+            _ = Parameter("Commitment", automaton.Settings.Commitment, value => automaton.Settings = automaton.Settings with { Commitment = value }, "Higher values favor continuing the current intention.");
+        }
         if (entity.Unit.HeatPerShot > 0) {
             _ = Parameter("Heat reserve", automaton.Settings.HeatReserve, value => automaton.Settings = automaton.Settings with { HeatReserve = (int)value }, "Preferred heat ceiling. Below 0.8 aggression, next-shot heat is checked before firing. Higher aggression permits exceeding the ceiling.", 40, 100, 5);
         }
 
         _ = this.Toggle(this.inspectorPanel, "Remember contacts", automaton.Settings.RememberContacts, value => Tune(() => automaton.Settings = automaton.Settings with { RememberContacts = value }));
+        if (automaton is HuntTheWeakestAutomaton) { return; }
         if (entity.Unit is PrytuHunter or PrytuManifestation) {
             _ = Label(this.inspectorPanel, "This unit's policy does not use individual bonds.", 12, this.muted);
             return;
@@ -193,7 +227,7 @@ public partial class MainInterface {
     private void BuildUnitDetails(Entity entity) {
         _ = this.Heading(this.inspectorPanel, "UNIT STATISTICS");
         Unit unit = entity.Unit;
-        _ = Label(this.inspectorPanel, $"Origin {entity.Position} · {Hex.DirectionNames[entity.Facing]}\n{entity.OccupiedCells().Count()} occupied cells\n{unit.TurnEnergy} energy / turn / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, this.muted);
+        _ = Label(this.inspectorPanel, $"Origin {entity.Position} · {Hex.DirectionNames[entity.Facing]}\n{entity.OccupiedCells().Count()} occupied cells\n{unit.TurnEnergy} energy / turn\n{unit.Damage} ranged · {unit.MeleeDamage} melee\n{unit.Range} range · {unit.Armor} front armor\n{unit.Evasion}% evasion · {unit.Mobility}", 13, this.muted);
         _ = this.Button(this.inspectorPanel, entity.Stationary ? "Mobilize unit" : "Deploy / hold position", () => {
             this.Pause(); entity.Stationary = !entity.Stationary;
             if (this.mode == "World creator") { this.RecordWorldEdit(); } else { this.Refresh(); }
@@ -205,7 +239,7 @@ public partial class MainInterface {
     }
 
     private void RememberTuning(Entity entity) {
-        this.experimentTuning[entity.Id] = (entity.Unit.AutomatonInstance.Settings with { }, entity.BondedUnitId);
+        this.experimentTuning[entity.Id] = (entity.Unit.AutomatonInstance.Settings with { }, entity.BondedUnitId, entity.Unit.AutomatonInstance.ProgramName);
     }
 
     private void CaptureLiveTuning() {

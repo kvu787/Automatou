@@ -50,6 +50,8 @@ public partial class MainInterface {
                     throw new InvalidOperationException("Experiment did not expose decision reasoning: " + scenario.Name);
                 }
             }
+            await this.VerifyAutomatonPrograms();
+            this.LoadScenario(ScenarioCatalog.All[0]);
             World checkpointWorld = this.checkpoint.Copy();
             int selectedId = this.selected!.Id;
             Entity initialEntity = checkpointWorld.Entities.Single(entity => entity.Id == selectedId);
@@ -255,6 +257,58 @@ public partial class MainInterface {
             this.GetTree().Quit();
         } catch (Exception exception) { this.Log("INTERFACE FAILURE: " + exception); GD.PushError(exception.ToString()); this.GetTree().Quit(1); }
     }
+    private async Task VerifyAutomatonPrograms() {
+        foreach (string name in new[] { "Lone wolf", "Keep your distance", "Hunt the weakest" }) {
+            this.LoadScenario(ScenarioCatalog.All.Single(scenario => scenario.Name == name));
+            this.Step();
+            if (this.selected!.Unit.AutomatonInstance.ProgramName != name || this.selected.LastTurn.Sensing.Count != 2 || this.selected.LastTurn.Error.Length > 0) {
+                throw new InvalidOperationException("Program scenario or sensing trace failed: " + name);
+            }
+            this.inspectorTab = 0; this.BuildInspector();
+            await this.Capture(name.Replace(" ", "") + "Program.png");
+            this.inspectorTab = 1; this.BuildInspector();
+            OptionButton programs = this.inspectorPanel.FindChildren("AutomatonProgram", "OptionButton", true, false).OfType<OptionButton>().Single();
+            if (programs.GetItemText(programs.Selected) != name || programs.ItemCount != 4) {
+                throw new InvalidOperationException("Ranged program selection is incomplete.");
+            }
+            if (name != "Hunt the weakest") {
+                SpinBox spacing = this.inspectorPanel.FindChildren("Spacing", "SpinBox", true, false).OfType<SpinBox>().Single();
+                if (name == "Keep your distance" && spacing.MaxValue != this.selected.Unit.Range - 1) {
+                    throw new InvalidOperationException("Spacing control permits N at or above attack range.");
+                }
+                spacing.Value = 2;
+                if (this.selected.Unit.AutomatonInstance.Settings.Spacing != 2) { throw new InvalidOperationException("Spacing was not applied."); }
+            } else if (this.inspectorPanel.FindChildren("Caution", "SpinBox", true, false).Count > 0 || this.inspectorPanel.FindChildren("BondChoice", "OptionButton", true, false).Count > 0) {
+                throw new InvalidOperationException("Hunt policy exposes irrelevant controls.");
+            }
+            SpinBox vision = this.inspectorPanel.FindChildren("Extrasightrange", "SpinBox", true, false).OfType<SpinBox>().Single();
+            vision.Value = 1;
+            await this.Capture(name.Replace(" ", "") + "Tuning.png");
+            int standard = Enumerable.Range(0, programs.ItemCount).Single(index => programs.GetItemText(index) == "Standard");
+            _ = programs.EmitSignal(OptionButton.SignalName.ItemSelected, standard);
+            if (this.selected.Unit.AutomatonInstance.ProgramName != "Standard" || this.selected.Unit.AutomatonInstance.TurnsObserved != 0 || this.selected.Unit.AutomatonInstance.Settings.ExtraSightRange != 1) {
+                throw new InvalidOperationException("Program switching did not reset memory and preserve tuning.");
+            }
+            this.RewindExperiment(true);
+            if (this.selected!.Unit.AutomatonInstance.ProgramName != "Standard" || this.selected.Unit.AutomatonInstance.Settings.ExtraSightRange != 1) {
+                throw new InvalidOperationException("Tuned rewind lost program selection.");
+            }
+            this.RewindExperiment(false);
+            if (this.selected!.Unit.AutomatonInstance.ProgramName != name || this.selected.Unit.AutomatonInstance.Settings.ExtraSightRange != 0) {
+                throw new InvalidOperationException("Exact rewind lost original program.");
+            }
+        }
+        this.LoadChosenWorld(null, "World");
+        this.selected = this.world.Entities.First(entity => entity.Unit.Range == 1);
+        this.inspectorTab = 1; this.BuildInspector();
+        OptionButton meleePrograms = this.inspectorPanel.FindChildren("AutomatonProgram", "OptionButton", true, false).OfType<OptionButton>().Single();
+        if (Enumerable.Range(0, meleePrograms.ItemCount).Any(index => meleePrograms.GetItemText(index) == "Keep your distance")) {
+            throw new InvalidOperationException("Melee body can select a ranged-only program.");
+        }
+        this.inspectorTab = 0;
+        this.Log("PASS: special programs, paid sensing trace, spacing limits, program switching, and tuned/exact program rewind.");
+    }
+
     private async Task VerifyFactionPlacement() {
         (Faction Faction, Type[] Units)[] rosters = [
             (Faction.Bastions, [typeof(Bastion)]),
