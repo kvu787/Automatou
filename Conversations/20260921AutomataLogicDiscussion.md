@@ -155,3 +155,56 @@ Grobots looks especially close to your energy-costed sensing idea. Battlecode is
    WebAssembly provides isolated program memory and explicit imported functionality. A host can expose only the permitted sensing and action operations; Wasmtime also supports execution limits through fuel. **Study this for enforceable encapsulation when running player programs.** Your game would still implement sensing permissions and energy charges inside those host calls; runtime fuel does not automatically represent gameplay energy. [Sandbox architecture](https://docs.wasmtime.dev/security.html), [fuel example](https://docs.wasmtime.dev/examples-interrupting-wasm.html).
 
 I’d start with **Grobots → Battlecode → Screeps**. One design distinction I would preserve is **gameplay energy versus execution budget**: sensing spends the unit’s energy, while a separate execution limit bounds loops and computation that never call a sensing method.
+
+## User
+
+i notice that your list doesn't include any majorly popular video games. i am curious about this, because this architecture seems like the most natural way to write AIs for a wide variety of games. however, i only have limited experience as a game developer, so i may be missing or misunderstanding some key things. explain
+
+## Assistant
+
+I’ll check how major games handle AI perception and action requests, then separate those common patterns from the stricter, energy-metered interface you’re proposing.
+
+## Assistant
+
+Halo 2 and Left 4 Dead both document substantial parts of the structure you described. My earlier list leaned toward games where players write the programs, which made the general architecture look less common than it is. The key distinction is between separating perception, memory, decisions, and execution—and making every observation an explicitly paid gameplay operation.
+
+## Assistant
+
+**Your core intuition is sound: separating sensing, memory, decisions, and execution is well established in major games.** My earlier list overemphasized matches for *player-programmable agents with metered sensing*. That made the broader architecture look less common than it is.
+
+You are proposing several related choices:
+
+- **Modularity:** perception, memory, decision-making, and world execution have distinct responsibilities.
+- **Information restrictions:** an AT receives only observations it is allowed to obtain.
+- **Enforced isolation:** its program cannot bypass that interface.
+- **An information economy:** obtaining observations spends resources that could otherwise support actions.
+
+The first two have clear mainstream precedents. The last two explain why programming games were prominent in my list.
+
+**Major games do use much of this structure.**
+
+In **Halo 2**, each actor maintains representations of perceived objects, including last-seen information and records of previous interactions. These representations are distinct from actual world state and filtered by perception. Decisions can therefore rely on outdated or mistaken beliefs. That is very close to your “sense, remember, think” model. Damian Isla’s account also discusses the difficulty of keeping behavior configuration understandable as the system grows—your encapsulation concern. [Halo 2 architecture, by its developer](https://www.gamedeveloper.com/programming/gdc-2005-proceeding-handling-complexity-in-the-i-halo-2-i-ai).
+
+**Left 4 Dead** separates Vision, Intention, Locomotion, and Body components. Vision owns visibility queries and recognized entities; Intention manages behaviors; Locomotion owns movement and collision resolution. This substantially resembles your separation between decisions and execution. It is not evidence that every observation costs gameplay energy or that each agent runs behind a security boundary. [Valve’s architecture presentation, slide 37](https://cdn.akamai.steamstatic.com/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf#page=38).
+
+**Unreal Engine** provides perception components with sight and hearing limits, remembered stimuli, and update events that can drive decision logic. Its sight implementation also exposes limits on traces and processing time per tick. These are concrete examples of restricted perception and computational budgeting. [Perception documentation](https://dev.epicgames.com/documentation/unreal-engine/ai-perception-in-unreal-engine), [sight processing limits](https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/AIModule/Perception/UAISense_Sight?application_version=5.5).
+
+**Why doesn’t every game go all the way to your model?** The following are engineering and design tradeoffs, rather than claims that every studio follows one approach.
+
+1. **A modular interface and an enforced sandbox solve different problems.**  
+   For developer-authored AI, interfaces, ownership rules, and testing may provide sufficient separation. A sandbox adds work around execution limits, data exchange, debugging, and persistence. With player-authored programs, enforcement becomes much more valuable: the rules must hold even when someone tries to bypass them.
+
+2. **Paying for every observation changes the game’s rules.**  
+   “Looking again costs energy that I could have used to move” is a meaningful mechanic for Automatou. For a shooter guard, the designer may simply want continuous awareness within a vision cone. Adding an energy bill would introduce another failure mode to balance and explain, without necessarily improving that game.
+
+3. **CPU cost and fictional energy serve different purposes.**  
+   A runtime might spread visibility checks across frames to meet performance limits. That does not require characters to expend stamina. Your design deliberately makes information gathering a tactical resource decision; that is an additional game-design choice.
+
+4. **Some AI exists to manage the experience beyond any individual character.**  
+   Left 4 Dead’s Director adjusts threat populations using estimates of survivor intensity. Such a system needs a broader perspective than one creature’s senses. Your architecture can accommodate this naturally as a separate world-level system. [Valve’s Director presentation](https://cdn.akamai.steamstatic.com/apps/valve/2009/ai_systems_of_l4d_mike_booth.pdf#page=79).
+
+One practical consequence deserves attention: **the distinction between acquiring information and reading already-acquired information must be explicit.** Two helper functions independently requesting vision could accidentally spend twice as much energy. Acquiring an observation once, storing it, and letting both helpers consult that memory makes the cost understandable.
+
+Also, behavior trees, state machines, utility scoring, and planners can all fit inside your **Think** stage. They are choices about how an AT decides; your syscall boundary governs what information and capabilities any of those implementations can use.
+
+For Automatou, the stronger boundary has a clear purpose: **the player is designing the decision-making program itself, so its interface and resource rules are part of the game players learn and master.**
