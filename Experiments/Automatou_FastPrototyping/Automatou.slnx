@@ -6,4 +6,8 @@
     <Folder Name="/Tests/">
         <Project Path="Tests/SimulationTests.csproj" />
     </Folder>
+    <Folder Name="/Automata/">
+        <Project Path="Source/AutomatonContract/AutomatonContract.csproj" />
+        <Project Path="Source/AutomatonPrograms/AutomatonPrograms.csproj" />
+    </Folder>
 </Solution>

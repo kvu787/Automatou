@@ -8,5 +8,6 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Remove="Tests/**/*.cs" />
+        <Compile Remove="Source/AutomatonContract/**/*.cs;Source/AutomatonPrograms/**/*.cs" />
     </ItemGroup>
 </Project>
