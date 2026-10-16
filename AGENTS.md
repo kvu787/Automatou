@@ -57,8 +57,10 @@ Any logs for that application session must be put in that log folder.
 
 Record verbatim and commit all conversations in a folder named `Conversations` located at the root of this Git repo.
 Use one file per conversation.
+Prefix these files with the PowerShell evaluation of `[DateTime]::UtcNow.ToString("yyyy-MM-dd_HH-mm") + "_UTC"`.
 Prefix these commits with `[cnv]`.
 If I attach images to prompts, save and record these in the conversation logs.
+If the conversation begins with `dnr`, then do not record the conversation.
 
 ## Application compatibility
 
