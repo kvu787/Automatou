@@ -97,3 +97,22 @@ with odd rows shifted right. This does not implement the main 3D Shell.
 Oblong model proportions and earlier rectangular-footprint experiments remain
 relevant references, but do not define the new hex footprint rules. The main
 Shell retains the required orthographic 3/4 miniature-world aesthetic.
+
+### Provisional preferences for oblong units
+
+The following preferences are provisional and may change after experimentation.
+Aircraft carriers and squiggly serpents are reference examples.
+
+- Compact silhouettes are unacceptable because they constrain visual design too
+  much. Do not assume that shortening and broadening a carrier or coiling a
+  serpent is an acceptable solution merely to fit a compact footprint.
+- Reserving space around an oblong body inside a regular hexagonal footprint is
+  possibly acceptable. The amount of apparently empty but occupied space is a
+  concern and needs experimentation; this approach is not yet accepted.
+- Rigid oblong footprints are unacceptable because of increased mechanics
+  complexity.
+- Articulated footprints are unacceptable because of increased mechanics
+  complexity.
+
+These preferences do not change the current regular hexagonal footprint rules
+or establish a final solution for oblong models.
