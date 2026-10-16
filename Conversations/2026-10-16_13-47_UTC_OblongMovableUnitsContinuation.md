@@ -109,3 +109,42 @@ I’ll read that conversation and the repository instructions to pick up where i
 ## Assistant
 
 I’ve read the previous conversation and will use it as context. The established decisions are regular hexagonal footprints, turning without changing occupied cells or swept collision checks, and no explicit ban on oblong visual models. How very long models fit those footprints remains unresolved.
+
+## User
+
+help me brainstorm approaches to oblong units. let's use an aircraft carrier and a squiggly serpent as examples
+
+## Assistant
+
+I’ll check the footprint and art-direction rules, then use the carrier and serpent to explore the tradeoffs.
+
+## Assistant
+
+The useful distinction is **looking long versus behaving long**. A carrier might need to fit through a narrow strait; a serpent might need to wrap around a rock. Those behaviors put different demands on the spatial rules.
+
+These are possibilities to explore, not changes to the existing decisions.
+
+| Approach                          | Aircraft carrier                                                                                                | Squiggly serpent                                                               | Main tradeoff                                                                                                                |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Compact silhouette**            | A stylized, shorter and broader hull fits inside a regular hexagonal footprint.                                 | A coiled body fills the footprint; the head establishes facing.                | Preserves the current rules, but reduces the sense of physical length.                                                       |
+| **Reserve space around the body** | A long hull sits inside a large regular hexagonal footprint. Empty space beside it represents maneuvering room. | A winding body fits inside the footprint and changes its pose during movement. | Preserves length and current rules, but blocks considerable apparently empty ground.                                         |
+| **Rigid oblong footprint**        | The occupied hexes follow the hull and rotate with it.                                                          | The entire curved body rotates as one fixed shape.                             | Length affects navigation, but the serpent behaves like a bent rigid object.                                                 |
+| **Articulated footprint**         | Several connected sections approximate the hull, with their relative positions constrained to keep it straight. | Connected body sections follow the head and bend around obstacles.             | Supports physical length and flexibility, but introduces body configuration, self-collision, and more demanding pathfinding. |
+
+**For the carrier, a rigid footprint seems the most natural option if geography should matter.** It could pass lengthwise through a narrow strait while being unable to turn broadside there. You would need to choose its rotation pivot and turning rule:
+
+- **Rotate in place:** accept a turn when the destination footprint is clear. This can retain the existing decision against swept collision checks, although the occupied cells would now change.
+- **Turn while advancing:** use movement actions that combine translation and a change of facing. This makes turning room a meaningful property of the ship.
+
+The second approach offers stronger ship behavior, but a large 60-degree facing change may need carefully designed movement steps to feel convincing.
+
+**For the serpent, decide whether its squiggles are animation or game state.** That is probably the most consequential choice here.
+
+- **Animation:** it is logically one compact unit. Its body coils, stretches, and undulates inside its reserved area. Easier movement and clearer commands.
+- **Game state:** its occupied body forms a connected chain. The head advances and the rest follows, releasing space behind the tail. It can snake through passages and span several locations at once.
+
+The chain version creates interesting questions: can it block a doorway with its middle, surround another unit, reverse through its own body, or be attacked anywhere along its length? Those could become defining mechanics rather than incidental complications. It also needs a separate facing rule: the head's direction need not describe the orientation of the whole body.
+
+My inclination is to explore **a rigid carrier and an articulated serpent** if physical shape is meant to produce tactics. They share occupied hexes and collision rules, while having different permitted movement actions. If the priority is keeping the present movement system simple, **a carrier with reserved maneuvering space and a visually coiled serpent** are the strongest starting points.
+
+The deciding question is: **should the carrier's length and the serpent's bends change where they can go, or mainly how they look?**
