@@ -148,3 +148,32 @@ The chain version creates interesting questions: can it block a doorway with its
 My inclination is to explore **a rigid carrier and an articulated serpent** if physical shape is meant to produce tactics. They share occupied hexes and collision rules, while having different permitted movement actions. If the priority is keeping the present movement system simple, **a carrier with reserved maneuvering space and a visually coiled serpent** are the strongest starting points.
 
 The deciding question is: **should the carrier's length and the serpent's bends change where they can go, or mainly how they look?**
+
+## User
+
+these are my current thoughts. they may change after experimentation:
+Compact silhouette: Unacceptable because it impacts visual design too much.
+Reserve space around the body: Possibly acceptable. I am concerned with how much "empty space" there could be in the hex footprint for oblong units.
+Rigid oblong footprint: Unacceptable due to increased mechanics complexity.
+Articulated footprint: Unacceptable due to increased mechanics complexity.
+
+## Assistant
+
+I’ll record these as provisional preferences and check where they fit in the design notes.
+
+## Assistant
+
+That narrows the exploration to **preserving the model’s proportions while keeping a regular hexagonal footprint**, with reserved empty space still an open concern.
+
+The carrier is the harder case: its rigid hull leaves substantial space beside it. A serpent can change poses, but requiring it to coil just to fit would risk the same visual compromise you rejected.
+
+A useful experiment would compare both models at several footprint sizes, showing:
+
+- The occupied boundary alongside the actual body.
+- Two units as close together as the rules permit.
+- Movement beside a shoreline or obstacle.
+- All six facings, including turn animations.
+
+That would help distinguish whether the empty space feels acceptable in play, looks misleading, or prevents formations and passages you expect to work. **No acceptable amount of empty space has been decided yet.**
+
+Recorded as provisional preferences in [ArtDirection.md](C:/Users/k/Repository/Automatou/Automatou1/Documentation/ArtDirection.md), committed as `5dfa4f6`.
