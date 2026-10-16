@@ -340,7 +340,7 @@ The rendered app checks passed, including program selection, spacing limits, and
 
 fyi i've gotten a few of these popups
 
-![Attached dotnet.exe application error popup](20260921AutomataLogicDiscussionDotnetError.png)
+![Attached dotnet.exe application error popup](2026-09-22_01-04_UTC_AutomataLogicDiscussionDotnetError.png)
 
 Original attachment: `C:/Users/k/AppData/Local/Temp/codex-clipboard-5eb3594d-2eb8-4433-b3ef-4e04d49abcd2.png`.
 

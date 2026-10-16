@@ -15,11 +15,11 @@ Date: 2026-09-01
 
 Attached reference sheets:
 
-![Reference sprite sheet 1](assets/2026-09-01-convert-faux-pixel-art-sprite-sheets/sheet-1.png)
+![Reference sprite sheet 1](2026-09-01_22-47_UTC_ConvertFauxPixelArtSpriteSheetsReference1.png)
 
-![Reference sprite sheet 2](assets/2026-09-01-convert-faux-pixel-art-sprite-sheets/sheet-2.png)
+![Reference sprite sheet 2](2026-09-01_22-47_UTC_ConvertFauxPixelArtSpriteSheetsReference2.png)
 
-![Reference sprite sheet 3](assets/2026-09-01-convert-faux-pixel-art-sprite-sheets/sheet-3.png)
+![Reference sprite sheet 3](2026-09-01_22-47_UTC_ConvertFauxPixelArtSpriteSheetsReference3.png)
 
 ## Assistant
 

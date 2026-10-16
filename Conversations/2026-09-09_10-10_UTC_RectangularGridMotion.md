@@ -39,7 +39,7 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 got this error
 
-![Attached error screenshot](20260909RectangularGridMotionLauncherError.png)
+![Attached error screenshot](2026-09-09_10-11_UTC_RectangularGridMotionLauncherError.png)
 
 ## Assistant
 
@@ -83,7 +83,7 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 the first thing that i find strange is that this approach doesn't seems to allow "full rotation". it's like the rectangle only swaps between 3 and 6 on a clock.
 
-![Attached rotation screenshot](20260909RectangularGridMotionRotationIssue.png)
+![Attached rotation screenshot](2026-09-09_10-22_UTC_RectangularGridMotionRotationIssue.png)
 
 ## Assistant
 
@@ -116,7 +116,7 @@ however, there is another oddity. having the pivot be at a cell corner instead o
 i think the general rule is that a pivot for a rectangular input should be centered in one or more dimension.
 there could be odd units that have their pivot off-centered in both dimensions, but for now, let's not simulate those.
 
-![Attached pivot screenshot](20260909RectangularGridMotionPivotIssue.png)
+![Attached pivot screenshot](2026-09-09_10-55_UTC_RectangularGridMotionPivotIssue.png)
 
 ## Assistant
 
@@ -173,7 +173,7 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 what exactly does "rear pivot sweep" mean? is the screenshot result expected?
 
-![Attached sweep screenshot](20260909RectangularGridMotionSweepQuestion.png)
+![Attached sweep screenshot](2026-09-09_11-05_UTC_RectangularGridMotionSweepQuestion.png)
 
 ## Assistant
 
@@ -261,7 +261,7 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 got this error
 
-![Attached export error](20260909RectangularGridMotionExportLock.png)
+![Attached export error](2026-09-09_11-13_UTC_RectangularGridMotionExportLock.png)
 
 ## Assistant
 

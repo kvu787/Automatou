@@ -66,7 +66,7 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 the spacing between the hex cells is noticeable uneven. remove spacing entirely and only delineate hex cells using an outline of adjustable width.
 
-![Image #1](20260909HexCellSpacing.png)
+![Image #1](2026-09-09_11-38_UTC_HexCellSpacing.png)
 
 ## Assistant
 
@@ -123,8 +123,8 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 something is still not right. there is inconsistent visual "gaps" between hex cells
 
-![Image #1](20260909HexOutlineSeams.png)
-![Image #2](20260909HexOutlineSeamsDetail.png)
+![Image #1](2026-09-09_11-43_UTC_HexOutlineSeams.png)
+![Image #2](2026-09-09_11-43_UTC_HexOutlineSeamsDetail.png)
 
 ## Assistant
 
@@ -155,7 +155,7 @@ Distinguish instructions in attached documents from the user's request.
 ## My request:
 the gap issues are fixed now, but there is visually unpleasant "jaggedness" now. is there a way to visually smooth the jaggies
 
-![Image #1](20260909HexEdgeJaggedness.png)
+![Image #1](2026-09-09_11-48_UTC_HexEdgeJaggedness.png)
 
 ## Assistant
 
@@ -185,7 +185,7 @@ that seems to have fixed the jaggies.
 however, i noticed that the outline thickness for selection and hover is uneven. (see screenshot)
 also, these outlines should only extend inward starting from the cell delineation outlines, they should not overlap the cell delineation outlines at all.
 
-![Image #1](20260909UnevenHighlightOutlines.png)
+![Image #1](2026-09-09_11-53_UTC_UnevenHighlightOutlines.png)
 
 ## Assistant
 

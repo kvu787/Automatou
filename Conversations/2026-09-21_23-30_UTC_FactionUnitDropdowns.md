@@ -15,7 +15,7 @@ several things need to be fixed here
 - there should be labels indicating what each dropdown is for. the labels for these dropdowns should be "faction" and "unit"
 - factions have access to specific units. so ensure that the unit dropdown reflects the units that can be placed for the selected faction
 
-![Image #1](20260921FactionUnitDropdowns.png)
+![Image #1](2026-09-21_23-30_UTC_FactionUnitDropdowns.png)
 
 ## Assistant
 

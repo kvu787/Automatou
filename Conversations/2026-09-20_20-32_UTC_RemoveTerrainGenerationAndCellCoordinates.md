@@ -20,7 +20,7 @@ Distinguish instructions in attached documents from the user's request.
 
 <image name=[Image #1] path="C:\Users\k\AppData\Local\Temp\codex-clipboard-0f99e843-1a73-4bdb-886a-7c26c91338eb.png">
 
-![Image #1](20260920RemoveTerrainGenerationAndCellCoordinates.png)
+![Image #1](2026-09-20_20-32_UTC_RemoveTerrainGenerationAndCellCoordinates.png)
 
 </image>
 

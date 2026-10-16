@@ -17,7 +17,7 @@ the unit visuals have some issues:
 
 do these fixes
 
-![Image #1](20260920UnitExteriorOutlines.png)
+![Image #1](2026-09-20_20-48_UTC_UnitExteriorOutlines.png)
 
 ## Assistant
 

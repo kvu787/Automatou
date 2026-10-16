@@ -17,7 +17,7 @@ put the mode select box in a separate pillbox from the other stuff to make to cl
 don't use "world creator" as the heading of the mode pillbox. world creator is the name of this overall sub-app, and that name already appears right below the "automatou" header.
 label the mode pillbox with "mode"
 
-![Image #1](20260920WorldCreatorModePillbox.png)
+![Image #1](2026-09-20_20-20_UTC_WorldCreatorModePillbox.png)
 
 ## Assistant
 
