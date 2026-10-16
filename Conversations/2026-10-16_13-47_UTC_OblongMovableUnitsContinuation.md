@@ -177,3 +177,73 @@ A useful experiment would compare both models at several footprint sizes, showin
 That would help distinguish whether the empty space feels acceptable in play, looks misleading, or prevents formations and passages you expect to work. **No acceptable amount of empty space has been decided yet.**
 
 Recorded as provisional preferences in [ArtDirection.md](C:/Users/k/Repository/Automatou/Automatou1/Documentation/ArtDirection.md), committed as `5dfa4f6`.
+
+## User
+
+i would still like to brainstorm more. provide more ideas and things to think about.
+
+## Assistant
+
+I’ll explore options that keep the simple footprint rules and preserve the models’ proportions, including ways to make the reserved space feel more natural.
+
+## Assistant
+
+Yes—there are still several useful directions within your constraints. **The main variables left are model scale, visual overhang, how the footprint is presented, and how much surrounding space the world normally gives units.** None requires oblong or articulated collision mechanics.
+
+1. **Scale the whole model without changing its proportions.**
+
+   A carrier can remain long and narrow while being somewhat smaller relative to its surroundings. This differs from shortening and broadening its hull. A serpent can retain its full body shape at a smaller overall scale.
+
+   The tradeoff is relative scale: would a beautifully proportioned carrier still feel like a carrier beside humans, buildings, and other ships? How consistent do you want scale to be across different kinds of units?
+
+2. **Allow a measured amount of visual overhang.**
+
+   You already allow harmless visual overhang. You could explore how far that allowance can go: choose a smaller regular hexagonal footprint and let the bow and stern extend slightly beyond it.
+
+   This reduces reserved empty space without changing the model. The limit appears when two nearby models intersect, a bow passes through a shoreline, or a serpent's tail visibly crosses another unit. Overhang that works in open water may fail beside a wall.
+
+   A useful possibility is **a little overhang plus a little reserved space**, instead of requiring either one to absorb the entire mismatch. This would need visual testing in all six facings and during turns.
+
+3. **Separate inherent empty space from footprint-size rounding.**
+
+   There are two sources of wasted area: the carrier is narrow, and the available footprints jump between whole rings. A model that barely exceeds one footprint might require an entire additional ring.
+
+   Trying several *uniform* model scales near those thresholds could reveal a much better fit with a relatively small visual change. That would not eliminate the empty space beside a carrier, but it could avoid unnecessarily amplifying it.
+
+4. **Make the reserved area feel like part of the unit's presence.**
+
+   For the carrier, wakes, disturbed water, and aircraft activity could make its surroundings feel occupied by something happening. For the serpent, ripples, dust, disturbed vegetation, or an undulating body could do something similar.
+
+   These would be presentation, with no extra entities or mechanics required. The question is whether they make the spacing feel natural or merely decorate an obviously oversized exclusion zone. They also cannot explain away a passage the rules prevent the unit from entering.
+
+5. **Lean into the miniature-world aesthetic with a visible base.**
+
+   Imagine the carrier as a miniature sitting on a subtle hexagonal patch of sea, or the serpent on a hexagonal terrain base. The model keeps its proportions, while the base makes its occupied area explicit.
+
+   This could be a permanent subtle treatment, something shown only when selected, or a temporary movement preview. A permanent base might explain separation better; a selection-only outline would preserve more of the continuous-world appearance.
+
+   Would visible miniature bases complement your aesthetic, or make the world feel too much like a tabletop board?
+
+6. **Give the serpent freedom of pose without making its pose authoritative.**
+
+   A serpent can be naturally long and squiggly without being tightly coiled. Its rendered body could undulate within a regular footprint, while movement and collision still use only the unit's center, size, and facing.
+
+   The important distinction is whether the footprint accommodates the serpent's intended poses, or whether the intended poses are being sacrificed to accommodate the footprint. The latter would run into your compact-silhouette objection again.
+
+   Also consider how much visible tail lag is acceptable. A tail following the head's previous route may look appealing, but once it extends outside the footprint it has the same overhang problems as the carrier's bow.
+
+7. **Treat spaciousness as a world-design choice.**
+
+   Broad sea lanes and loosely spaced fleets might make the carrier's reserved area feel unremarkable. A sparse landscape might do the same for a huge serpent.
+
+   That raises a broader question: do you want crowded harbors, tightly packed formations, narrow passages, and bodies threading between obstacles? If those scenes are central, reserved space will be much harder to accept. If they are uncommon, the mismatch might rarely matter.
+
+A few especially revealing situations to think through:
+
+- **Two carriers alongside each other:** how much water between their hulls feels reasonable?
+- **A carrier beside a dock:** is a visible gap acceptable, and can interaction happen across it?
+- **An attack aimed at an empty part of a footprint:** would that look confusing if the rules consider it a hit?
+- **A serpent beside a tree:** is it acceptable for the body to appear capable of bending around it while the footprint prevents passage?
+- **Turning in a crowded scene:** does the animation intersect neighboring models even when both endpoint poses look fine?
+
+I would explore **reserved space, modest overhang, and uniform scale together**. There may be a comfortable balance among them even if none is satisfactory alone. The carrier would test rigid-body spacing; the serpent would test how much visual movement can coexist with a simple, fixed footprint.
