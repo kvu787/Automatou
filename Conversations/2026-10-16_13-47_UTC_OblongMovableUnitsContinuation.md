@@ -1,0 +1,111 @@
+# Oblong Movable Units Continuation
+
+## User
+
+# AGENTS.md instructions for C:\Users\k\Repository\Automatou
+
+<INSTRUCTIONS>
+# Base template
+
+## Platform compatibility
+
+Assume that everything is running on Windows 11 x64 and only targets Windows 11 x64.
+
+## Folder and file naming
+
+This only applies to things that we have the freedom to name as wanted.
+Use CamelCase.
+Use complete proper words. Don't use typical shortenings. Good: Source, Documentation. Bad: src, docs.
+
+## External tools
+
+You may use the tools in `%UserProfile%\Program`.
+You may refer to local copies of source repos in `%UserProfile%\Repository\External`.
+
+## Git
+
+Unless explicitly told not to by the user, commit your changes like a normal developer would.
+When implementing stuff, avoid difficult-to-review "mega-commits".
+Split large work into multiple commits to make it easier to review.
+Separate commits that record conversations from other commits.
+
+## Markdown tables
+
+Tables in Markdown must be padded and aligned in a way to make them easy to read in a plaintext editor, not only in a Markdown viewer.
+
+## Mathematical notation in Markdown
+
+Any mathematical notation in Markdown files (LaTeX, KaTeX, MathJax, etc) must display properly in VSCode's Markdown previewer, GitHub.com's Markdown displayer, and the markdown viewer in the Windows 11 ChatGPT app.
+
+## Applications
+
+### Running
+
+If you create a runnable application, create a `Run.cmd` file that builds and launches the application when Run.cmd is double-clicked from File Explorer.
+Run.cmd must be located at the root of the application's folder in the git repo.
+Run.cmd must be a simple wrapper for a PowerShell script named `Run.ps1` that contains the actual logic to minimize the amount of batch code written.
+
+### Logging
+
+When creating an application, create a folder called `MyLogOutput` at the root of the application's folder in the git repo.
+For each run of the application, a folder must be created in MyLogOutput and named with the current timestamp. This PowerShell code shows what the name of the folder should be:
+
+```powershell
+$logFolderPath = "$env:UserProfile\Repository\Godot\VsyncStutterTest\MyLogOutput\$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")"
+New-Item -ItemType "Directory" -Path $logFolderPath
+```
+
+Any logs for that application session must be put in that log folder.
+`MyLogOutput/` must be gitignored.
+
+# Base template additions
+
+## Conversations
+
+Record verbatim and commit all conversations in a folder named `Conversations` located at the root of this Git repo.
+Use one file per conversation.
+Prefix these files with the PowerShell evaluation of `[DateTime]::UtcNow.ToString("yyyy-MM-dd_HH-mm") + "_UTC"`.
+Prefix these commits with `[cnv]`.
+If I attach images to prompts, save and record these in the conversation logs.
+If the conversation begins with `dnr`, then do not record the conversation.
+
+## Application compatibility
+
+Do not attempt to maintain any sort of application compatibility between different commits of the repo. This creates unwanted complexity.
+
+# Repository-specific
+
+Do not edit anything in the Lore folder.
+
+## Repository layout
+
+The repository root contains only the shared `.editorconfig`, `.gitattributes`,
+`AGENTS.md`, `CLAUDE.md`, and `LICENSE.txt` files, the global `Blender`,
+`Conversations`, and `Lore` folders, and these independent project folders
+(excluding Git metadata):
+
+- `Automatou1`: the original Kernel and Shells application.
+- `Automatou2`: the standalone fast-prototyping application.
+- `RectangularGridMotion`: the integer-only rectangular motion experiment.
+
+Keep each project's source, assets, build configuration, tests, launchers, and
+`.gitignore` inside its own folder. Projects must build and run without sibling
+projects. Run development commands from the relevant project folder.
+
+</INSTRUCTIONS>
+
+## User
+
+<external_codex_apps_open_page>{"page_id":null}</external_codex_apps_open_page>
+
+## User
+
+treat this conversation as a continuation of C:\Users\k\Repository\Automatou\Conversations\2026-10-16_11-50_UTC_OblongMovableUnits.md
+
+## Assistant
+
+I’ll read that conversation and the repository instructions to pick up where it left off.
+
+## Assistant
+
+I’ve read the previous conversation and will use it as context. The established decisions are regular hexagonal footprints, turning without changing occupied cells or swept collision checks, and no explicit ban on oblong visual models. How very long models fit those footprints remains unresolved.
